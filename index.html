@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>临床阅片器 · 产品方案演示</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei',sans-serif;background:linear-gradient(160deg,#0A192F 0%,#0D1B2A 60%,#0A192F 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;color:#E0E6F0;padding:24px}
+.card{background:#112233;border:1px solid #24344D;border-radius:16px;padding:46px 52px;max-width:640px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.logo{width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#1890FF,#00C896);display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+h1{font-size:24px;margin-bottom:8px;letter-spacing:1px}
+.sub{color:#8A97A8;font-size:13px;margin-bottom:30px;line-height:1.8}
+.entry{display:flex;align-items:center;gap:16px;background:#0D1B2A;border:1px solid #24344D;border-radius:12px;padding:18px 20px;margin-bottom:14px;text-decoration:none;color:#E0E6F0;transition:all .2s}
+.entry:hover{border-color:#2A7FFF;transform:translateY(-2px);box-shadow:0 10px 30px rgba(42,127,255,.15)}
+.entry .ic{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+.entry .t{font-size:16px;font-weight:700;margin-bottom:4px}
+.entry .d{font-size:12px;color:#8A97A8;line-height:1.6}
+.ic-blue{background:rgba(42,127,255,.15)}
+.ic-green{background:rgba(0,200,150,.15)}
+.foot{margin-top:24px;color:#5A6B85;font-size:11px;line-height:1.9;text-align:center}
+.tag{display:inline-block;font-size:10px;color:#FFD700;border:1px solid rgba(255,215,0,.4);border-radius:20px;padding:1px 9px;margin-left:8px;vertical-align:2px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5" stroke-dasharray="2.5 2.5"/><path d="M12 8v8M8 12h8"/></svg></div>
+  <h1>影禾医脉 · 临床阅片器<span class="tag">演示环境</span></h1>
+  <div class="sub">产品方案 · V2.0<br>图像与报告联动 · 病灶时空对齐对比 · 多期随访配准</div>
+  <a class="entry" href="prototype.html">
+    <div class="ic ic-blue">🖥️</div>
+    <div><div class="t">交互原型（推荐）</div><div class="d">登录 → 患者列表 → 阅片工作站<br>支持布局切换 / 病灶标注 / 图文联动 / 配准对比 / 时序量化<br>账号任意填写即可登录，或用演示账号 vv / 123456</div></div>
+  </a>
+  <a class="entry" href="prd.html">
+    <div class="ic ic-green">📄</div>
+    <div><div class="t">需求说明文档</div><div class="d">详细且专业的完整需求说明（13 章）<br>核心定义表 · 算法里程碑 · 排期 · 验收 · 风险</div></div>
+  </a>
+  <div class="foot">影禾智能 AI 事业部 · 内部演示 · 数据为模拟数据<br>建议使用 Chrome / Edge 浏览器全屏打开</div>
+</div>
+</body>
+</html>

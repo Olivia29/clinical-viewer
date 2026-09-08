@@ -1,0 +1,360 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>临床阅片器产品需求说明文档</title><style>
+body{font-family:'Microsoft YaHei','微软雅黑',sans-serif;max-width:1000px;margin:24px auto;padding:0 28px;color:#222;line-height:1.75;background:#fff}
+h1{color:#1F3B73;font-size:24px;text-align:center;border-bottom:3px solid #1F3B73;padding-bottom:10px;margin-bottom:6px}
+h2{color:#1F3B73;font-size:19px;border-left:5px solid #1F3B73;padding-left:10px;margin-top:30px;background:#F0F4FA;padding:6px 10px}
+h3{color:#2E5CA0;font-size:15px;margin-top:20px}
+blockquote{color:#666;border-left:3px solid #bbb;margin:8px 0 8px 8px;padding:2px 12px;font-size:13px;background:#FAFAFA}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:12.5px}
+th{background:#1F3B73;color:#fff;padding:5px 7px;border:1px solid #9FB0CC;text-align:center;font-weight:600}
+td{border:1px solid #B9C6DC;padding:4px 7px;vertical-align:top}
+tr:nth-child(even) td{background:#EEF3FA}
+strong{color:#0D2E5C}
+ul{padding-left:22px}
+hr{border:none;border-top:1px dashed #ccc;margin:16px 0}
+pre{background:#0D1B2A;color:#E0E6F0;padding:14px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+em{color:#666}
+@media print{h2{page-break-after:avoid}table{page-break-inside:auto}tr{page-break-inside:avoid}body{margin:0}}
+</style></head><body>
+<h1>临床医生医学影像阅片器（临床阅片器）产品需求说明文档</h1>
+<blockquote>文档版本：V2.0（整合版）</blockquote>
+<blockquote>密级：内部资料</blockquote>
+<blockquote>编制：影禾智能 AI 事业部 · 产品部</blockquote>
+<blockquote>日期：2026-09-04</blockquote>
+<blockquote>依据：V1.0 需求文档（华西合作版）＋ 交互层需求说明 ＋ 产品原型设计稿</blockquote>
+<hr>
+<h2>修订记录</h2>
+<table><tr><th>版本</th><th>日期</th><th>修订人</th><th>修订内容</th></tr>
+<tr><td>V1.0</td><td>2026-02-07</td><td>孟滔（AI 事业部）</td><td>初版：项目概述、核心需求、数据与算法要求、排期、验收、风险（华西合作版）</td></tr>
+<tr><td>V2.0</td><td>2026-09-04</td><td>产品部</td><td>整合交互层需求：登录/患者列表/阅片工作站页面级交互规则、拖拽窗口管理、配准对比模式细化；补充 UI 设计规范与核心定义表示例</td></tr>
+</table>
+<hr>
+<h2>1. 项目概述</h2>
+<h3>1.1 项目背景与目标</h3>
+<p>本项目是影禾智能与四川大学华西医院（以下简称"华西医院"）战略合作的核心组成部分，共同开发一款面向临床医生的医学影像阅片器（以下简称"临床阅片器"）。产品以<strong>肺肿物患者的胸部 CT 随访数据</strong>为训练数据集，核心目标为实现 <strong>"图像与报告内容联动，不同随访时间节点病灶可对齐、可对比"</strong> 的智能化功能，提升临床医生在肿瘤随访、疗效评估等场景下的阅片效率与诊断精准度。</p>
+<p>系统同时服务<strong>放射科日常阅片</strong>与<strong>临床科研（多期影像配准分析）</strong>两类场景，是连接诊断与决策支持的智能化工作台。</p>
+<h3>1.2 产品定位</h3>
+<p>临床阅片器定位为<strong>集成 AI 能力的交互式临床阅片工具</strong>：</p>
+<li style="margin-left:18px">具备<strong>独立 UI</strong>，可作为独立系统使用；</li>
+<li style="margin-left:18px">或通过 <strong>API 嵌入华西医院现有 PACS 系统</strong>（需对应软件供应商根据 API 提供定制化开发），作为临床医生日常阅片的核心工具。</li>
+<p>产品不仅提供传统阅片功能，更通过 AI 驱动的<strong>病灶时空对齐</strong>与<strong>图文联动</strong>，实现从"孤立信息浏览"到"综合信息辅助决策"的转变。</p>
+<h3>1.3 核心价值主张</h3>
+<table><tr><th>对象</th><th>价值</th></tr>
+<tr><td>对临床医生赋能</td><td>通过自动化病灶对齐与可视化对比，将随访阅片时间从数分钟缩短至秒级；减少人为误差，提升诊断一致性</td></tr>
+<tr><td>对院级数据治理赋能</td><td>沉淀结构化、标准化的高质量医疗数据资产，为临床科研、AI 模型训练及医院质量控制提供基础</td></tr>
+</table>
+<h3>1.4 目标用户与使用场景</h3>
+<table><tr><th>用户角色</th><th>场景</th><th>核心诉求</th></tr>
+<tr><td>放射科诊断医师</td><td>日常阅片、报告撰写</td><td>高效浏览、精准标注、所见即所得报告</td></tr>
+<tr><td>临床科室医生（肿瘤/呼吸/胸外）</td><td>肿瘤随访、疗效评估</td><td>跨时点病灶对比、进展量化</td></tr>
+<tr><td>科研人员</td><td>多期影像配准分析</td><td>定量指标提取、数据沉淀</td></tr>
+</table>
+<hr>
+<h2>2. 术语定义</h2>
+<table><tr><th>术语</th><th>定义</th></tr>
+<tr><td>核心定义表</td><td>影禾平台定义的解剖结构、病灶属性、征象描述的标准字段规范（含 AISU 肺肿物部分），用于多源结果的对齐、归并与结构化重构</td></tr>
+<tr><td>病灶家族</td><td>将同一患者不同序列/不同检查中属于同一病灶的标注进行关联管理的一组对象，统一管理个体属性与对比信息</td></tr>
+<tr><td>图文联动</td><td>结构化报告文本要素与影像分割/检测结果的双向关联：文字可定位影像，影像标注可回填报告</td></tr>
+<tr><td>配准（对齐）</td><td>将同一患者不同时间点/不同序列影像中的解剖结构或病灶映射到统一空间坐标系的过程</td></tr>
+<tr><td>MPR</td><td>多平面重建（冠状位/矢状位/任意斜位）</td></tr>
+<tr><td>结构化报告</td><td>基于核心定义表组织的、字段化可提取的诊断报告（区别于自由文本）</td></tr>
+<tr><td>Report Plus</td><td>在结构化报告基础上补充医生标注信息（测量、定性）形成的增强报告</td></tr>
+</table>
+<hr>
+<h2>3. 产品总体结构</h2>
+<pre>┌─────────────────────────────────────────────────────┐
+│               临床阅片器（B/S 架构）                    │
+├───────────┬──────────────┬───────────────┬───────────┤
+│ 患者管理   │  影像阅片     │  智能分析      │ 报告与数据  │
+│ ·检索列表  │ ·多序列浏览   │ ·解剖分割      │ ·结构化报告 │
+│ ·DICOM导入 │ ·2D/MPR/3D   │ ·病灶检测      │ ·图文联动   │
+│ ·PACS拉取  │ ·窗宽窗位    │ ·时空对齐      │ ·ReportPlus│
+│           │ ·测量标注     │ ·量化对比      │ ·导出/回传  │
+├───────────┴──────────────┴───────────────┴───────────┤
+│              平台能力层（算法引擎/核心定义表/调度）        │
+├─────────────────────────────────────────────────────┤
+│        集成层：PACS(DICOM/DICOMweb) · 统一认证 · RIS   │
+└─────────────────────────────────────────────────────┘</pre>
+<hr>
+<h2>4. 功能需求详述</h2>
+<blockquote>需求编号规则：FR-模块-序号。优先级：P0=核心必须 / P1=重要 / P2=增强。</blockquote>
+<blockquote>验收口径：标注 ★ 的为可量化验收项，对应第 10 章验收标准。</blockquote>
+<h3>4.1 系统登录</h3>
+<p><strong>功能描述</strong>：系统安全入口，验证用户身份；与医院统一身份认证集成。</p>
+<table><tr><th>编号</th><th>需求项</th><th>优先级</th><th>说明/交互规则</th></tr>
+<tr><td>FR-AUTH-01</td><td>账号/密码登录</td><td>P0</td><td>输入框带图标与占位提示；支持"工号/账号"两种标识</td></tr>
+<tr><td>FR-AUTH-02</td><td>密码可见性切换</td><td>P0</td><td>输入框右侧眼睛图标切换明文/密文</td></tr>
+<tr><td>FR-AUTH-03</td><td>表单实时校验</td><td>P0</td><td>非空、长度限制校验；错误提示带抖动反馈；输入框聚焦高亮边框</td></tr>
+<tr><td>FR-AUTH-04</td><td>登录异步状态</td><td>P0</td><td>点击登录按钮后显示"验证中..."状态，模拟异步认证，防重复提交</td></tr>
+<tr><td>FR-AUTH-05</td><td>回车快捷提交</td><td>P1</td><td>密码框回车触发登录</td></tr>
+<tr><td>FR-AUTH-06</td><td>身份集成</td><td>P0</td><td>与医院统一身份认证（AD/LDAP/OAuth）集成，基于角色的权限管理</td></tr>
+<tr><td>FR-AUTH-07</td><td>安全策略</td><td>P1</td><td>连续失败锁定；会话超时自动退出；登录留痕（审计）</td></tr>
+</table>
+<p><strong>流程</strong>：验证通过后自动跳转至患者列表页（首页）。</p>
+<h3>4.2 患者检查检索列表（登录后首页）</h3>
+<p><strong>功能描述</strong>：患者数据归集与检索导航中枢，支持多条件组合搜索，定位检查后进入阅片页。</p>
+<p>#### 4.2.1 顶部搜索筛选区</p>
+<table><tr><th>编号</th><th>需求项</th><th>优先级</th><th>说明/交互规则</th></tr>
+<tr><td>FR-LIST-01</td><td>患者姓名搜索</td><td>P0</td><td>文本输入，支持模糊匹配</td></tr>
+<tr><td>FR-LIST-02</td><td>患者 ID 搜索</td><td>P0</td><td>文本输入，支持精确/模糊查询（如 P2784）</td></tr>
+<tr><td>FR-LIST-03</td><td>检查号搜索</td><td>P0</td><td>文本输入（如 E14037）</td></tr>
+<tr><td>FR-LIST-04</td><td>检查日期范围</td><td>P0</td><td>起止日期双选择器</td></tr>
+<tr><td>FR-LIST-05</td><td>检查类型筛选</td><td>P0</td><td>下拉选择：全部/CT/MR/DR 等（当前仅 CT 入列）</td></tr>
+<tr><td>FR-LIST-06</td><td>搜索按钮</td><td>P0</td><td>触发筛选逻辑，请求期间列表显示"加载中..."</td></tr>
+<tr><td>FR-LIST-07</td><td>重置按钮</td><td>P0</td><td>清空所有条件并刷新列表</td></tr>
+</table>
+<p>#### 4.2.2 数据列表区（强制二级嵌套）</p>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th><th></th><th></th><th></th><th></th><th></th></tr>
+<tr><td>FR-LIST-08</td><td>分组逻辑</td><td>按<strong>患者 ID</strong> 分组；同一患者的多条检查记录归为一组，完成患者数据归集</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>FR-LIST-09</td><td>排序规则</td><td>患者组按<strong>最新一次检查时间倒序</strong>；组内按<strong>检查日期倒序</strong>（最新置顶）</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>FR-LIST-10</td><td>表头顺序</td><td>姓名 \</td><td>患者 ID \</td><td>年龄 \</td><td>检查号 \</td><td>检查日期 \</td><td>操作</td></tr>
+<tr><td>FR-LIST-11</td><td>组折叠/展开</td><td>组标题行展示"X 项检查"与折叠控件，支持折叠收起组内检查，默认展开</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>FR-LIST-12</td><td>模态标识</td><td>每条检查记录带模态标签（如 CT），视觉区分</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>FR-LIST-13</td><td>查看入口 ★</td><td>每条检查记录提供【查看】按钮，点击跳转至阅片页面（唯一入口）</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>FR-LIST-14</td><td>空状态/加载态</td><td>无数据时展示空状态提示；加载时展示"加载中..."</td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p>#### 4.2.3 底部功能区</p>
+<table><tr><th>编号</th><th>需求项</th><th>优先级</th><th>说明</th></tr>
+<tr><td>FR-LIST-15</td><td>本地上传 DICOM</td><td>P0</td><td>"本地上传 DICOM 影像"入口可用（模拟/实际交互：拖拽或文件选择）</td></tr>
+<tr><td>FR-LIST-16</td><td>PACS 系统拉取</td><td>P1</td><td>"PACS 系统拉取影像"按钮；未打通接口时置灰不可用</td></tr>
+<tr><td>FR-LIST-17</td><td>分页控件</td><td>P0</td><td>上一页/下一页按钮 + 页码信息显示</td></tr>
+</table>
+<h3>4.3 放射影像阅片工作站（核心页面）</h3>
+<p>#### 4.3.1 整体布局</p>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>FR-VIEW-01</td><td>布局结构</td><td>上：全局工具栏（通栏）；下：左/中/右三栏。左栏（序列缩略图）、右栏（诊断报告）均支持一键收起/展开</td></tr>
+<tr><td>FR-VIEW-02</td><td>布局切换</td><td>顶部工具栏提供 1x1 / 1x2 / 2x1 / 2x2 布局切换</td></tr>
+<tr><td>FR-VIEW-03</td><td>工具栏反馈</td><td>按钮具备 hover 反馈与激活/未激活状态区分；除布局选择外，点击工具按钮不弹出冗余提示窗</td></tr>
+</table>
+<p>#### 4.3.2 顶部工具栏（标准阅片工具集）</p>
+<table><tr><th>工具</th><th>说明</th><th>快捷键（建议）</th></tr>
+<tr><td>布局切换</td><td>1x1、1x2、2x1、2x2</td><td>F1–F4</td></tr>
+<tr><td>窗宽窗位</td><td>WW/WL 调节（滑块 + 数值），预设快捷（肺窗/纵隔窗/骨窗）</td><td>W</td></tr>
+<tr><td>缩放</td><td>影像缩放（滚轮/拖动）</td><td>Z / 滚轮</td></tr>
+<tr><td>平移</td><td>影像拖拽移动</td><td>P</td></tr>
+<tr><td>测量</td><td>距离/面积/角度测量，结果标注于影像</td><td>M</td></tr>
+<tr><td>标注</td><td>病灶框选/圈注，联动报告</td><td>A</td></tr>
+<tr><td>重置视图</td><td>恢复初始视图状态</td><td>R</td></tr>
+<tr><td>保存报告</td><td>保存当前报告与标注</td><td>Ctrl+S</td></tr>
+<tr><td>配准对比</td><td>进入/退出配准模式（详见 4.6）</td><td>F</td></tr>
+<tr><td>导出影像</td><td>导出当前阅片状态（影像+标注+报告）</td><td>Ctrl+E</td></tr>
+<tr><td>联动标注</td><td>2D/3D 联动、多序列同步标注（详见 4.5.1）</td><td>L</td></tr>
+<tr><td>2D/MPR/3D</td><td>显示模式切换</td><td>—</td></tr>
+</table>
+<p>#### 4.3.3 左侧：影像序列缩略图栏（可收起）</p>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>FR-SEQ-01</td><td>数据来源</td><td>当前患者全部影像序列缩略图</td></tr>
+<tr><td>FR-SEQ-02</td><td>排序规则</td><td>按检查时间倒序（最新序列置顶）</td></tr>
+<tr><td>FR-SEQ-03</td><td>分组与折叠</td><td>按日期分组展示；默认只展开最近日期组，其余折叠；点击日期标题手动展开/收起</td></tr>
+<tr><td>FR-SEQ-04</td><td>序列信息</td><td>每项展示缩略图、序列名、日期/时间、模态标识（如 CT）</td></tr>
+<tr><td>FR-SEQ-05</td><td>点击切换</td><td>点击缩略图，中间主影像区立即切换对应全尺寸影像</td></tr>
+<tr><td>FR-SEQ-06</td><td>拖拽添加</td><td>从缩略图栏<strong>拖拽</strong>任意序列至中间阅片区（详见 4.7 窗口管理）</td></tr>
+</table>
+<p>#### 4.3.4 中间：主影像展示区（不可收起）</p>
+<p><strong>基础阅片操作</strong>（FR-VIEW-04）：支持 DICOM 影像的缩放、拖动、窗宽窗位调节、标注、测距（工具通过工具栏激活）。</p>
+<p><strong>多模态显示</strong>（FR-VIEW-05）：支持 2D/MPR/3D 多序列、多次检查图像的同步浏览、对比显示与显示模式切换；支持横断位/冠状位/矢状位间<strong>联动定位同一病灶</strong>。</p>
+<p><strong>图像优化</strong>（FR-VIEW-06）：支持窗宽窗位适应性切换与调整（肺窗/纵隔窗/骨窗等预设 + 手动），适应不同病种阅片需求。</p>
+<p><strong>病灶联动</strong>（FR-VIEW-07）：点击右侧报告中的高亮病灶文字，影像区自动标记并<strong>定位至对应病灶位置（闪烁提示）</strong>。</p>
+<p><strong>影像信息叠加</strong>（FR-VIEW-08）：窗格内展示检查日期/时间、序列号、患者 ID（脱敏）、方向标记（R/L）、比例尺、KV/mA/层厚/窗宽窗位等 DICOM 元数据信息。</p>
+<p>#### 4.3.5 右侧：诊断报告编辑/展示区（可收起）</p>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>FR-REP-01</td><td>报告内容</td><td>当前影像对应的结构化放射诊断报告全文（影像所见/诊断意见分段）</td></tr>
+<tr><td>FR-REP-02</td><td>病灶高亮</td><td>报告内病灶位置描述文字以高亮样式呈现（可按语义标签着色）</td></tr>
+<tr><td>FR-REP-03</td><td>文字→影像定位</td><td>点击任何高亮病灶文字 → 中间影像区病灶定位（闪烁标记）</td></tr>
+<tr><td>FR-REP-04</td><td>标注→报告</td><td>影像区病灶标注（测量/定性）自动填充至报告对应模块，形成 Report Plus</td></tr>
+<tr><td>FR-REP-05</td><td>编码引用</td><td>病灶描述关联影像位置编码（如 [IMA xx]），点击可跳转</td></tr>
+</table>
+<h3>4.4 核心模块一：多时间节点影像解剖分割、病灶检测、智能对齐与对比</h3>
+<blockquote>本项目 AI 能力核心。对齐与对比的对象包括同一患者<strong>不同序列</strong>与<strong>不同检查时点</strong>（首诊/随访1/随访2…）。</blockquote>
+<p>#### 4.4.1 多序列、多时点、多方位对齐场景（FR-ALIGN-01）</p>
+<table><tr><th>场景</th><th>说明</th><th>示例</th></tr>
+<tr><td>同次检查内多序列对齐</td><td>同一检查内不同序列间的病灶对齐</td><td>胸部 CT 平扫 ↔ 增强序列病灶对齐</td></tr>
+<tr><td>不同检查时点对齐</td><td>同一患者跨时点检查的图像/病灶对齐</td><td>相隔数月的两次 CT 检查病灶对齐</td></tr>
+<tr><td>多扫描方位联动</td><td>不同方位序列的识别对齐及联动</td><td>横断位/冠状位/矢状位联动定位同一病灶</td></tr>
+</table>
+<p>#### 4.4.2 渐进式对齐模式（FR-ALIGN-02，复杂度递增）</p>
+<table><tr><th>层级</th><th>模式</th><th>原理</th></tr>
+<tr><td>L1</td><td>基于图像配准对齐</td><td>平扫与增强按图像顺位对齐；不同方位按空间定位信息对齐</td></tr>
+<tr><td>L2</td><td>基于解剖结构分割对齐</td><td>基于肺（含肺叶、肺段）、骨、气管、心脏、大血管等位置固定解剖结构的分割结果，按整体空间位置配准</td></tr>
+<tr><td>L3</td><td>解剖分割 + 病灶检测对齐</td><td>在 L2 基础上按病灶检测结果，将临近对齐层面的病灶链接，判断核心病灶在同次/前后次检查中的存在与否及链接情况</td></tr>
+</table>
+<p>#### 4.4.3 算法自动对齐 + 医生手动微调（FR-ALIGN-03）</p>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>FR-ALIGN-04</td><td>算法自动对齐</td><td>基于核心定义表定义的关键解剖结构与病变，算法自动完成对齐</td></tr>
+<tr><td>FR-ALIGN-05</td><td>医生手动微调</td><td>提供手动编辑对齐结果：对 AI 自动对齐结果调整、确认或重新定义（解除/重置页面与病灶对齐关系）</td></tr>
+</table>
+<p>#### 4.4.4 量化对比与可视化（FR-ALIGN-06）</p>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>FR-ALIGN-07</td><td>自动计算</td><td>基于病灶对齐，自动计算病灶<strong>大小、体积、密度</strong>等关键临床参数的变化量及百分比</td></tr>
+<tr><td>FR-ALIGN-08</td><td>可视化展示</td><td>以表格、图表或叠加标注方式直观展示病灶随时间变化趋势（体积/密度曲线）</td></tr>
+<tr><td>FR-ALIGN-09</td><td>目标家族管理</td><td>支持将不同序列/检查中的同一病灶标注为"家族"，统一管理个体属性与对比信息</td></tr>
+</table>
+<h3>4.5 核心模块二：图像与报告智能联动</h3>
+<p><strong>功能描述</strong>：报告结构化 + 文本要素提取，提取结果与图像分割/检测结果对齐联动。医生在报告中点击可交互要素（解剖结构、病灶）→ 直接定位到对应影像；在影像上标注/删除病灶 → 自动填充/删除报告对应字段。</p>
+<table><tr><th>编号</th><th>需求项</th><th>优先级</th><th>说明/验收</th></tr>
+<tr><td>FR-LINK-01</td><td>报告驱动影像定位</td><td>P0</td><td>审核医生通过结构化报告中文字描述，一键跳转至提及的具体影像层面和病灶位置，无需手动翻阅</td></tr>
+<tr><td>FR-LINK-02</td><td>影像标注驱动报告更新</td><td>P0</td><td>医生阅片中对病灶标注（测量、定性），系统自动补充至结构化报告对应模块，形成 Report Plus</td></tr>
+<tr><td>FR-LINK-03</td><td>自动关联准确率 ★</td><td>P0</td><td>报告中文本描述与影像病灶区域自动关联准确率 <strong>≥ 0.8</strong></td></tr>
+<tr><td>FR-LINK-04</td><td>关联关系持久化</td><td>P0</td><td>阅片完成后图文关联关系在系统内自动保存，下次打开可复现</td></tr>
+<tr><td>FR-LINK-05</td><td>双向删除同步</td><td>P1</td><td>影像删除病灶标注 → 报告对应字段同步删除（或标记）</td></tr>
+</table>
+<h3>4.6 配准对比模式（科研核心功能）</h3>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>FR-REG-01</td><td>触发条件</td><td>阅片区至少显示 <strong>≥2 个序列</strong>时，"配准对比"按钮才可点击</td></tr>
+<tr><td>FR-REG-02</td><td>基准设定</td><td>系统自动选择<strong>检查时间最近的序列</strong>作为基准序列（不可被替换）</td></tr>
+<tr><td>FR-REG-03</td><td>布局适配</td><td>进入配准模式后布局自动适配为 1x2 或 2x2（依窗口数量）</td></tr>
+<tr><td>FR-REG-04</td><td>基准标识</td><td>基准序列窗口以<strong>金色边框 + "⭐ 基准"标签</strong>标识</td></tr>
+<tr><td>FR-REG-05</td><td>替换保护</td><td>拖拽新序列至阅片区仅允许替换非基准序列；基准序列受保护</td></tr>
+<tr><td>FR-REG-06</td><td>量化指标</td><td>配准完成后自动计算病灶尺寸、密度、差值等量化指标，展示于各窗口<strong>左上角</strong>与右侧独立"配准对比"浮动面板（指标可按需更新）</td></tr>
+<tr><td>FR-REG-07</td><td>退出配准</td><td>点击"配准对比"按钮或重置视图退出，恢复普通浏览</td></tr>
+<tr><td>FR-REG-08</td><td>手动配准</td><td>无法自动配准的序列，支持手动标记病灶进行病灶关联（手动配准）</td></tr>
+</table>
+<h3>4.7 窗口管理（拖拽新增与替换）</h3>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>FR-WIN-01</td><td>拖拽逻辑</td><td>从左侧缩略图栏拖拽任意序列至中间阅片区</td></tr>
+<tr><td>FR-WIN-02</td><td>容量规则</td><td>窗口数 &lt;4 → 新增该序列窗口，布局自动适应（1→2→4）；已达 4 窗（2x2）→ 新拖入序列<strong>替换当前最后一个窗口</strong>，始终保持最多 4 窗</td></tr>
+<tr><td>FR-WIN-03</td><td>配准保护</td><td>配准模式下拖拽仅允许替换非基准序列</td></tr>
+<tr><td>FR-WIN-04</td><td>窗口关闭</td><td>窗口支持单独关闭（非配准模式，保留 ≥1 窗）</td></tr>
+</table>
+<h3>4.8 其他功能模块</h3>
+<table><tr><th>模块</th><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>联动标注</td><td>FR-ANN-01</td><td>2D/3D 联动标注</td><td>同次检查内支持 2D/3D 联动标注；单序列标注时，联动状态下所有序列同步标注/修改/删除，标注结果默认关联为同一解剖或病变</td></tr>
+<tr><td>病灶管理</td><td>FR-ANN-02</td><td>病灶信息弹窗</td><td>选中影像病灶时弹出病灶信息面板（解剖位置/诊断分类/描述文本），支持删除、收起、编辑描述，描述与报告文本双向一致</td></tr>
+</table>
+<hr>
+<h2>5. 核心流程</h2>
+<h3>5.1 数据载入与对齐流程（阅片前置）</h3>
+<p>1. 在业务系统中选择患者的多序列及多次检查数据；</p>
+<p>2. 选择检查数据，推送进行<strong>分割、检测、报告生成及基于图像位置和解剖结构的初步对齐</strong>的综合算法推理；</p>
+<p>3. 进入对齐界面，医生查看对齐结果，可<strong>手动微调与确认</strong>对齐的图像位置；</p>
+<p>4. 查看对齐后的<strong>对比视图与量化报告</strong>。</p>
+<h3>5.2 图文联动报告流程</h3>
+<p>1. 医生在阅片器中浏览影像并进行病灶标注；</p>
+<p>2. 标注信息<strong>自动填充</strong>至结构化报告；</p>
+<p>3. 医生编辑报告文本，可<strong>点击文本跳转</strong>至对应影像；</p>
+<p>4. 阅片完成，图文关联关系在系统内<strong>自动保存</strong>。</p>
+<hr>
+<h2>6. 核心定义表（AISU 肺肿物部分 · 示例）</h2>
+<blockquote>核心定义表是解剖结构、病灶、征象的结构化规范，是多源结果对齐与报告重构的依据。完整表含全部解剖结构与病变条目；此处列肺肿物核心部分作为字段/描述模板规范。</blockquote>
+<h3>6.1 肺肿物描述模板（结构化语句）</h3>
+<p><strong>中央型肺癌</strong>：</p>
+<p>「解剖结构」可见「属性A」「属性B」肿块影，密度「属性C」，边界「属性D」；局部「属性E」。</p>
+<table><tr><th>属性</th><th>必选</th><th>取值（示例）</th><th>描述词库</th></tr>
+<tr><td>A 位置/管壁</td><td>必选</td><td>主支气管/支气管</td><td>管壁不规则增厚/官腔狭窄/官腔截断</td></tr>
+<tr><td>B 肿块密度</td><td>必选</td><td>软组织密度/混杂密度</td><td>均匀/不均匀</td></tr>
+<tr><td>C 密度均匀性</td><td>必选</td><td>—</td><td>均匀/不均匀</td></tr>
+<tr><td>D 边界</td><td>必选</td><td>—</td><td>清晰/不清晰</td></tr>
+<tr><td>E 继发征象</td><td>可选</td><td>—</td><td>肿块突入管腔/肿块包绕支气管/肿块包绕肺动脉/局部见低密度坏死区/临近肺组织牵拉改变，远端肺叶不张</td></tr>
+</table>
+<p><strong>周围型肺癌 / 良性肿瘤</strong>：</p>
+<p>「解剖结构」可见「属性A」软组织密度肿块影，密度「属性B」，边界「属性C」，大小约「输入框」×「输入框」mm（良性肿瘤另含边缘「属性D」、直径「输入框」mm）。</p>
+<table><tr><th>属性</th><th>周围型肺癌</th><th>良性肿瘤</th></tr>
+<tr><td>形态</td><td>类圆形/不规则型</td><td>类圆形/不规则型</td></tr>
+<tr><td>密度</td><td>均匀/不均匀、高密度/混杂密度</td><td>均匀/不均匀</td></tr>
+<tr><td>边界</td><td>清晰/不清晰</td><td>清晰/不清晰</td></tr>
+<tr><td>边缘</td><td>—</td><td>光滑/不光滑</td></tr>
+<tr><td>征象词库</td><td>病灶呈分叶状/边缘可见长毛刺/边缘可见短毛刺/其内可见空泡征/其内可见空洞/其内可见磨玻璃成分/局部见低密度坏死区/临近胸膜凹陷/病灶侵犯临近骨组织呈溶骨性破坏</td><td>同左（适用部分）</td></tr>
+</table>
+<h3>6.2 核心定义表的作用</h3>
+<p>1. <strong>对齐依据</strong>：定义关键解剖结构与病变，作为自动对齐的语义锚点；</p>
+<p>2. <strong>报告重构</strong>：全部报告数据经多模态模型文本拆解 + 核心定义表结构化重构；</p>
+<p>3. <strong>图文联动基底</strong>：文本要素（解剖结构/病灶）→ 影像要素的双向映射字典。</p>
+<hr>
+<h2>7. 数据与算法/工程任务要求</h2>
+<h3>7.1 训练数据集要求</h3>
+<table><tr><th>项</th><th>要求</th></tr>
+<tr><td>数据类型</td><td>CT 胸部平扫 + 增强（DICOM 图像 + 对应报告文本）</td></tr>
+<tr><td>数据规模</td><td><strong>≥2000 套</strong>肺肿物连续随访数据（周围型肺癌 ≥1000 套、中央型肺癌 ≥1000 套），含首诊 + ≥2 个节点随访</td></tr>
+<tr><td>解剖结构标注</td><td>≥500 例胸部 CT 平扫+增强图像主要解剖结构对应性标注</td></tr>
+<tr><td>随访结构标注</td><td>≥100 套连续随访数据解剖结构对应性标注</td></tr>
+<tr><td>病灶标注</td><td>≥1000 套肺肿物连续随访数据核心随访病灶标注</td></tr>
+<tr><td>报告重构</td><td>全部报告基于多模态模型文本拆解 + 核心定义表结构化重构</td></tr>
+</table>
+<h3>7.2 核心算法/工程任务要求（分里程碑）</h3>
+<table><tr><th>#</th><th>任务</th><th>6 月目标</th><th>9 月目标</th><th>12 月目标</th></tr>
+<tr><td>1</td><td>解剖分割</td><td>肺分割 Dice ≥0.9；肺叶段 ≥0.8</td><td>肺分割 ≥0.95；肺叶段 ≥0.85</td><td>—</td></tr>
+<tr><td>2</td><td>病灶检测</td><td>—</td><td>肺肿物检测 Precision/Recall ≥0.9</td><td>—</td></tr>
+<tr><td>3</td><td>报告生成</td><td>平扫为主序列 PR ≥0.85</td><td>平扫+增强肺肿物检出 PR ≥0.9</td><td>—</td></tr>
+<tr><td>4</td><td>图文联动</td><td>—</td><td>一阶段准确率 ≥80%</td><td>二阶段 ≥85%</td></tr>
+<tr><td>5</td><td>对齐</td><td>—</td><td>一阶段准确率 ≥80%（单次检查多序列图像/病变对齐、多次检查图像/病变对齐）</td><td>二阶段 ≥90%</td></tr>
+<tr><td>6</td><td>病变检测后分割及量化分析</td><td>—</td><td>—</td><td>分割 Dice ≥85%</td></tr>
+</table>
+<hr>
+<h2>8. 产品交互与 UI 设计规范</h2>
+<h3>8.1 设计原则</h3>
+<table><tr><th>原则</th><th>说明</th></tr>
+<tr><td>专业性</td><td>符合放射科医生专业阅片习惯，操作逻辑清晰；影像信息（方位标记/比例尺/参数）完整呈现</td></tr>
+<tr><td>高效性</td><td>核心功能（对齐、对比、标注）操作路径最短，支持快捷键</td></tr>
+<tr><td>可视化</td><td>病灶对齐与对比结果以直观图形化方式呈现（趋势图/叠加标注/量化角标）</td></tr>
+<tr><td>低干扰</td><td>深色主题降低视觉疲劳，红色仅用于病灶警示，青绿标识 AI 标注，色彩语义明确</td></tr>
+</table>
+<h3>8.2 视觉规范（参考原型）</h3>
+<table><tr><th>Token</th><th>值</th><th>用途</th></tr>
+<tr><td>主背景</td><td>#0A192F / #0D1B2A</td><td>全局深海军蓝</td></tr>
+<tr><td>面板背景</td><td>#112233 / #1B263B</td><td>卡片、侧栏</td></tr>
+<tr><td>主操作色</td><td>#2A7FFF / #1890FF</td><td>按钮、选中态、测量</td></tr>
+<tr><td>AI 标注色</td><td>#00C896</td><td>AI 生成标注、轮廓</td></tr>
+<tr><td>病灶警示色</td><td>#FF4D4F</td><td>病灶框、异常标记</td></tr>
+<tr><td>基准/强调色</td><td>#FFD700（金）</td><td>配准基准序列标识</td></tr>
+<tr><td>文本色</td><td>#E0E6F0 / #8A97A8</td><td>主文本 / 次级文本</td></tr>
+</table>
+<h3>8.3 页面清单</h3>
+<table><tr><th>页面</th><th>说明</th><th>状态</th></tr>
+<tr><td>登录页</td><td>品牌区（左）+ 登录表单（右）</td><td>见原型</td></tr>
+<tr><td>患者检查列表页</td><td>搜索 + 分组列表 + 底部数据源/分页</td><td>见原型</td></tr>
+<tr><td>阅片工作站页</td><td>三栏布局阅片工作台</td><td>见原型</td></tr>
+<tr><td>时序对齐视图</td><td>跨时点病灶对齐对比（时间轴 + 主视图 + 量化看板）</td><td>原型设计稿</td></tr>
+<tr><td>图文联动报告编辑界面</td><td>影像标注 ↔ 结构化报告联动</td><td>原型设计稿</td></tr>
+</table>
+<hr>
+<h2>9. 技术架构与集成要求</h2>
+<h3>9.1 技术架构</h3>
+<li style="margin-left:18px"><strong>B/S 架构</strong>，部署于院内服务器，数据不出院；</li>
+<li style="margin-left:18px">影像渲染：DICOM 解析 + 2D/MPR/3D 渲染引擎；</li>
+<li style="margin-left:18px">算法服务：解剖分割/病灶检测/配准对齐/图文联动算法以服务化方式接入；</li>
+<li style="margin-left:18px">报告引擎：结构化报告生成（基于核心定义表）与版本管理。</li>
+<h3>9.2 集成要求</h3>
+<table><tr><th>编号</th><th>需求项</th><th>说明</th></tr>
+<tr><td>FR-INT-01</td><td>数据接口</td><td>对接院内 PACS，接收符合 DICOM 标准的影像数据（DICOM/DICOMweb）</td></tr>
+<tr><td>FR-INT-02</td><td>结果回传</td><td>结构化报告及对齐结果回传医院信息系统</td></tr>
+<tr><td>FR-INT-03</td><td>权限集成</td><td>与医院统一身份认证集成，基于角色的权限管理</td></tr>
+<tr><td>FR-INT-04</td><td>嵌入模式</td><td>支持通过 API 嵌入现有 PACS（供应商按 API 定制开发）</td></tr>
+</table>
+<hr>
+<h2>10. 成功度量与验收标准</h2>
+<h3>10.1 技术验收标准</h3>
+<table><tr><th>类别</th><th>指标</th><th>目标</th></tr>
+<tr><td>算法精度</td><td>解剖分割/病灶检测/对齐/图文联动</td><td>见 7.2 里程碑</td></tr>
+<tr><td>系统性能</td><td>≤3 组随访数据推理与对齐响应</td><td>≤60 秒</td></tr>
+<tr><td>并发</td><td>并发用户数</td><td>≥50</td></tr>
+<tr><td>数据治理</td><td>数据完整性及标注准确率</td><td>通过专家评审</td></tr>
+<tr><td>图文关联准确率</td><td>报告文本 ↔ 影像病灶</td><td>≥0.8</td></tr>
+</table>
+<h3>10.2 临床验收标准</h3>
+<table><tr><th>指标</th><th>目标</th></tr>
+<tr><td>用户认可</td><td>华西试用科室医生对对齐准确率、临床可用性等综合评分 ≥4.5/5</td></tr>
+<tr><td>效率提升</td><td>典型肺肿物多期随访对比阅片平均时间较传统方式缩短 ≥30%</td></tr>
+</table>
+<hr>
+<h2>11. 项目排期与里程碑（三阶段迭代，总周期约 12 个月）</h2>
+<table><tr><th>阶段</th><th>时间范围</th><th>核心目标</th><th>关键交付物</th><th>负责团队</th></tr>
+<tr><td>阶段一：数据与基础准备</td><td>2025.10.30–2026.5.30</td><td>数据标准与数据集建设</td><td>核心定义表（解剖/病灶对齐标准）；标注工具开发完成；≥2000 套随访数据及标注完成；数据集质检与封装</td><td>核心定义表组、数据组、标注工程、算法组</td></tr>
+<tr><td>阶段二：算法与产品开发</td><td>2026.2.28–2026.12.30</td><td>核心算法、产品功能开发与内测</td><td>解剖结构与病灶对齐算法；图文联动算法；临床阅片器核心功能模块；算法部署与功能联调</td><td>基座模型部、AI 事业部（产品/算法/工程）</td></tr>
+<tr><td>阶段三：临床测试与上线</td><td>2026.10.30–2026.12.30</td><td>院内临床测试、系统集成与正式上线</td><td>临床测试报告与优化方案；系统集成与全流程测试；院内上线部署；发布会</td><td>信息科、医疗测试团队、产品经理</td></tr>
+</table>
+<blockquote>注：阶段二与阶段三存在并行窗口（2026.10–12），符合"算法迭代 + 临床验证"的敏捷节奏。</blockquote>
+<hr>
+<h2>12. 风险分析与应对策略</h2>
+<table><tr><th>风险类别</th><th>具体风险描述</th><th>概率</th><th>影响</th><th>应对策略</th></tr>
+<tr><td>数据风险</td><td>数据质量不达标（层厚不一、序列缺失等）</td><td>高</td><td>高</td><td>1. 提前制定数据纳排标准与规范；2. 与院方信息部紧密沟通确保数据获取顺畅；3. 我方负责数据治理与预处理</td></tr>
+<tr><td>技术风险</td><td>复杂场景（不同模态、严重形变）病灶对齐精度不达标</td><td>中</td><td>高</td><td>1. 分阶段实现，优先解决 CT 同模态、轻微形变；2. 保留医生手动对齐兜底；3. 持续优化算法</td></tr>
+<tr><td>项目风险</td><td>跨部门协作沟通成本高、进度滞后</td><td>高</td><td>中</td><td>1. 明确项目管理机制与周例会制度；2. 明确各方负责人与职责；3. 制定清晰里程碑与交付物验收标准</td></tr>
+<tr><td>合规风险</td><td>患者隐私数据合规</td><td>低</td><td>高</td><td>1. 严格遵循 DICOM 标准与医院数据安全规范；2. 系统院内部署、数据不出院；3. 完成软件注册/备案</td></tr>
+</table>
+<hr>
+<h2>13. 附录</h2>
+<li style="margin-left:18px">附录 A：产品原型（随本交付物附带 HTML 交互原型，覆盖登录页/患者列表/阅片工作站/时序对齐对比/图文联动报告）</li>
+<li style="margin-left:18px">附录 B：胸部 CT 核心定义表 AISU 肺肿物部分（见第 6 章）</li>
+<li style="margin-left:18px">文档负责人（V1.0）：孟滔（影禾智能 AI 事业部）；合作方：华西医院信息部及临床科室专家</li>
+<hr>
+<p>*文档完 · 内部资料 · 未经授权请勿外传*</p>
+</body></html>
