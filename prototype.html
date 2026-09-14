@@ -464,7 +464,7 @@ body.no-anim *{transition:none!important;animation:none!important}
           </div>
           <div class="rm-item on" data-dim="lesion" onclick="pickRegDim('lesion')">
             <span class="ri-ic">⭐</span>
-            <span class="ri-tx"><span class="ri-nm">病灶配准 <span class="phase-tag p1">第一期 · 已实现</span></span>
+            <span class="ri-tx"><span class="ri-nm">病灶配准 <span class="phase-tag p1">第一期</span></span>
             <span class="ri-ds">以病灶家族为中心对齐，跨时段追踪同一病灶的形态与量化变化</span></span>
           </div>
           <div class="rm-foot"><span>第一期仅实现病灶配准；另两个维度已预留入口</span><button onclick="exitReg()">退出配准</button></div>
@@ -1469,7 +1469,7 @@ function updateRegPanel(show){
   if(!show) return;
   const dim=state.regDim||'lesion';
   const D=REG_DIMS[dim];
-  $('#regHead').innerHTML=`${D.icon} 配准 · ${D.name}<span class="phase-tag ${D.phase===1?'p1':'p2'}" style="margin-left:auto">${D.phase===1?'第一期 · 已实现':'第二期 · 规划中'}</span>`;
+  $('#regHead').innerHTML=`${D.icon} 配准 · ${D.name}<span class="phase-tag ${D.phase===1?'p1':'p2'}" style="margin-left:auto">${D.phase===1?'第一期':'第二期 · 规划中'}</span>`;
   $('#regDimLine').textContent=D.desc;
   const b=$('#regBody');
   if(dim==='lesion'){
