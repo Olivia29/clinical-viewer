@@ -254,7 +254,6 @@ input,select{font-family:inherit}
 .rm-item .ri-ic{width:31px;height:31px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:var(--panel2)}
 .rm-item .ri-tx{flex:1;min-width:0}
 .rm-item .ri-nm{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px}
-.rm-item .ri-ds{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.6}
 .phase-tag{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:600;white-space:nowrap}
 .phase-tag.p1{background:rgba(0,200,150,.18);color:#5CE0B0}
 .phase-tag.p2{background:rgba(138,151,168,.2);color:#A9B6C7}
@@ -454,24 +453,20 @@ body.no-anim *{transition:none!important;animation:none!important}
           <div class="rm-head">⭐ 配准维度选择<span class="x" onclick="closeRegMenu()">×</span></div>
           <div class="rm-item" data-dim="slice" onclick="pickRegDim('slice')">
             <span class="ri-ic">▤</span>
-            <span class="ri-tx"><span class="ri-nm">层面配准 <span class="phase-tag p2">第二期</span></span>
-            <span class="ri-ds">以呼吸相位 / 体位导致的层面位移为对象，逐层对齐同一解剖层面</span></span>
+            <span class="ri-tx"><span class="ri-nm">层面配准 <span class="phase-tag p2">第二期</span></span></span>
           </div>
           <div class="rm-item" data-dim="anat" onclick="pickRegDim('anat')">
             <span class="ri-ic">🫀</span>
-            <span class="ri-tx"><span class="ri-nm">解剖结构配准 <span class="phase-tag p2">第二期</span></span>
-            <span class="ri-ds">以气管隆突、脊柱、肋骨等解剖标志为基准，完成结构级配准</span></span>
+            <span class="ri-tx"><span class="ri-nm">解剖结构配准 <span class="phase-tag p2">第二期</span></span></span>
           </div>
           <div class="rm-item on" data-dim="lesion" onclick="pickRegDim('lesion')">
             <span class="ri-ic">⭐</span>
-            <span class="ri-tx"><span class="ri-nm">病灶配准 <span class="phase-tag p1">第一期</span></span>
-            <span class="ri-ds">以病灶家族为中心对齐，跨时段追踪同一病灶的形态与量化变化</span></span>
+            <span class="ri-tx"><span class="ri-nm">病灶配准 <span class="phase-tag p1">第一期</span></span></span>
           </div>
           <div class="rm-foot"><span>第一期仅实现病灶配准；另两个维度已预留入口</span><button onclick="exitReg()">退出配准</button></div>
         </div>
         <div class="reg-panel" id="regPanel">
           <div class="rp-head" id="regHead">⭐ 配准 · 量化指标</div>
-          <div class="rp-dim" id="regDimLine"></div>
           <div class="rp-body" id="regBody"></div>
           <div class="rp-foot" id="regFoot">拖拽新序列仅可替换非基准序列 · 点「⭐ 配准」切换维度 / 退出</div>
         </div>
@@ -1420,9 +1415,9 @@ wlRange.addEventListener('input',()=>{
 });
 /* ---------- 配准：三个维度（层面 / 解剖结构 / 病灶） ---------- */
 const REG_DIMS={
-  slice: {name:'层面配准',     icon:'▤',  phase:2, desc:'以呼吸相位 / 体位导致的层面位移为对象，逐层对齐同一解剖层面'},
-  anat:  {name:'解剖结构配准', icon:'🫀', phase:2, desc:'以气管隆突、脊柱、肋骨等解剖标志为基准，完成结构级配准'},
-  lesion:{name:'病灶配准',     icon:'⭐', phase:1, desc:'以病灶家族为中心对齐，跨时段追踪同一病灶的形态与量化变化'}
+  slice: {name:'层面配准',     icon:'▤',  phase:2},
+  anat:  {name:'解剖结构配准', icon:'🫀', phase:2},
+  lesion:{name:'病灶配准',     icon:'⭐', phase:1}
 };
 $('#tbReg').addEventListener('click',openRegMenu);
 function openRegMenu(){ $('#regMenu').classList.toggle('show'); }
@@ -1470,7 +1465,6 @@ function updateRegPanel(show){
   const dim=state.regDim||'lesion';
   const D=REG_DIMS[dim];
   $('#regHead').innerHTML=`${D.icon} 配准 · ${D.name}<span class="phase-tag ${D.phase===1?'p1':'p2'}" style="margin-left:auto">${D.phase===1?'第一期':'第二期 · 规划中'}</span>`;
-  $('#regDimLine').textContent=D.desc;
   const b=$('#regBody');
   if(dim==='lesion'){
     const base=FOLLOWUP[BASE_SID], first=FOLLOWUP[FIRST_SID], early=FOLLOWUP[EARLIEST_SID];
