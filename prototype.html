@@ -141,6 +141,8 @@ input,select{font-family:inherit}
 .sd-head .caret{font-size:9px;transition:transform .2s;display:inline-block}
 .sd-head.open .caret{transform:rotate(90deg)}
 .sd-head .cnt{margin-left:auto;font-size:10px;background:var(--panel2);border-radius:10px;padding:0 7px}
+.sd-head .tno{font-size:9px;font-weight:700;color:#8FB4FF;background:rgba(42,127,255,.15);border-radius:4px;padding:0 4px;letter-spacing:.3px}
+.si-meta .stype{color:#9FD8FF}
 .series-item{display:flex;align-items:center;gap:8px;padding:6px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;background:var(--panel)}
 .series-item:hover{border-color:var(--accent)}
 .series-item.active{border-color:var(--accent);background:rgba(42,127,255,.1)}
@@ -241,8 +243,30 @@ input,select{font-family:inherit}
 .rp-row .rv{text-align:right;font-family:Consolas,monospace;color:#7CF5C6}
 .rp-row .rv.up{color:var(--warn)}.rp-row .rv.down{color:var(--ai)}
 .rp-foot{padding:8px 12px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted)}
+/* 配准维度选择菜单 */
+.reg-menu{position:absolute;right:14px;top:14px;z-index:25;width:342px;background:var(--panel);border:1px solid rgba(255,215,0,.4);border-radius:11px;box-shadow:0 16px 44px rgba(0,0,0,.6);display:none;overflow:hidden}
+.reg-menu.show{display:block}
+.rm-head{padding:9px 13px;background:rgba(255,215,0,.11);color:var(--gold);font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:7px}
+.rm-head .x{margin-left:auto;color:var(--muted);cursor:pointer;font-size:15px;line-height:1}
+.rm-item{display:flex;gap:10px;padding:10px 13px;border-top:1px solid var(--line);cursor:pointer;transition:background .12s}
+.rm-item:hover{background:var(--panel2)}
+.rm-item.on{background:rgba(42,127,255,.1)}
+.rm-item .ri-ic{width:31px;height:31px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:var(--panel2)}
+.rm-item .ri-tx{flex:1;min-width:0}
+.rm-item .ri-nm{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+.rm-item .ri-ds{font-size:10.5px;color:var(--muted);margin-top:3px;line-height:1.6}
+.phase-tag{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:600;white-space:nowrap}
+.phase-tag.p1{background:rgba(0,200,150,.18);color:#5CE0B0}
+.phase-tag.p2{background:rgba(138,151,168,.2);color:#A9B6C7}
+.rm-foot{padding:8px 13px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted);line-height:1.65;display:flex;align-items:center;gap:8px}
+.rm-foot button{color:#8FB4FF;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:3px 9px;flex-shrink:0}
+.rm-foot button:hover{border-color:var(--accent)}
+/* 结果面板内的维度标识 / 规划说明 */
+.rp-dim{padding:7px 12px;background:rgba(42,127,255,.09);border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:11px;color:#BBD4F7;line-height:1.6}
+.rp-plan{display:flex;gap:8px;padding:9px 12px;font-size:11px;color:var(--muted);line-height:1.7;border-bottom:1px dashed var(--line)}
+.rp-plan .phase-tag{flex-shrink:0;margin-top:1px}
 /* 时序量化看板 */
-.trend-panel{position:absolute;left:14px;bottom:14px;z-index:20;width:330px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.5);display:none;overflow:hidden}
+.trend-panel{position:absolute;left:14px;bottom:14px;z-index:20;width:398px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.5);display:none;overflow:hidden}
 .trend-panel.show{display:block}
 .tp-head{background:var(--bg2);padding:8px 12px;font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
 .tp-body{padding:12px}
@@ -386,14 +410,14 @@ body.no-anim *{transition:none!important;animation:none!important}
     <button class="tool-btn" id="tbMark" title="病灶标注 A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="4 3"/><circle cx="12" cy="12" r="2.5"/></svg>标注</button>
     <div class="sep"></div>
     <button class="tool-btn" id="tbLink" title="多序列联动标注 L"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>联动</button>
-    <button class="tool-btn primary-btn" id="tbReg" title="配准对比 F">⭐ 配准对比</button>
+    <button class="tool-btn primary-btn" id="tbReg" title="配准（层面 / 解剖结构 / 病灶）F">⭐ 配准 ▾</button>
     <button class="tool-btn" id="tbTrend" title="时序量化"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 20h18M6 20v-6m4 6v-9m4 9V8m4 12V5"/></svg>量化</button>
     <button class="tool-btn" id="tbSave" title="保存报告 Ctrl+S"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h14v18l-7-4-7 4V3z"/></svg>保存</button>
     <button class="tool-btn" title="导出"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 15V4m0 0L7 9m5-5l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>导出</button>
     <div class="sep"></div>
     <button class="tool-btn" style="color:#8A97A8" onclick="backToList()">← 返回列表</button>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-      <span class="mode-tag" id="regModeTag">⭐ 配准对比模式 · 金色框为基准序列</span>
+      <span class="mode-tag" id="regModeTag">⭐ 病灶配准（第一期）· 金色框为基准序列</span>
       <span class="badge" id="linkBadge" style="display:none;color:var(--ai);border-color:rgba(0,200,150,.4)">🔗 联动标注</span>
       <span class="badge" id="modeBadge">2D · 轴位</span>
     </div>
@@ -425,10 +449,31 @@ body.no-anim *{transition:none!important;animation:none!important}
       </div>
       <div class="grid-area">
         <div id="viewGrid"></div>
+        <!-- 配准维度选择（点击「⭐ 配准」弹出） -->
+        <div class="reg-menu" id="regMenu">
+          <div class="rm-head">⭐ 配准维度选择<span class="x" onclick="closeRegMenu()">×</span></div>
+          <div class="rm-item" data-dim="slice" onclick="pickRegDim('slice')">
+            <span class="ri-ic">▤</span>
+            <span class="ri-tx"><span class="ri-nm">层面配准 <span class="phase-tag p2">第二期</span></span>
+            <span class="ri-ds">以呼吸相位 / 体位导致的层面位移为对象，逐层对齐同一解剖层面</span></span>
+          </div>
+          <div class="rm-item" data-dim="anat" onclick="pickRegDim('anat')">
+            <span class="ri-ic">🫀</span>
+            <span class="ri-tx"><span class="ri-nm">解剖结构配准 <span class="phase-tag p2">第二期</span></span>
+            <span class="ri-ds">以气管隆突、脊柱、肋骨等解剖标志为基准，完成结构级配准</span></span>
+          </div>
+          <div class="rm-item on" data-dim="lesion" onclick="pickRegDim('lesion')">
+            <span class="ri-ic">⭐</span>
+            <span class="ri-tx"><span class="ri-nm">病灶配准 <span class="phase-tag p1">第一期 · 已实现</span></span>
+            <span class="ri-ds">以病灶家族为中心对齐，跨时段追踪同一病灶的形态与量化变化</span></span>
+          </div>
+          <div class="rm-foot"><span>第一期仅实现病灶配准；另两个维度已预留入口</span><button onclick="exitReg()">退出配准</button></div>
+        </div>
         <div class="reg-panel" id="regPanel">
-          <div class="rp-head">⭐ 配准对比 · 量化指标</div>
+          <div class="rp-head" id="regHead">⭐ 配准 · 量化指标</div>
+          <div class="rp-dim" id="regDimLine"></div>
           <div class="rp-body" id="regBody"></div>
-          <div class="rp-foot">拖拽新序列仅可替换非基准序列 · 点「配准对比」退出</div>
+          <div class="rp-foot" id="regFoot">拖拽新序列仅可替换非基准序列 · 点「⭐ 配准」切换维度 / 退出</div>
         </div>
         <div class="trend-panel" id="trendPanel">
           <div class="tp-head"><span>📈 病灶量化趋势 · 目标家族</span><button class="close-btn" onclick="toggleTrend(false)">✕</button></div>
@@ -494,10 +539,12 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 /* ---------- 患者 / 检查 模拟数据 ---------- */
 const PATIENTS = [
   {pid:'P2784', name:'何婷', sex:'女', age:31, exams:[
+    {eid:'E20260', date:'2026-09-02', type:'CT', series:4},
     {eid:'E14037', date:'2026-05-11', type:'CT', series:3},
     {eid:'E41627', date:'2025-12-02', type:'CT', series:2},
     {eid:'E24192', date:'2025-06-18', type:'CT', series:2},
-    {eid:'E21638', date:'2025-01-07', type:'CT', series:2}
+    {eid:'E21638', date:'2025-01-07', type:'CT', series:2},
+    {eid:'E17904', date:'2024-08-15', type:'CT', series:2}
   ]},
   {pid:'P2963', name:'高平玲', sex:'女', age:27, exams:[
     {eid:'E40222', date:'2026-04-23', type:'CT', series:2},
@@ -516,23 +563,41 @@ const PATIENTS = [
     {eid:'E77701', date:'2026-06-03', type:'CT', series:3}
   ]}
 ];
-/* 选中患者 = 何婷：5 个时点随访 肺肿物（含序列与病灶家族） */
+/* 选中患者 = 何婷：6 个时段随访 肺肿物（含序列与病灶家族） */
 const CURRENT = {pid:'P2784', name:'何婷', sex:'女', age:31};
 
-/* 检查节点（时间线，倒序展示，第0=最新） */
+/* 检查节点（时间线，倒序展示，第0=最新）—— 共 6 个时段 */
 const EXAMS = [
-  {eid:'E14037', label:'随访3', date:'2026-05-11'},
-  {eid:'E41627', label:'随访2', date:'2025-12-02'},
-  {eid:'E24192', label:'随访1', date:'2025-06-18'},
-  {eid:'E21638', label:'首诊',  date:'2025-01-07'}
+  {eid:'E20260', label:'随访4',  date:'2026-09-02'},
+  {eid:'E14037', label:'随访3',  date:'2026-05-11'},
+  {eid:'E41627', label:'随访2',  date:'2025-12-02'},
+  {eid:'E24192', label:'随访1',  date:'2025-06-18'},
+  {eid:'E21638', label:'首诊',   date:'2025-01-07'},
+  {eid:'E17904', label:'外院既往', date:'2024-08-15'}
 ];
-/* 序列：平扫/增强 各 2 序列 */
+/* 序列：每个时段多个序列（平扫肺窗/纵隔窗 · 增强动脉/静脉期 · 外院胶片） */
 const SERIES = [
-  {id:'s1', exam:0, name:'序列1 · 胸部平扫', win:'LUNG', slices:60},
-  {id:'s2', exam:0, name:'序列2 · 胸部增强', win:'MEDI', slices:60},
-  {id:'s3', exam:1, name:'序列3 · 胸部平扫', win:'LUNG', slices:58},
-  {id:'s4', exam:2, name:'序列4 · 胸部平扫', win:'LUNG', slices:56},
-  {id:'s5', exam:3, name:'序列5 · 胸部平扫', win:'LUNG', slices:52}
+  /* 随访4 · 2026-09-02（最新）—— 4 个序列 */
+  {id:'s1',  exam:0, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'1.25mm', slices:64},
+  {id:'s2',  exam:0, name:'序列2 · 胸部平扫（纵隔窗）', win:'MEDI', type:'平扫', thick:'1.25mm', slices:64},
+  {id:'s3',  exam:0, name:'序列3 · 胸部增强（动脉期）', win:'MEDI', type:'增强', thick:'1.25mm', slices:62},
+  {id:'s4',  exam:0, name:'序列4 · 胸部增强（静脉期）', win:'MEDI', type:'增强', thick:'1.25mm', slices:62},
+  /* 随访3 · 2026-05-11 —— 3 个序列 */
+  {id:'s5',  exam:1, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'1.25mm', slices:60},
+  {id:'s6',  exam:1, name:'序列2 · 胸部平扫（纵隔窗）', win:'MEDI', type:'平扫', thick:'1.25mm', slices:60},
+  {id:'s7',  exam:1, name:'序列3 · 胸部增强（静脉期）', win:'MEDI', type:'增强', thick:'1.25mm', slices:60},
+  /* 随访2 · 2025-12-02 —— 2 个序列 */
+  {id:'s8',  exam:2, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'1.5mm',  slices:58},
+  {id:'s9',  exam:2, name:'序列2 · 胸部增强（静脉期）', win:'MEDI', type:'增强', thick:'1.5mm',  slices:58},
+  /* 随访1 · 2025-06-18 —— 2 个序列 */
+  {id:'s10', exam:3, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'1.5mm',  slices:56},
+  {id:'s11', exam:3, name:'序列2 · 胸部平扫（纵隔窗）', win:'MEDI', type:'平扫', thick:'1.5mm',  slices:56},
+  /* 首诊 · 2025-01-07 —— 2 个序列 */
+  {id:'s12', exam:4, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'2mm',    slices:52},
+  {id:'s13', exam:4, name:'序列2 · 胸部平扫（纵隔窗）', win:'MEDI', type:'平扫', thick:'2mm',    slices:52},
+  /* 外院既往 · 2024-08-15 —— 2 个序列（外院胶片扫描） */
+  {id:'s14', exam:5, name:'序列1 · 胸部平扫（肺窗·外院）',   win:'LUNG', type:'外院', thick:'5mm', slices:48},
+  {id:'s15', exam:5, name:'序列2 · 胸部平扫（纵隔窗·外院）', win:'MEDI', type:'外院', thick:'5mm', slices:48}
 ];
 /* 病灶家族：lesion id 关联跨时点同一病灶 */
 const LESIONS = [
@@ -542,13 +607,33 @@ const LESIONS = [
 ];
 /* 各序列当前时间点：各病灶的量化指标（体积 cm³ 随随访时间变化） */
 const FOLLOWUP = {
-  's1':{F001:{vol:3.42,dia:18.7,den:38}, F002:{vol:0.86,dia:12.1,den:-520}, F003:{vol:0.07,dia:5.0,den:24}},
-  's2':{F001:{vol:3.40,dia:18.6,den:42}, F002:{vol:0.85,dia:12.0,den:-518}, F003:{vol:0.07,dia:5.0,den:25}},
-  's3':{F001:{vol:2.95,dia:17.6,den:40}, F002:{vol:0.92,dia:12.4,den:-530}, F003:{vol:0.07,dia:5.0,den:23}},
-  's4':{F001:{vol:2.10,dia:15.8,den:35}, F002:{vol:1.05,dia:13.0,den:-545}, F003:{vol:0.06,dia:4.8,den:22}},
-  's5':{F001:{vol:1.45,dia:13.9,den:33}, F002:{vol:1.20,dia:13.6,den:-560}, F003:{vol:null,dia:null,den:null}}
+  /* 随访4 · 2026-09-02（最新）—— F-003 已消失 */
+  's1' :{F001:{vol:4.05,dia:19.8,den:38}, F002:{vol:0.82,dia:11.9,den:-525}, F003:{vol:null,dia:null,den:null}},
+  's2' :{F001:{vol:4.05,dia:19.8,den:39}, F002:{vol:0.82,dia:11.9,den:-523}, F003:{vol:null,dia:null,den:null}},
+  's3' :{F001:{vol:4.06,dia:19.9,den:58}, F002:{vol:0.83,dia:12.0,den:-480}, F003:{vol:null,dia:null,den:null}},
+  's4' :{F001:{vol:4.06,dia:19.9,den:62}, F002:{vol:0.83,dia:12.0,den:-470}, F003:{vol:null,dia:null,den:null}},
+  /* 随访3 · 2026-05-11 */
+  's5' :{F001:{vol:3.42,dia:18.7,den:38}, F002:{vol:0.86,dia:12.1,den:-520}, F003:{vol:0.07,dia:5.0,den:24}},
+  's6' :{F001:{vol:3.42,dia:18.7,den:39}, F002:{vol:0.86,dia:12.1,den:-518}, F003:{vol:0.07,dia:5.0,den:24}},
+  's7' :{F001:{vol:3.43,dia:18.8,den:60}, F002:{vol:0.87,dia:12.2,den:-472}, F003:{vol:0.07,dia:5.0,den:26}},
+  /* 随访2 · 2025-12-02 */
+  's8' :{F001:{vol:2.95,dia:17.6,den:40}, F002:{vol:0.92,dia:12.4,den:-530}, F003:{vol:0.07,dia:5.0,den:23}},
+  's9' :{F001:{vol:2.96,dia:17.7,den:58}, F002:{vol:0.93,dia:12.4,den:-488}, F003:{vol:0.07,dia:5.0,den:25}},
+  /* 随访1 · 2025-06-18 */
+  's10':{F001:{vol:2.10,dia:15.8,den:35}, F002:{vol:1.05,dia:13.0,den:-545}, F003:{vol:0.06,dia:4.8,den:22}},
+  's11':{F001:{vol:2.10,dia:15.8,den:36}, F002:{vol:1.05,dia:13.0,den:-543}, F003:{vol:0.06,dia:4.8,den:22}},
+  /* 首诊 · 2025-01-07 */
+  's12':{F001:{vol:1.45,dia:13.9,den:33}, F002:{vol:1.20,dia:13.6,den:-560}, F003:{vol:0.07,dia:5.0,den:24}},
+  's13':{F001:{vol:1.45,dia:13.9,den:34}, F002:{vol:1.20,dia:13.6,den:-558}, F003:{vol:0.07,dia:5.0,den:24}},
+  /* 外院既往 · 2024-08-15 */
+  's14':{F001:{vol:1.05,dia:12.6,den:32}, F002:{vol:1.35,dia:14.2,den:-570}, F003:{vol:0.08,dia:5.2,den:25}},
+  's15':{F001:{vol:1.05,dia:12.6,den:33}, F002:{vol:1.35,dia:14.2,den:-568}, F003:{vol:0.08,dia:5.2,den:25}}
 };
-const SERIES_EXAM = s => EXAMS.find(e=>e.eid===SERIES.find(x=>x.id===s).eid)?EXAMS.find(e=>e.eid===SERIES.find(x=>x.id===s).eid):EXAMS[0];
+/* 基准 / 对比序列（数据驱动，避免散落硬编码） */
+const BASE_SID='s1';        // 最新时段 · 平扫肺窗 → 配准基准
+const FIRST_SID='s12';      // 首诊 · 平扫肺窗
+const EARLIEST_SID='s14';   // 外院既往 · 平扫肺窗
+const examOf = sid => { const s=SERIES.find(x=>x.id===sid); return s?EXAMS[s.exam]:(EXAMS[0]||{label:'—',date:''}); };
 
 /* ---------- 状态 ---------- */
 let state = {
@@ -557,7 +642,7 @@ let state = {
   wins:[],                // 各窗口 {sid, slice, ww, wl, zoom, panx, pany, mode:'view'|'mark', lesions:[]}
   tool:'none',            // wl|pan|zoom|measure|mark
   activeLesion:null,      // 当前选中病灶 id（家族）
-  regMode:false, baseSid:'s1',
+  regMode:false, baseSid:BASE_SID, regDim:null,   // regDim: slice|anat|lesion（第一期仅 lesion 可用）
   linkMode:false,
   trendOpen:false,
   wlPreset:'LUNG',
@@ -776,11 +861,12 @@ function mkWin(sid){
 }
 /* ---------- 阅片工作站初始化 ---------- */
 function initViewer(){
-  // 默认窗口：平扫最新序列 s1 + 增强 s2（1x2 对比）
+  // 默认窗口：最新时段（随访4）肺窗 s1 + 纵隔窗 s2（1x2 对比）
   state.layout='l1x2';
   state.regMode=false; state.trendOpen=false; state.linkMode=false;
-  state.baseSid='s1';
-  state.wins=[mkWin('s1'),mkWin('s2')];
+  state.regDim=null;
+  state.baseSid=BASE_SID;
+  state.wins=[mkWin(BASE_SID),mkWin('s2')];
   state.tool='none';
   $('#vtPatient').innerHTML=`<span class="pt-nm">${CURRENT.name}</span><span class="pt-meta">${CURRENT.sex} ${CURRENT.age}岁 · ${CURRENT.pid} · 肺肿物随访</span>`;
   $('#pidInfo').textContent=CURRENT.pid;
@@ -821,20 +907,21 @@ function addWindowFromList(){
 /* ---------- 序列栏 ---------- */
 function renderSeries(){
   const list=$('#seriesList'); list.innerHTML='';
+  $('#seriesHint').textContent=EXAMS.length+' 时段 / '+SERIES.length+' 序列';
   // 按检查日期分组（EXAMS 倒序）
   EXAMS.forEach((ex,ei)=>{
     const g=document.createElement('div'); g.className='series-date-group';
     const items=SERIES.filter(s=>s.exam===ei);
     if(!items.length) return;
     const dt=ex.date.split('-');
-    g.innerHTML=`<div class="sd-head ${ei===0?'open':''}" onclick="this.classList.toggle('open');const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'':'none'"><span class="caret">▶</span><span>${ex.label} · ${ex.date}</span><span class="cnt">${items.length}</span></div>`;
+    g.innerHTML=`<div class="sd-head ${ei===0?'open':''}" onclick="this.classList.toggle('open');const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'':'none'"><span class="caret">▶</span><span class="tno">T${EXAMS.length-ei}</span><span>${ex.label} · ${ex.date}</span><span class="cnt">${items.length} 序列</span></div>`;
     const wrap=document.createElement('div'); wrap.className='sd-items'; if(ei!==0) wrap.style.display='none';
     items.forEach(s=>{
       const item=document.createElement('div'); item.className='series-item'+(state.wins[0]&&state.wins[0].sid===s.id?' active':'');
       item.draggable=true;
       item.addEventListener('dragstart',ev=>{ ev.dataTransfer.setData('text/sid',s.id); ev.dataTransfer.effectAllowed='copy'; });
       item.innerHTML=`<div class="series-thumb"><canvas data-sid="${s.id}"></canvas></div>
-        <div class="si-info"><div class="si-name">${s.name}</div><div class="si-meta">${s.win==='LUNG'?'肺窗':'纵隔窗'} · ${s.slices}层</div><div class="si-time">${ex.date}</div></div>`;
+        <div class="si-info"><div class="si-name">${s.name}</div><div class="si-meta"><span class="stype">${s.type}</span> · ${s.win==='LUNG'?'肺窗':'纵隔窗'} · ${s.thick} · ${s.slices}层</div><div class="si-time">${ex.date}</div></div>`;
       item.addEventListener('click',ev=>{
         ev.stopPropagation();
         if(state.regMode){
@@ -1190,15 +1277,13 @@ function showLesionPop(lid, wi){
   $('#lesionPop').classList.add('show');
   $('#lpTitle').textContent=L.label;
   const pop=$('#lesionPop');
-  // 定位到病灶所在窗口：有病灶且 slice 最近的
-  const s1=SERIES.find(s=>s.id==='s1');
   $('#lpBody').innerHTML=`
     <div><b style="color:#FFD9D9">${L.desc}</b></div>
     <div style="margin-top:6px;font-size:10.5px;color:var(--muted)">AI 结构化描述 · 基于核心定义表生成 · 点击报告高亮文字可定位影像</div>`;
-  // 量化 chips：当前序列 + 家族跨时点对比（s5首诊 -> s1最新）
+  // 量化 chips：最新时段 + 家族跨时段对比（首诊 → 最新）
   const q=$('#lpQuant'); q.innerHTML='';
-  const ff=FOLLOWUP.s1[L.fid]; const ff0=FOLLOWUP.s5[L.fid];
-  if(ff){
+  const ff=FOLLOWUP[BASE_SID]&&FOLLOWUP[BASE_SID][L.fid]; const ff0=FOLLOWUP[FIRST_SID]&&FOLLOWUP[FIRST_SID][L.fid];
+  if(ff&&ff.vol!=null){
     const chips=[
       {k:'体积', v:ff.vol+' cm³'},
       {k:'最大径', v:ff.dia+' mm'},
@@ -1212,9 +1297,13 @@ function showLesionPop(lid, wi){
     if(ff0&&ff0.vol){
       const delta=((ff.vol-ff0.vol)/ff0.vol*100);
       const el=document.createElement('div'); el.className='quant-chip';
-      el.innerHTML=`<span class="qk">较首诊变化</span><span class="qv ${delta>0?'up':'down'}">${delta>0?'+':''}${delta.toFixed(0)}%</span>`;
+      el.innerHTML=`<span class="qk">较首诊</span><span class="qv ${delta>0?'up':'down'}">${delta>0?'+':''}${delta.toFixed(0)}%</span>`;
       q.appendChild(el);
     }
+  }else{
+    const el=document.createElement('div'); el.className='quant-chip';
+    el.innerHTML=`<span class="qk">最新时段</span><span class="qv down">该病灶已消失</span>`;
+    q.appendChild(el);
   }
   updateLesionNav();
 }
@@ -1253,7 +1342,7 @@ function flashLesion(lid){
 function renderReport(){
   $('#repPt').innerHTML=`
     <span><b>姓名</b> ${CURRENT.name}</span><span><b>性别/年龄</b> ${CURRENT.sex}/${CURRENT.age}岁</span>
-    <span><b>患者ID</b> ${CURRENT.pid}</span><span><b>检查日期</b> 2026-05-11（随访3）</span>
+    <span><b>患者ID</b> ${CURRENT.pid}</span><span><b>检查日期</b> 2026-09-02（随访4）</span>
     <span><b>检查类型</b> CT 胸部平扫+增强</span><span><b>申请科室</b> 肿瘤内科</span>`;
   const find=$('#repFindings'); find.innerHTML='';
   const segs=[
@@ -1265,9 +1354,9 @@ function renderReport(){
   // 影像所见：主文本 + 病灶文本（可点击）
   const parts=[];
   parts.push('<span class="seg">胸部扫描体位良好。双侧胸廓对称，气管居中。纵隔、肺门区未见明显肿大淋巴结。心脏及大血管形态未见异常。</span>');
-  parts.push('<span class="seg"><mark data-les="F001">左肺上叶可见类圆形软组织密度肿块影</mark><span class="ima" data-les="F001">IMA 44</span>，密度欠均匀，边界清晰，大小约 <b style="color:#fff">23×18 mm</b>，病灶呈分叶状，边缘可见短毛刺，临近胸膜凹陷。较前次随访（2025-12-02，约 18×16 mm）<span style="color:#FF9F43">增大</span>。</span>');
-  parts.push('<span class="seg"><mark data-les="F002" class="ai">右肺中叶可见斑片状磨玻璃密度影</mark><span class="ima" data-les="F002">IMA 52</span>，边界清晰，其内可见空泡征。较前无明显变化。</span>');
-  parts.push('<span class="seg"><mark data-les="F003" class="ai">左肺下叶可见小结节影</mark><span class="ima" data-les="F003">IMA 15</span>，密度均匀，直径约 5 mm。较前无明显变化。</span>');
+  parts.push('<span class="seg"><mark data-les="F001">左肺上叶可见类圆形软组织密度肿块影</mark><span class="ima" data-les="F001">IMA 44</span>，密度欠均匀，边界清晰，最大径约 <b style="color:#fff">19.8 mm</b>，病灶呈分叶状，边缘可见短毛刺，临近胸膜凹陷。较前次随访（2026-05-11，约 18.7 mm）<span style="color:#FF9F43">增大</span>。</span>');
+  parts.push('<span class="seg"><mark data-les="F002" class="ai">右肺中叶可见斑片状磨玻璃密度影</mark><span class="ima" data-les="F002">IMA 52</span>，边界清晰，其内可见空泡征。较前略缩小。</span>');
+  parts.push('<span class="seg"><mark data-les="F003" class="ai">左肺下叶小结节</mark><span class="ima" data-les="F003">IMA 15</span>，原直径约 5 mm，本次随访未见显示（<span style="color:#00C896">已消失</span>）。</span>');
   find.innerHTML=parts.join('');
   // 绑定点击
   $$('#repFindings mark,#repFindings .ima').forEach(el=>{
@@ -1275,7 +1364,7 @@ function renderReport(){
     el.title='点击定位至影像病灶';
   });
   $('#repConclusion').innerHTML=`<span class="seg">1. 左肺上叶占位性病变，较前次随访增大，考虑周围型肺癌可能，建议结合临床进一步检查。 <span class="ima">IMA 44</span></span><span class="seg">2. 右肺中叶磨玻璃结节、左肺下叶小结节，建议继续随访观察。</span>`;
-  $('#repPlus').innerHTML=`<span class="seg" style="color:#B8F5E0">· 医生补充标注：左肺上叶病灶 2026-05-11 测量 23×18mm（AI 建议 22.9×17.8mm，一致）</span><span class="seg" style="color:#B8F5E0">· 病灶家族 F-001 跨 4 个随访时点已关联（首诊→随访3）</span>`;
+  $('#repPlus').innerHTML=`<span class="seg" style="color:#B8F5E0">· 医生补充标注：左肺上叶病灶 2026-09-02 测量 19.8mm（AI 建议 19.9×19.6mm，一致）</span><span class="seg" style="color:#B8F5E0">· 病灶家族 F-001 跨 6 个时段已关联（外院既往→随访4）</span>`;
   updateLesionNav();
 }
 function aiRefresh(){
@@ -1327,44 +1416,91 @@ wlRange.addEventListener('input',()=>{
   $('#wlVal').textContent='WW:'+ww+' WL:'+(ww>700?-600:40);
   drawAll();
 });
-/* 配准对比 */
-$('#tbReg').addEventListener('click',toggleReg);
-function toggleReg(){
-  // 需要 ≥2 序列
-  if(state.wins.length<2){
+/* ---------- 配准：三个维度（层面 / 解剖结构 / 病灶） ---------- */
+const REG_DIMS={
+  slice: {name:'层面配准',     icon:'▤',  phase:2, desc:'以呼吸相位 / 体位导致的层面位移为对象，逐层对齐同一解剖层面'},
+  anat:  {name:'解剖结构配准', icon:'🫀', phase:2, desc:'以气管隆突、脊柱、肋骨等解剖标志为基准，完成结构级配准'},
+  lesion:{name:'病灶配准',     icon:'⭐', phase:1, desc:'以病灶家族为中心对齐，跨时段追踪同一病灶的形态与量化变化'}
+};
+$('#tbReg').addEventListener('click',openRegMenu);
+function openRegMenu(){ $('#regMenu').classList.toggle('show'); }
+function closeRegMenu(){ $('#regMenu').classList.remove('show'); }
+function pickRegDim(dim){
+  closeRegMenu();
+  state.regDim=dim;
+  $$('#regMenu .rm-item').forEach(el=>el.classList.toggle('on',el.dataset.dim===dim));
+  const D=REG_DIMS[dim];
+  if(dim==='lesion'){
+    /* 第一期：病灶配准 —— 进入基准保护模式 */
+    if(state.wins.length<2){ addWindowFromList(); setLayout('l1x2'); }
+    state.regMode=true;
+    state.baseSid=BASE_SID;
+    if(!state.wins.find(w=>w.sid===BASE_SID)){ state.wins.unshift(mkWin(BASE_SID)); }
     if(state.wins.length<2) addWindowFromList();
-    setLayout('l1x2');
-  }
-  state.regMode=!state.regMode;
-  $('#tbReg').classList.toggle('active',state.regMode);
-  $('#regModeTag').classList.toggle('show',state.regMode);
-  if(state.regMode){
-    // 基准：检查时间最近的序列 = s1
-    state.baseSid='s1';
-    if(!state.wins.find(w=>w.sid==='s1')){ state.wins.unshift(mkWin('s1')); }
-    if(state.wins.length<2) addWindowFromList();
-    renderViewports();
-    updateRegPanel(true);
-    toast('配准对比模式：⭐金色窗口=基准序列（2026-05-11 最新），已自动完成多时点影像配准');
+    $('#tbReg').classList.add('active');
+    const bEx=examOf(BASE_SID);
+    $('#regModeTag').textContent=`⭐ 病灶配准（第一期）· 基准 ${bEx.label} ${bEx.date}`;
+    $('#regModeTag').classList.add('show');
+    renderViewports(); updateRegPanel(true);
+    toast(`已进入「病灶配准」：基于病灶家族自动对齐 ${EXAMS.length} 个时段，金色窗口为基准序列`);
   }else{
-    updateRegPanel(false);
-    renderViewports();
-    toast('已退出配准模式');
+    /* 第二期：层面配准 / 解剖结构配准 —— 界面预留入口 */
+    state.regMode=false;
+    $('#tbReg').classList.add('active');
+    $('#regModeTag').textContent=`${D.icon} ${D.name} · 第二期规划能力（本版预留入口）`;
+    $('#regModeTag').classList.add('show');
+    renderViewports(); updateRegPanel(true);
+    toast(`${D.name}为第二期规划能力，界面已预留入口 · 本版仅实现病灶配准`);
   }
+}
+function exitReg(){
+  state.regMode=false; state.regDim=null;
+  $('#tbReg').classList.remove('active');
+  $('#regModeTag').classList.remove('show');
+  $('#regPanel').classList.remove('show');
+  $$('#regMenu .rm-item').forEach(el=>el.classList.remove('on'));
+  renderViewports();
+  toast('已退出配准 · 回到普通阅片');
 }
 function updateRegPanel(show){
   $('#regPanel').classList.toggle('show',show);
   if(!show) return;
-  const b=$('#regBody'); b.innerHTML='';
-  // 基准 s1 vs 各对比序列
-  const others=state.wins.filter(w=>!isBase(w.sid));
-  const rows=[
-    ['F-001 体积差', '(vs 首诊) +136%','up'],
-    ['F-001 最大径', '+34.5%','up'],
-    ['配准误差', '0.8 mm',''],
-    ['图像相似度', 'Dice 0.94','']
-  ];
-  rows.forEach(r=>{ b.innerHTML+=`<div class="rp-row"><span class="rk">${r[0]}</span><span class="rv ${r[2]}">${r[1]}</span></div>`; });
+  const dim=state.regDim||'lesion';
+  const D=REG_DIMS[dim];
+  $('#regHead').innerHTML=`${D.icon} 配准 · ${D.name}<span class="phase-tag ${D.phase===1?'p1':'p2'}" style="margin-left:auto">${D.phase===1?'第一期 · 已实现':'第二期 · 规划中'}</span>`;
+  $('#regDimLine').textContent=D.desc;
+  const b=$('#regBody');
+  if(dim==='lesion'){
+    const base=FOLLOWUP[BASE_SID], first=FOLLOWUP[FIRST_SID], early=FOLLOWUP[EARLIEST_SID];
+    const bEx=examOf(BASE_SID), fEx=examOf(FIRST_SID), eEx=examOf(EARLIEST_SID);
+    const dv=(base.F001.vol-first.F001.vol)/first.F001.vol*100;
+    const dd=(base.F001.dia-first.F001.dia)/first.F001.dia*100;
+    const de=(base.F001.vol-early.F001.vol)/early.F001.vol*100;
+    const rows=[
+      ['配准基准', bEx.label+' · '+bEx.date, ''],
+      ['对比时段跨度', EXAMS.length+' 个时段 · '+SERIES.length+' 序列', ''],
+      ['F-001 体积差', 'vs '+fEx.label+'  '+(dv>0?'+':'')+dv.toFixed(0)+'%', dv>0?'up':'down'],
+      ['F-001 最大径', (dd>0?'+':'')+dd.toFixed(1)+'%', dd>0?'up':'down'],
+      ['F-001 较'+eEx.label, (de>0?'+':'')+de.toFixed(0)+'%', de>0?'up':'down'],
+      ['配准误差', '0.8 mm', ''],
+      ['图像相似度', 'Dice 0.94', '']
+    ];
+    b.innerHTML=rows.map(r=>`<div class="rp-row"><span class="rk">${r[0]}</span><span class="rv ${r[2]}">${r[1]}</span></div>`).join('');
+    $('#regFoot').textContent='拖拽新序列仅可替换非基准序列 · 点「⭐ 配准」切换维度 / 退出';
+  }else{
+    const plan = dim==='slice'
+      ? [['对齐对象','同一解剖层面的逐层对应（呼吸相位 / 体位差异）'],
+         ['关键指标','层面位移误差 (mm) · 层间距一致性'],
+         ['解决什么','呼吸不齐导致“看起来不是同一层”的读片困扰'],
+         ['交付计划','第二期 · 与 MPR 多平面重建联动']]
+      : [['对齐对象','气管隆突、脊柱、肋骨、胸壁等解剖标志'],
+         ['关键指标','标志点残差 (mm) · 结构重叠度 Dice'],
+         ['解决什么','整体解剖结构不对齐，为配准结果提供可解释的依据'],
+         ['交付计划','第二期 · 作为病灶配准的上游步骤']];
+    b.innerHTML=`<div class="rp-plan"><span class="phase-tag p2">第二期</span><span>「${D.name}」为第二期规划能力，本版界面仅预留入口与说明，暂不提供计算结果。</span></div>`+
+      plan.map(r=>`<div style="padding:7px 0;border-bottom:1px dashed var(--line)"><div style="color:var(--muted);font-size:10px;margin-bottom:2px">${r[0]}</div><div style="color:#C7D6E8;font-size:11px;line-height:1.6">${r[1]}</div></div>`).join('');
+    $('#regFoot').textContent='第一期仅实现病灶配准 · 切换维度请点「⭐ 配准」';
+  }
 }
 function replaceWindow(idx,sid){
   if(idx<0) return;
@@ -1379,29 +1515,40 @@ function toggleTrend(force){
   $('#trendPanel').classList.toggle('show',show);
   $('#tbTrend').classList.toggle('active',show);
   if(show){
-    const b=$('#trendBody'); b.innerHTML=`
+    const b=$('#trendBody');
+    /* 6 个时段（由早到晚），每个时段取该时段首个序列的量化值 */
+    const pts=EXAMS.map((e,idx)=>({ex:e,idx})).reverse();
+    const firstSeriesOf=i=>SERIES.find(s=>s.exam===i);
+    const volOf=(fid,i)=>{ const s=firstSeriesOf(i); const f=s&&FOLLOWUP[s.id]&&FOLLOWUP[s.id][fid]; return f?f.vol:null; };
+    const shortLab=l=>l.replace('随访','随').replace('外院既往','外院');
+    const S={F001:{n:'F-001 左肺上叶肿块',c:'#FF4D4F'},F002:{n:'F-002 磨玻璃结节',c:'#2A7FFF'}};
+    const vals=fid=>pts.map(p=>volOf(fid,p.idx));
+    const all=[...vals('F001'),...vals('F002')].filter(v=>v!=null);
+    const vmin=Math.min(...all)*0.9, vmax=Math.max(...all)*1.04;
+    const W=356,Hh=96,x0=26,x1=W-16,yT=14,yB=Hh-26;
+    const px=i=>x0+(x1-x0)*i/(pts.length-1), py=v=>yB-(v-vmin)/(vmax-vmin)*(yB-yT);
+    let svg=`<line x1="${x0}" y1="${yB}" x2="${x1}" y2="${yB}" stroke="#24344D"/><line x1="${x0}" y1="${yB}" x2="${x0}" y2="${yT}" stroke="#24344D"/>`;
+    Object.keys(S).forEach(fid=>{
+      const vs=vals(fid);
+      const poly=vs.map((v,i)=>px(i).toFixed(1)+','+(v==null?yB:py(v).toFixed(1))).join(' ');
+      svg+=`<polyline points="${poly}" fill="none" stroke="${S[fid].c}" stroke-width="2"/>`;
+      vs.forEach((v,i)=>{ if(v!=null) svg+=`<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3" fill="${S[fid].c}"/>`; });
+    });
+    pts.forEach((p,i)=>{ svg+=`<text x="${px(i).toFixed(1)}" y="${Hh-8}" font-size="8.5" fill="#8A97A8" text-anchor="middle">${shortLab(p.ex.label)}</text>`; });
+    svg+=`<text x="4" y="11" font-size="8" fill="#8A97A8">体积 cm³</text>`;
+    b.innerHTML=`
       <div class="tp-legend">
         <span><span class="sw" style="background:#FF4D4F"></span>F-001 左肺上叶肿块</span>
         <span><span class="sw" style="background:#2A7FFF"></span>F-002 磨玻璃结节</span>
       </div>
-      <svg viewBox="0 0 300 90" width="100%" height="90">
-        <line x1="0" y1="80" x2="300" y2="80" stroke="#24344D"/>
-        <line x1="0" y1="80" x2="0" y2="0" stroke="#24344D"/>
-        <polyline points="20,20 105,35 190,60 285,72" fill="none" stroke="#FF4D4F" stroke-width="2"/>
-        <polyline points="20,62 105,52 190,40 285,33" fill="none" stroke="#2A7FFF" stroke-width="2"/>
-        <circle cx="20" cy="20" r="3" fill="#FF4D4F"/><circle cx="105" cy="35" r="3" fill="#FF4D4F"/><circle cx="190" cy="60" r="3" fill="#FF4D4F"/><circle cx="285" cy="72" r="3" fill="#FF4D4F"/>
-        <text x="12" y="94" font-size="9" fill="#8A97A8">首诊 25-01</text>
-        <text x="95" y="94" font-size="9" fill="#8A97A8">随访1 25-06</text>
-        <text x="182" y="94" font-size="9" fill="#8A97A8">随访2 25-12</text>
-        <text x="272" y="94" font-size="9" fill="#8A97A8">随访3 26-05</text>
-        <text x="8" y="14" font-size="8" fill="#8A97A8">体积 cm³</text>
-      </svg>
+      <svg viewBox="0 0 ${W} ${Hh}" width="100%" height="${Hh}">${svg}</svg>
       <table class="tp-table">
-        <tr><th>家族</th><th>首诊</th><th>随访1</th><th>随访2</th><th>随访3</th></tr>
-        <tr class="family"><td>F-001 左肺上叶</td><td class="num">1.45</td><td class="num">2.10</td><td class="num">2.95</td><td class="num" style="color:#FF9F43">3.42 ▲</td></tr>
-        <tr><td>F-002 磨玻璃</td><td class="num">1.20</td><td class="num">1.05</td><td class="num">0.92</td><td class="num" style="color:#00C896">0.86 ▼</td></tr>
+        <tr><th>家族</th>${pts.map(p=>`<th>${shortLab(p.ex.label)}</th>`).join('')}</tr>
+        <tr class="family"><td>F-001 左肺上叶</td>${pts.map((p,i)=>{const v=vals('F001')[i];return `<td class="num"${i===pts.length-1?' style="color:#FF9F43"':''}>${v==null?'—':v.toFixed(2)}${i===pts.length-1?' ▲':''}</td>`;}).join('')}</tr>
+        <tr><td>F-002 磨玻璃</td>${pts.map((p,i)=>{const v=vals('F002')[i];return `<td class="num"${i===pts.length-1?' style="color:#00C896"':''}>${v==null?'—':v.toFixed(2)}${i===pts.length-1?' ▼':''}</td>`;}).join('')}</tr>
+        <tr><td>F-003 实性小结节</td>${pts.map((p,i)=>{const v=vals('F003')[i];return `<td class="num" style="color:#8A97A8">${v==null?'已消失':v.toFixed(2)}</td>`;}).join('')}</tr>
       </table>
-      <div style="font-size:10px;color:var(--muted);margin-top:8px">量化对比自动计算 · 大小/体积/密度变化量及百分比</div>`;
+      <div style="font-size:10px;color:var(--muted);margin-top:8px">跨 ${pts.length} 个时段自动关联 · 体积变化量与百分比自动计算 · 病灶家族跨时段对齐</div>`;
   }
 }
 /* 保存 */
@@ -1475,7 +1622,7 @@ document.addEventListener('keydown',e=>{
   if(k==='f2'){ e.preventDefault(); setLayout('l1x2'); }
   if(k==='f3'){ e.preventDefault(); setLayout('l2x1'); }
   if(k==='f4'){ e.preventDefault(); setLayout('l2'); }
-  if(k==='f'){ toggleReg(); }
+  if(k==='f'){ openRegMenu(); }
   if(k==='w'){ setTool(state.tool==='wl'?'none':'wl'); }
   if(k==='m'){ setTool(state.tool==='measure'?'none':'measure'); }
   if(k==='a'){ setTool(state.tool==='mark'?'none':'mark'); }
