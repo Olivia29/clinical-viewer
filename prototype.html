@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V2.0</title>
+<title>临床阅片器 · 交互原型 V2.1</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
@@ -528,7 +528,9 @@ body.no-anim *{transition:none!important;animation:none!important}
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V2.0
+   临床阅片器 · 交互原型 V2.1
+   新增：配准三维度选择（层面 / 解剖结构 / 病灶，第一期实现病灶配准）
+   新增：时空影像序列扩展为 6 时段 × 多序列（共 15 序列）
    模拟数据 + Canvas 合成 CT 影像 + 病灶时空对齐 / 图文联动 / 配准
    ============================================================ */
 'use strict';
@@ -1633,7 +1635,7 @@ document.addEventListener('keydown',e=>{
 });
 /* 初始 */
 renderList();
-console.log('临床阅片器原型 V2.0 已加载');
+console.log('临床阅片器原型 V2.1 已加载');
 </script>
 </body>
 </html>
