@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V2.1</title>
+<title>临床阅片器 · 交互原型 V2.2</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
@@ -416,7 +416,7 @@ body.no-anim *{transition:none!important;animation:none!important}
     <div class="sep"></div>
     <button class="tool-btn" style="color:#8A97A8" onclick="backToList()">← 返回列表</button>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-      <span class="mode-tag" id="regModeTag">⭐ 病灶配准（第一期）· 金色框为基准序列</span>
+      <span class="mode-tag" id="regModeTag">🫀 解剖结构配准（第一期）· 金色框为基准序列</span>
       <span class="badge" id="linkBadge" style="display:none;color:var(--ai);border-color:rgba(0,200,150,.4)">🔗 联动标注</span>
       <span class="badge" id="modeBadge">2D · 轴位</span>
     </div>
@@ -455,15 +455,15 @@ body.no-anim *{transition:none!important;animation:none!important}
             <span class="ri-ic">▤</span>
             <span class="ri-tx"><span class="ri-nm">层面配准 <span class="phase-tag p2">第二期</span></span></span>
           </div>
-          <div class="rm-item" data-dim="anat" onclick="pickRegDim('anat')">
+          <div class="rm-item on" data-dim="anat" onclick="pickRegDim('anat')">
             <span class="ri-ic">🫀</span>
-            <span class="ri-tx"><span class="ri-nm">解剖结构配准 <span class="phase-tag p2">第二期</span></span></span>
+            <span class="ri-tx"><span class="ri-nm">解剖结构配准 <span class="phase-tag p1">第一期</span></span></span>
           </div>
-          <div class="rm-item on" data-dim="lesion" onclick="pickRegDim('lesion')">
+          <div class="rm-item" data-dim="lesion" onclick="pickRegDim('lesion')">
             <span class="ri-ic">⭐</span>
-            <span class="ri-tx"><span class="ri-nm">病灶配准 <span class="phase-tag p1">第一期</span></span></span>
+            <span class="ri-tx"><span class="ri-nm">病灶配准 <span class="phase-tag p2">第二期</span></span></span>
           </div>
-          <div class="rm-foot"><span>第一期仅实现病灶配准；另两个维度已预留入口</span><button onclick="exitReg()">退出配准</button></div>
+          <div class="rm-foot"><span>第一期仅实现解剖结构配准；另两个维度已预留入口</span><button onclick="exitReg()">退出配准</button></div>
         </div>
         <div class="reg-panel" id="regPanel">
           <div class="rp-head" id="regHead">⭐ 配准 · 量化指标</div>
@@ -523,8 +523,8 @@ body.no-anim *{transition:none!important;animation:none!important}
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V2.1
-   新增：配准三维度选择（层面 / 解剖结构 / 病灶，第一期实现病灶配准）
+   临床阅片器 · 交互原型 V2.2
+   新增：配准三维度选择（第一期：解剖结构配准；第二期：层面配准、病灶配准）
    新增：时空影像序列扩展为 6 时段 × 多序列（共 15 序列）
    模拟数据 + Canvas 合成 CT 影像 + 病灶时空对齐 / 图文联动 / 配准
    ============================================================ */
@@ -639,7 +639,7 @@ let state = {
   wins:[],                // 各窗口 {sid, slice, ww, wl, zoom, panx, pany, mode:'view'|'mark', lesions:[]}
   tool:'none',            // wl|pan|zoom|measure|mark
   activeLesion:null,      // 当前选中病灶 id（家族）
-  regMode:false, baseSid:BASE_SID, regDim:null,   // regDim: slice|anat|lesion（第一期仅 lesion 可用）
+  regMode:false, baseSid:BASE_SID, regDim:null,   // regDim: slice|anat|lesion（第一期仅 anat 可用）
   linkMode:false,
   trendOpen:false,
   wlPreset:'LUNG',
@@ -1414,10 +1414,11 @@ wlRange.addEventListener('input',()=>{
   drawAll();
 });
 /* ---------- 配准：三个维度（层面 / 解剖结构 / 病灶） ---------- */
+/* 2026-09 领导决议：解剖结构配准提为第一期（当前实现），层面配准与病灶配准列为第二期 */
 const REG_DIMS={
   slice: {name:'层面配准',     icon:'▤',  phase:2},
-  anat:  {name:'解剖结构配准', icon:'🫀', phase:2},
-  lesion:{name:'病灶配准',     icon:'⭐', phase:1}
+  anat:  {name:'解剖结构配准', icon:'🫀', phase:1},
+  lesion:{name:'病灶配准',     icon:'⭐', phase:2}
 };
 $('#tbReg').addEventListener('click',openRegMenu);
 function openRegMenu(){ $('#regMenu').classList.toggle('show'); }
@@ -1427,8 +1428,8 @@ function pickRegDim(dim){
   state.regDim=dim;
   $$('#regMenu .rm-item').forEach(el=>el.classList.toggle('on',el.dataset.dim===dim));
   const D=REG_DIMS[dim];
-  if(dim==='lesion'){
-    /* 第一期：病灶配准 —— 进入基准保护模式 */
+  if(dim==='anat'){
+    /* 第一期：解剖结构配准 —— 进入基准保护模式 */
     if(state.wins.length<2){ addWindowFromList(); setLayout('l1x2'); }
     state.regMode=true;
     state.baseSid=BASE_SID;
@@ -1436,18 +1437,18 @@ function pickRegDim(dim){
     if(state.wins.length<2) addWindowFromList();
     $('#tbReg').classList.add('active');
     const bEx=examOf(BASE_SID);
-    $('#regModeTag').textContent=`⭐ 病灶配准（第一期）· 基准 ${bEx.label} ${bEx.date}`;
+    $('#regModeTag').textContent=`🫀 解剖结构配准（第一期）· 基准 ${bEx.label} ${bEx.date}`;
     $('#regModeTag').classList.add('show');
     renderViewports(); updateRegPanel(true);
-    toast(`已进入「病灶配准」：基于病灶家族自动对齐 ${EXAMS.length} 个时段，金色窗口为基准序列`);
+    toast(`已进入「解剖结构配准」：以肺 · 气管 · 脊柱 · 胸壁为参照自动对齐 ${EXAMS.length} 个时段，金色窗口为基准序列`);
   }else{
-    /* 第二期：层面配准 / 解剖结构配准 —— 界面预留入口 */
+    /* 第二期：层面配准 / 病灶配准 —— 界面预留入口 */
     state.regMode=false;
     $('#tbReg').classList.add('active');
     $('#regModeTag').textContent=`${D.icon} ${D.name} · 第二期规划能力（本版预留入口）`;
     $('#regModeTag').classList.add('show');
     renderViewports(); updateRegPanel(true);
-    toast(`${D.name}为第二期规划能力，界面已预留入口 · 本版仅实现病灶配准`);
+    toast(`${D.name}为第二期规划能力，界面已预留入口 · 本版仅实现解剖结构配准`);
   }
 }
 function exitReg(){
@@ -1462,40 +1463,37 @@ function exitReg(){
 function updateRegPanel(show){
   $('#regPanel').classList.toggle('show',show);
   if(!show) return;
-  const dim=state.regDim||'lesion';
+  const dim=state.regDim||'anat';
   const D=REG_DIMS[dim];
   $('#regHead').innerHTML=`${D.icon} 配准 · ${D.name}<span class="phase-tag ${D.phase===1?'p1':'p2'}" style="margin-left:auto">${D.phase===1?'第一期':'第二期 · 规划中'}</span>`;
   const b=$('#regBody');
-  if(dim==='lesion'){
-    const base=FOLLOWUP[BASE_SID], first=FOLLOWUP[FIRST_SID], early=FOLLOWUP[EARLIEST_SID];
-    const bEx=examOf(BASE_SID), fEx=examOf(FIRST_SID), eEx=examOf(EARLIEST_SID);
-    const dv=(base.F001.vol-first.F001.vol)/first.F001.vol*100;
-    const dd=(base.F001.dia-first.F001.dia)/first.F001.dia*100;
-    const de=(base.F001.vol-early.F001.vol)/early.F001.vol*100;
+  if(dim==='anat'){
+    /* 第一期：解剖结构配准 —— 输出空间变换 + 可核查的质量指标 */
+    const bEx=examOf(BASE_SID);
     const rows=[
       ['配准基准', bEx.label+' · '+bEx.date, ''],
-      ['对比时段跨度', EXAMS.length+' 个时段 · '+SERIES.length+' 序列', ''],
-      ['F-001 体积差', 'vs '+fEx.label+'  '+(dv>0?'+':'')+dv.toFixed(0)+'%', dv>0?'up':'down'],
-      ['F-001 最大径', (dd>0?'+':'')+dd.toFixed(1)+'%', dd>0?'up':'down'],
-      ['F-001 较'+eEx.label, (de>0?'+':'')+de.toFixed(0)+'%', de>0?'up':'down'],
-      ['配准误差', '0.8 mm', ''],
-      ['图像相似度', 'Dice 0.94', '']
+      ['对齐依据', '解剖结构（肺 · 气管 · 脊柱 · 胸壁）', ''],
+      ['标志点残差 RMSE', '2.1 mm', ''],
+      ['目标配准误差 TRE', '1.9 mm', ''],
+      ['结构重叠 Dice', '肺 0.94 · 肺叶段 0.87', ''],
+      ['有效配准范围', '96 %', ''],
+      ['质量分级', '优 · 可用于病灶配准与量化', '']
     ];
     b.innerHTML=rows.map(r=>`<div class="rp-row"><span class="rk">${r[0]}</span><span class="rv ${r[2]}">${r[1]}</span></div>`).join('');
-    $('#regFoot').textContent='拖拽新序列仅可替换非基准序列 · 点「⭐ 配准」切换维度 / 退出';
+    $('#regFoot').textContent='结果以虚拟序列存在 · 原始影像只读 · 拖拽可更换参与配准的序列（更换基准需确认）';
   }else{
     const plan = dim==='slice'
       ? [['对齐对象','同一解剖层面的逐层对应（呼吸相位 / 体位差异）'],
          ['关键指标','层面位移误差 (mm) · 层间距一致性'],
          ['解决什么','呼吸不齐导致“看起来不是同一层”的读片困扰'],
          ['交付计划','第二期 · 与 MPR 多平面重建联动']]
-      : [['对齐对象','气管隆突、脊柱、肋骨、胸壁等解剖标志'],
-         ['关键指标','标志点残差 (mm) · 结构重叠度 Dice'],
-         ['解决什么','整体解剖结构不对齐，为配准结果提供可解释的依据'],
-         ['交付计划','第二期 · 作为病灶配准的上游步骤']];
+      : [['对齐对象','病灶家族（跨时点同一病灶）'],
+         ['关键指标','病灶体积 / 径线变化量 · 病灶级关联准确率'],
+         ['解决什么','在解剖结构对齐的基础上做病灶级精细配准与量化'],
+         ['交付计划','第二期 · 依赖解剖结构配准（第一期）先行']];
     b.innerHTML=`<div class="rp-plan"><span class="phase-tag p2">第二期</span><span>「${D.name}」为第二期规划能力，本版界面仅预留入口与说明，暂不提供计算结果。</span></div>`+
       plan.map(r=>`<div style="padding:7px 0;border-bottom:1px dashed var(--line)"><div style="color:var(--muted);font-size:10px;margin-bottom:2px">${r[0]}</div><div style="color:#C7D6E8;font-size:11px;line-height:1.6">${r[1]}</div></div>`).join('');
-    $('#regFoot').textContent='第一期仅实现病灶配准 · 切换维度请点「⭐ 配准」';
+    $('#regFoot').textContent='第一期仅实现解剖结构配准 · 切换维度请点「⭐ 配准」';
   }
 }
 function replaceWindow(idx,sid){
@@ -1629,7 +1627,7 @@ document.addEventListener('keydown',e=>{
 });
 /* 初始 */
 renderList();
-console.log('临床阅片器原型 V2.1 已加载');
+console.log('临床阅片器原型 V2.2 已加载');
 </script>
 </body>
 </html>
