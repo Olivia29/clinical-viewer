@@ -1,1633 +1,1465 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V2.2</title>
+<title>临床阅片器 · 交互原型 V3.0（对应需求文档 V2.1）</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
-  --text:#E0E6F0; --muted:#8A97A8; --accent:#2A7FFF; --accent2:#1890FF;
-  --ai:#00C896; --danger:#FF4D4F; --gold:#FFD700; --warn:#FF9F43;
-  --radius:8px;
+  --txt:#E6EEF8; --muted:#8FA3BF; --dim:#5E7488;
+  --blue:#2A7FFF; --ai:#00C896; --gold:#FFD700; --red:#FF5C5C; --orange:#FFA53C;
+  --txt2:#C7D6E8;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:var(--bg);color:var(--text);font-size:13px;overflow:hidden;height:100vh}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:var(--text)}
-input,select{font-family:inherit}
-::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#2A3B56;border-radius:4px}::-webkit-scrollbar-track{background:transparent}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--txt);
+  font-family:"Microsoft YaHei","微软雅黑","PingFang SC",system-ui,sans-serif;
+  font-size:13px; -webkit-font-smoothing:antialiased;
+}
+button,input,select{font-family:inherit}
+.page{display:none; height:100vh; flex-direction:column; overflow:hidden}
+.page.on{display:flex}
+/* ============ 通用 ============ */
+.btn{background:transparent; border:1px solid var(--line); color:var(--txt2); border-radius:6px;
+     padding:5px 11px; font-size:12px; cursor:pointer; transition:.15s}
+.btn:hover{border-color:var(--blue); color:#fff; background:rgba(42,127,255,.12)}
+.btn.on{background:rgba(42,127,255,.22); border-color:var(--blue); color:#fff; font-weight:700}
+.btn.ai.on{background:rgba(0,200,150,.2); border-color:var(--ai)}
+.btn.gold.on{background:rgba(255,215,0,.18); border-color:var(--gold); color:var(--gold)}
+.btn.sm{padding:3px 8px; font-size:11px}
+.badge{display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:2px 8px;
+       border-radius:10px; border:1px solid var(--line); color:var(--muted); white-space:nowrap}
+.badge.blue{color:#7FB4FF; border-color:rgba(42,127,255,.5); background:rgba(42,127,255,.1)}
+.badge.ai{color:var(--ai); border-color:rgba(0,200,150,.45); background:rgba(0,200,150,.1)}
+.badge.gold{color:var(--gold); border-color:rgba(255,215,0,.45); background:rgba(255,215,0,.09)}
+.badge.red{color:var(--red); border-color:rgba(255,92,92,.45); background:rgba(255,92,92,.1)}
+.badge.org{color:var(--orange); border-color:rgba(255,165,60,.45); background:rgba(255,165,60,.1)}
+.tag{display:inline-block; font-size:10px; padding:1px 6px; border-radius:8px;
+     background:rgba(143,163,191,.16); color:var(--muted); margin-right:3px}
+.tag.p1{background:rgba(255,215,0,.16); color:var(--gold)}
+.tag.p2{background:rgba(143,163,191,.14); color:#8093AD}
+.tag.acq{background:rgba(42,127,255,.16); color:#7FB4FF}
+.tag.enh{background:rgba(0,200,150,.14); color:var(--ai)}
+.mono{font-family:Consolas,"Courier New",monospace}
+.hint{font-size:11px; color:var(--muted); line-height:1.7}
+h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600;
+       margin:0 0 8px; padding-bottom:5px; border-bottom:1px solid var(--line)}
 
-/* ============ 通用页容器 ============ */
-.page{position:fixed;inset:0;display:none;flex-direction:column}
-.page.active{display:flex}
+/* ============ 登录 ============ */
+#pgLogin{align-items:center; justify-content:center;
+  background:radial-gradient(1100px 620px at 22% 12%, #14294A 0%, var(--bg) 62%)}
+.loginWrap{display:flex; gap:52px; align-items:center; max-width:1180px; padding:0 30px}
+.lgLeft{flex:1; min-width:340px}
+.lgLeft .logo{display:flex; align-items:center; gap:10px; color:var(--blue);
+              font-size:12px; letter-spacing:3px; margin-bottom:14px}
+.lgLeft .logo i{width:9px; height:9px; background:var(--ai); border-radius:50%; display:inline-block}
+.lgLeft h1{margin:0 0 6px; font-size:30px; letter-spacing:1px}
+.lgLeft .sub{color:var(--muted); font-size:13px; line-height:1.9}
+.lgLeft .sub b{color:var(--txt2)}
+.formCard{width:376px; background:var(--panel); border:1px solid var(--line);
+          border-radius:12px; padding:24px 24px 20px; box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.formCard h3{margin:0 0 16px; font-size:15px}
+.fld{margin-bottom:13px}
+.fld label{display:block; font-size:11px; color:var(--muted); margin-bottom:5px}
+.fld input{width:100%; background:var(--bg2); border:1px solid var(--line); border-radius:7px;
+           padding:9px 11px; color:var(--txt); font-size:13px; outline:none; transition:.15s}
+.fld input:focus{border-color:var(--blue); box-shadow:0 0 0 3px rgba(42,127,255,.15)}
+.fld .err{color:var(--red); font-size:11px; margin-top:4px; display:none}
+.fld.bad input{border-color:var(--red)}
+.fld.bad .err{display:block}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:shk .3s}
+.submit{width:100%; background:linear-gradient(90deg,var(--blue),#1E6BE0); border:0; color:#fff;
+        padding:10px; border-radius:7px; font-size:13.5px; font-weight:700; cursor:pointer; margin-top:5px}
+.submit:hover{filter:brightness(1.1)}
+.lgFoot{margin-top:14px; text-align:center; font-size:11px; color:var(--muted); line-height:1.8}
+.formBox{display:flex; flex-direction:column; gap:11px}
+.forms{display:flex; flex-direction:column; gap:9px; margin-top:2px}
+.fcard{border:1px solid var(--line); border-radius:9px; padding:10px 12px; cursor:pointer;
+       background:var(--bg2); transition:.15s; display:flex; gap:10px; align-items:flex-start}
+.fcard:hover{border-color:var(--blue)}
+.fcard.on{border-color:var(--ai); background:rgba(0,200,150,.07); box-shadow:0 0 0 1px rgba(0,200,150,.3)}
+.fcard .fk{font-size:11px; font-weight:700; color:var(--ai); min-width:52px}
+.fcard .ft{font-size:11.5px; color:var(--txt2); line-height:1.6}
+.fcard .fd{font-size:10.5px; color:var(--muted); margin-top:3px}
 
-/* ============ 登录页 ============ */
-#page-login{background:radial-gradient(ellipse at 20% 30%,#122A4A 0%,var(--bg) 55%),var(--bg);align-items:stretch;flex-direction:row}
-.login-brand{flex:1.5;display:flex;flex-direction:column;justify-content:center;padding:60px;position:relative;overflow:hidden}
-.login-brand::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(42,127,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(42,127,255,.05) 1px,transparent 1px);background-size:44px 44px}
-.login-icon{width:110px;height:110px;border-radius:24px;background:linear-gradient(135deg,var(--accent2),#00C896);display:flex;align-items:center;justify-content:center;margin-bottom:26px;position:relative;box-shadow:0 12px 40px rgba(24,144,255,.35)}
-.login-icon svg{width:58px;height:58px}
-.login-brand h1{font-size:38px;font-weight:700;letter-spacing:2px}
-.login-brand .sub{color:var(--muted);font-size:15px;margin-top:10px;letter-spacing:1px}
-.login-form{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;background:rgba(13,27,42,.6)}
-.form-card{width:400px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:38px 36px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-.form-card h2{font-size:22px;margin-bottom:6px;text-align:center}
-.form-card .tip{color:var(--muted);text-align:center;font-size:12px;margin-bottom:28px}
-.field{margin-bottom:18px}
-.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
-.input-wrap{position:relative}
-.input-wrap .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);display:flex}
-.input-wrap input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:11px 38px 11px 36px;color:var(--text);font-size:14px;outline:none;transition:border .2s}
-.input-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(42,127,255,.15)}
-.input-wrap .eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);padding:4px}
-.input-wrap .eye:hover{color:var(--text)}
-.input-wrap.err input{border-color:var(--danger);animation:shake .3s}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-.err-msg{color:var(--danger);font-size:11px;margin-top:5px;display:none}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;padding:11px 20px;font-size:14px;transition:all .15s;background:var(--panel2);border:1px solid var(--line)}
-.btn:hover{border-color:var(--accent);color:var(--text)}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-weight:600}
-.btn-primary:hover{filter:brightness(1.12);box-shadow:0 6px 18px rgba(42,127,255,.3)}
-.btn-primary:disabled{opacity:.6;cursor:wait}
-.btn-block{width:100%;margin-top:6px}
-.login-foot{color:var(--muted);font-size:11px;text-align:center;margin-top:26px;line-height:1.8}
+/* ============ 顶栏 ============ */
+.topbar{height:50px; background:var(--bg2); border-bottom:1px solid var(--line);
+        display:flex; align-items:center; gap:12px; padding:0 16px; flex-shrink:0}
+.topbar .brand{display:flex; align-items:center; gap:9px; font-weight:700; letter-spacing:1px}
+.topbar .brand i{width:8px;height:8px;background:var(--ai);border-radius:50%;display:inline-block}
+.topbar .sp{flex:1}
+.topbar .who{font-size:11.5px; color:var(--muted)}
+.topbar .who b{color:var(--txt2)}
 
-/* ============ 患者列表页 ============ */
-.app-header{height:52px;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;gap:14px;flex-shrink:0}
-.app-logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;letter-spacing:.5px}
-.app-logo .logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent2),#00C896);display:flex;align-items:center;justify-content:center}
-.app-logo .logo-mark svg{width:17px;height:17px}
-.app-header .hd-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.hd-user{display:flex;align-items:center;gap:8px;color:var(--muted)}
-.avatar{width:30px;height:30px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:600;font-size:12px}
-.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;background:var(--panel2);border:1px solid var(--line);color:var(--muted)}
-
-.page-body{flex:1;overflow:auto;padding:20px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px}
-.search-bar{display:flex;align-items:flex-end;gap:12px;padding:18px;flex-wrap:wrap}
-.search-bar .field{margin-bottom:0}
-.search-bar input,.search-bar select{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:9px 12px;color:var(--text);font-size:13px;outline:none}
-.search-bar input:focus,.search-bar select:focus{border-color:var(--accent)}
-.sb-item{display:flex;flex-direction:column;gap:5px}
-.sb-item label{color:var(--muted);font-size:11px}
-.sb-name{width:120px}.sb-id{width:120px}.sb-exam{width:130px}.sb-type{width:96px}
-.sb-date1{width:168px}.sb-date2{width:168px}
-.date-wrap{position:relative}
-.date-wrap .d-ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;z-index:1}
-.date-input{width:100%;background:var(--bg2)!important;border:1px solid var(--line)!important;border-radius:7px;padding:8px 8px 8px 30px!important;color:var(--text)!important;font-size:12.5px;outline:none;color-scheme:dark;min-height:36px;cursor:pointer}
-.date-input:hover{border-color:var(--accent)!important}
-.date-input:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(42,127,255,.15)!important}
-.date-input::-webkit-calendar-picker-indicator{filter:invert(.72);cursor:pointer;opacity:.9}
-.date-input::-webkit-calendar-picker-indicator:hover{filter:invert(.4)}
-.sb-actions{display:flex;gap:8px;margin-left:auto;align-items:center}
-.list-panel{margin-top:16px}
-.list-head,.list-row{display:grid;grid-template-columns:1.2fr .9fr .6fr 1.1fr 1.1fr .9fr;gap:10px;align-items:center;padding:10px 18px}
-.list-head{color:var(--muted);font-size:11px;border-bottom:1px solid var(--line);background:var(--bg2);border-radius:12px 12px 0 0;font-weight:600}
-.pt-group{border-bottom:1px solid var(--line)}
-.pt-group:last-child{border-bottom:none}
-.pt-head{display:grid;grid-template-columns:1.2fr .9fr .6fr 1.1fr 1.1fr .9fr;gap:10px;align-items:center;padding:12px 18px;background:rgba(42,127,255,.06);cursor:pointer;user-select:none;transition:background .15s}
-.pt-head:hover{background:rgba(42,127,255,.12)}
-.pt-head .name{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
-.pt-head .caret{color:var(--muted);font-size:10px;transition:transform .2s;display:inline-block}
-.pt-head.open .caret{transform:rotate(90deg)}
-.exam-row{display:grid;grid-template-columns:1.2fr .9fr .6fr 1.1fr 1.1fr .9fr;gap:10px;align-items:center;padding:8px 18px 8px 44px;border-top:1px dashed rgba(36,52,77,.6);font-size:12.5px;color:#C5CFDC}
-.exam-row:hover{background:var(--bg2)}
-.exam-row .op{display:flex;gap:8px;align-items:center}
-.modal-tag{font-size:10px;padding:1px 7px;border-radius:4px;background:rgba(42,127,255,.15);color:var(--accent2);border:1px solid rgba(42,127,255,.3)}
-.ct-tag{font-size:10px;padding:1px 7px;border-radius:4px;background:rgba(0,200,150,.12);color:var(--ai);border:1px solid rgba(0,200,150,.3)}
-.exam-count{color:var(--muted);font-size:11px}
-.footer-bar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--line)}
-.pager{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}
-.icon-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid var(--line);background:var(--bg2);color:var(--muted);font-size:13px}
-.icon-btn:hover{color:var(--text);border-color:var(--accent)}
-.loading-mask,.empty-state{display:none;text-align:center;padding:50px;color:var(--muted)}
-.loading-mask.show,.empty-state.show{display:block}
-.spinner{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* ============ 列表 ============ */
+#pgList{background:var(--bg); overflow:hidden}
+.listBody{flex:1; overflow:auto; padding:16px 18px 24px}
+.filters{background:var(--panel); border:1px solid var(--line); border-radius:10px;
+         padding:13px 15px; margin-bottom:14px}
+.frow{display:flex; gap:11px; flex-wrap:wrap; align-items:flex-end}
+.fldx{display:flex; flex-direction:column; gap:4px}
+.fldx label{font-size:10.5px; color:var(--muted)}
+.fldx input,.fldx select{background:var(--bg2); border:1px solid var(--line); border-radius:6px;
+        padding:6px 9px; color:var(--txt); font-size:12px; outline:none; min-width:124px}
+.fldx input:focus,.fldx select:focus{border-color:var(--blue)}
+/* 三级嵌套 */
+.pgroup{border:1px solid var(--line); border-radius:10px; margin-bottom:11px; overflow:hidden;
+        background:var(--panel)}
+.phead{display:flex; align-items:center; gap:11px; padding:11px 14px; cursor:pointer;
+       background:linear-gradient(90deg,rgba(42,127,255,.14),transparent)}
+.phead:hover{background:linear-gradient(90deg,rgba(42,127,255,.22),transparent)}
+.phead .caret{color:var(--muted); font-size:11px; width:11px}
+.phead .pname{font-weight:700; font-size:13.5px}
+.phead .pid{font-size:11.5px; color:var(--muted)}
+.phead .sp{flex:1}
+.igroup{border-top:1px solid var(--line); background:rgba(13,27,42,.55);
+        border-left:3px solid rgba(42,127,255,.42)}
+.ihead{display:flex; align-items:center; gap:9px; padding:9px 14px 9px 14px; cursor:pointer;
+       font-size:12px; color:var(--txt2)}
+.ihead:hover{background:rgba(42,127,255,.08)}
+.ihead .caret{color:var(--muted); font-size:10px}
+.ihead .iname{font-weight:600}
+.ihead .sp{flex:1}
+.etable{width:100%; border-collapse:collapse; font-size:12px}
+.etable th{text-align:left; font-weight:600; color:var(--muted); font-size:10.5px;
+           padding:7px 10px; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+           background:rgba(27,38,59,.7); letter-spacing:.5px}
+.etable td{padding:8px 10px; border-bottom:1px solid rgba(36,52,77,.6); vertical-align:middle}
+.etable tr:last-child td{border-bottom:0}
+.etable tr:hover td{background:rgba(42,127,255,.06)}
+.etable .eid{color:var(--muted); font-size:11px}
+.seqsum{font-size:10.5px; color:var(--muted); line-height:1.6}
+.cmpbar{display:flex; gap:7px; flex-wrap:wrap; margin-top:5px}
+.mapnote{font-size:11.5px; color:var(--orange); background:rgba(255,165,60,.09);
+         border:1px solid rgba(255,165,60,.32); border-radius:7px; padding:7px 10px;
+         margin:0 14px 9px 30px; line-height:1.65}
+.empty{text-align:center; color:var(--muted); padding:44px; font-size:13px}
 
 /* ============ 阅片工作站 ============ */
-#page-viewer{flex-direction:column}
-.viewer-top{height:46px;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 10px;gap:6px;flex-shrink:0}
-.viewer-top .sep{width:1px;height:22px;background:var(--line);margin:0 6px}
-.tool-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 9px;border-radius:6px;color:var(--muted);font-size:10px;min-width:48px}
-.tool-btn svg{width:17px;height:17px}
-.tool-btn:hover{color:var(--text);background:var(--panel2)}
-.tool-btn.active{color:var(--accent2);background:rgba(42,127,255,.15)}
-.tool-btn.primary-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:600}
-.tool-btn.primary-btn:hover{filter:brightness(1.15)}
-.tool-btn:disabled{opacity:.35;cursor:not-allowed}
-.tool-btn:disabled:hover{background:none;color:var(--muted)}
-.layout-group{display:flex;gap:2px;background:var(--panel);border-radius:6px;padding:2px;border:1px solid var(--line)}
-.layout-btn{width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}
-.layout-btn:hover{color:var(--text)}
-.layout-btn.active{background:rgba(42,127,255,.2);color:var(--accent2)}
-.vt-patient{display:flex;align-items:center;gap:8px;color:#C5CFDC;font-size:12px;padding:0 10px;min-width:260px;border-right:1px solid var(--line);height:100%}
-.vt-patient .pt-nm{color:#fff;font-weight:600}
-.vt-patient .pt-meta{color:var(--muted);font-size:11px}
-.vt-title{font-weight:700;font-size:14px;color:#fff;letter-spacing:.5px;padding:0 8px}
-.mode-tag{font-size:10px;padding:2px 10px;border-radius:20px;background:rgba(255,215,0,.12);color:var(--gold);border:1px solid rgba(255,215,0,.35);display:none;align-items:center;gap:4px}
-.mode-tag.show{display:inline-flex}
-.workbody{flex:1;display:flex;min-height:0}
-/* 左序列栏 */
-.series-panel{width:212px;background:var(--bg2);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;transition:width .2s}
-.series-panel.collapsed{width:34px}
-.series-panel.collapsed .series-inner{display:none}
-.collapse-rail{display:none}
-.series-panel.collapsed .collapse-rail{display:flex;flex-direction:column;align-items:center;padding-top:12px;gap:8px;width:34px}
-.series-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:1px;flex-shrink:0}
-.series-list{flex:1;overflow-y:auto;padding:0 10px 12px}
-.series-date-group{margin-bottom:10px}
-.sd-head{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11px;padding:6px 4px;cursor:pointer;user-select:none}
-.sd-head .caret{font-size:9px;transition:transform .2s;display:inline-block}
-.sd-head.open .caret{transform:rotate(90deg)}
-.sd-head .cnt{margin-left:auto;font-size:10px;background:var(--panel2);border-radius:10px;padding:0 7px}
-.sd-head .tno{font-size:9px;font-weight:700;color:#8FB4FF;background:rgba(42,127,255,.15);border-radius:4px;padding:0 4px;letter-spacing:.3px}
-.si-meta .stype{color:#9FD8FF}
-.series-item{display:flex;align-items:center;gap:8px;padding:6px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:4px;background:var(--panel)}
-.series-item:hover{border-color:var(--accent)}
-.series-item.active{border-color:var(--accent);background:rgba(42,127,255,.1)}
-.series-thumb{width:52px;height:52px;border-radius:5px;background:#000;flex-shrink:0;overflow:hidden;position:relative;border:1px solid var(--line)}
-.series-thumb canvas{width:100%;height:100%}
-.series-item .si-info{min-width:0}
-.series-item .si-name{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
-.series-item .si-meta{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap}
-.series-item .si-time{font-size:10px;color:var(--muted);margin-top:2px}
-.si-dot{width:6px;height:6px;border-radius:50%;background:var(--ai);flex-shrink:0;display:none}
-.series-item.has-ai .si-dot{display:block}
-.reg-badge{font-size:9px;background:rgba(255,215,0,.15);color:var(--gold);padding:0 4px;border-radius:3px}
-/* 中部影像区 */
-.viewer-main{flex:1;display:flex;flex-direction:column;min-width:0;background:#050B14}
-.viewer-toolbar{height:38px;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 12px;gap:6px;flex-shrink:0;color:var(--muted);font-size:12px}
-.vt-info{margin-left:auto;font-size:11px;color:var(--muted);display:flex;gap:12px;align-items:center}
-.slice-nav{display:flex;align-items:center;gap:6px}
-.slice-nav button{width:24px;height:24px;border-radius:5px;background:var(--panel);border:1px solid var(--line);color:var(--muted);display:flex;align-items:center;justify-content:center}
-.slice-nav button:hover{color:var(--accent2)}
-.grid-area{flex:1;position:relative;min-height:0}
-#viewGrid{position:absolute;inset:0;display:grid;gap:6px;padding:8px}
-#viewGrid.l1{grid-template-columns:1fr}
-#viewGrid.l1x2{grid-template-columns:1fr 1fr}
-#viewGrid.l2x1{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
-#viewGrid.l2{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
-.viewport{position:relative;background:#000;border-radius:6px;overflow:hidden;border:1px solid #0E1A2C;min-height:0;min-width:0}
-.viewport canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
-.viewport .vp-tag{position:absolute;top:6px;left:8px;font-size:10.5px;color:#9FD8FF;text-shadow:0 1px 2px #000;z-index:2;display:flex;align-items:center;gap:6px;pointer-events:none}
-.viewport .vp-tag .d{color:#E0E6F0;font-weight:600}
-.viewport .vp-corner{position:absolute;bottom:5px;left:8px;font-size:9.5px;color:rgba(224,230,240,.75);text-shadow:0 1px 2px #000;z-index:2;pointer-events:none}
-.viewport .vp-corner.r{left:auto;right:8px}
-.viewport .vp-metrics{position:absolute;top:6px;right:8px;font-size:10px;color:#7CF5C6;text-shadow:0 1px 2px #000;z-index:3;display:none;flex-direction:column;align-items:flex-end;gap:2px;background:rgba(0,30,20,.55);padding:4px 8px;border-radius:6px;border:1px solid rgba(0,200,150,.25);pointer-events:none}
-.viewport .vp-metrics.show{display:flex}
-.viewport .base-flag{position:absolute;top:30px;right:8px;z-index:4;display:none;align-items:center;gap:4px;font-size:10.5px;color:#1A1200;background:var(--gold);padding:2px 9px;border-radius:4px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none}
-.viewport.base{border:2px solid var(--gold)}
-.viewport.base .base-flag{display:flex}
-.viewport.sel{border:1px solid var(--accent)}
-.viewport .lesion-tip{position:absolute;bottom:24px;right:8px;font-size:9px;color:var(--danger);background:rgba(255,77,79,.15);padding:1px 6px;border-radius:3px;display:none}
-.viewport.flash .lesion-tip{display:block;animation:blink .6s 4}
-@keyframes blink{50%{opacity:0}}
-.vp-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#3A4A66;font-size:13px;gap:8px}
-.wl-slider{display:flex;align-items:center;gap:8px}
-.wl-slider input[type=range]{width:110px;accent-color:var(--accent2);background:transparent}
-.wl-val{color:var(--text);font-size:11px;min-width:120px;font-family:Consolas,monospace}
-/* 右报告栏 */
-.report-panel{width:330px;background:var(--bg2);border-left:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;transition:width .2s}
-.report-panel.collapsed{width:34px}
-.report-panel.collapsed .report-inner{display:none}
-.rep-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);flex-shrink:0}
-.rep-head .t{font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px}
-.rep-body{flex:1;overflow-y:auto;padding:12px 14px}
-.rep-pt{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:11.5px;display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;color:#C5CFDC;margin-bottom:10px}
-.rep-pt b{color:#E0E6F0;font-weight:600}
-.rep-sec-title{font-size:11px;color:var(--accent2);font-weight:700;margin:12px 0 6px;letter-spacing:1px;display:flex;align-items:center;gap:6px}
-.rep-sec-title::before{content:"";width:3px;height:12px;background:var(--accent2);border-radius:2px}
-.rep-text{font-size:12px;line-height:2;color:#D8E0EA}
-.rep-text .seg{display:block}
-.rep-text mark{background:none;color:#FFD9D9;border-bottom:1.5px dashed rgba(255,77,79,.7);padding:0 1px;cursor:pointer;transition:all .15s}
-.rep-text mark:hover{background:rgba(255,77,79,.18);border-bottom-style:solid}
-.rep-text mark.ai{color:#B8F5E0;border-bottom:1.5px dashed rgba(0,200,150,.7)}
-.rep-text mark.ai:hover{background:rgba(0,200,150,.15)}
-.rep-text .ima{font-size:9.5px;color:var(--accent2);border:1px solid rgba(42,127,255,.35);border-radius:3px;padding:0 3px;margin:0 2px;vertical-align:1px;cursor:pointer;background:rgba(42,127,255,.08)}
-.lesion-nav{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 4px}
-.ln-item{font-size:11px;padding:4px 12px;border-radius:20px;background:var(--panel);border:1px solid var(--line);color:var(--muted);cursor:pointer}
-.ln-item:hover{border-color:var(--accent);color:var(--text)}
-.ln-item.active{background:rgba(42,127,255,.15);border-color:var(--accent2);color:var(--accent2)}
-.rep-foot{flex-shrink:0;border-top:1px solid var(--line);padding:10px 14px;color:var(--muted);font-size:10.5px;line-height:1.7}
-/* 病灶信息浮层 */
-.lesion-pop{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:30;background:var(--panel);border:1px solid rgba(255,77,79,.4);border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.55);width:520px;display:none;overflow:hidden}
-.lesion-pop.show{display:block;animation:popUp .18s ease}
-@keyframes popUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.lp-head{display:flex;align-items:center;gap:8px;padding:9px 14px;background:rgba(255,77,79,.1);border-bottom:1px solid rgba(255,77,79,.25)}
-.lp-head .lp-title{font-weight:700;font-size:13px}
-.lp-head .lp-sub{color:var(--muted);font-size:11px}
-.lp-head .lp-actions{margin-left:auto;display:flex;gap:6px}
-.lp-body{padding:10px 14px;font-size:12px;line-height:1.9;color:#E0E6F0}
-.lp-body .kw{color:var(--warn);font-weight:600}
-.lp-body .gen{margin-left:6px;font-size:10.5px;color:var(--muted)}
-.lp-quant{display:flex;gap:10px;padding:8px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
-.quant-chip{display:flex;flex-direction:column;gap:2px;background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:5px 12px;min-width:92px}
-.quant-chip .qk{font-size:10px;color:var(--muted)}
-.quant-chip .qv{font-size:13.5px;font-weight:700;font-family:Consolas,monospace;color:#7CF5C6}
-.quant-chip .qv .delta{font-size:10px;color:var(--warn);font-weight:600}
-.quant-chip .qv.up{color:var(--warn)}
-.quant-chip .qv.down{color:var(--ai)}
-.del-btn{color:var(--danger);font-size:11px;display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;border:1px solid rgba(255,77,79,.35)}
-.del-btn:hover{background:rgba(255,77,79,.12)}
-.close-btn{color:var(--muted);display:flex;align-items:center;padding:4px 8px;border-radius:6px}
-.close-btn:hover{color:var(--text);background:var(--panel2)}
-/* 配准浮动面板 */
-.reg-panel{position:absolute;right:14px;top:14px;z-index:20;width:270px;background:var(--panel);border:1px solid rgba(255,215,0,.35);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.5);display:none;overflow:hidden}
-.reg-panel.show{display:block}
-.rp-head{background:rgba(255,215,0,.1);padding:8px 12px;font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:7px;color:var(--gold)}
-.rp-body{padding:10px 12px;max-height:260px;overflow-y:auto}
-.rp-row{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:11px}
-.rp-row:last-child{border-bottom:none}
-.rp-row .rk{color:var(--muted)}
-.rp-row .rv{text-align:right;font-family:Consolas,monospace;color:#7CF5C6}
-.rp-row .rv.up{color:var(--warn)}.rp-row .rv.down{color:var(--ai)}
-.rp-foot{padding:8px 12px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted)}
-/* 配准维度选择菜单 */
-.reg-menu{position:absolute;right:14px;top:14px;z-index:25;width:342px;background:var(--panel);border:1px solid rgba(255,215,0,.4);border-radius:11px;box-shadow:0 16px 44px rgba(0,0,0,.6);display:none;overflow:hidden}
-.reg-menu.show{display:block}
-.rm-head{padding:9px 13px;background:rgba(255,215,0,.11);color:var(--gold);font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:7px}
-.rm-head .x{margin-left:auto;color:var(--muted);cursor:pointer;font-size:15px;line-height:1}
-.rm-item{display:flex;gap:10px;padding:10px 13px;border-top:1px solid var(--line);cursor:pointer;transition:background .12s}
-.rm-item:hover{background:var(--panel2)}
-.rm-item.on{background:rgba(42,127,255,.1)}
-.rm-item .ri-ic{width:31px;height:31px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:var(--panel2)}
-.rm-item .ri-tx{flex:1;min-width:0}
-.rm-item .ri-nm{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px}
-.phase-tag{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:600;white-space:nowrap}
-.phase-tag.p1{background:rgba(0,200,150,.18);color:#5CE0B0}
-.phase-tag.p2{background:rgba(138,151,168,.2);color:#A9B6C7}
-.rm-foot{padding:8px 13px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted);line-height:1.65;display:flex;align-items:center;gap:8px}
-.rm-foot button{color:#8FB4FF;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:3px 9px;flex-shrink:0}
-.rm-foot button:hover{border-color:var(--accent)}
-/* 结果面板内的维度标识 / 规划说明 */
-.rp-dim{padding:7px 12px;background:rgba(42,127,255,.09);border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:11px;color:#BBD4F7;line-height:1.6}
-.rp-plan{display:flex;gap:8px;padding:9px 12px;font-size:11px;color:var(--muted);line-height:1.7;border-bottom:1px dashed var(--line)}
-.rp-plan .phase-tag{flex-shrink:0;margin-top:1px}
-/* 时序量化看板 */
-.trend-panel{position:absolute;left:14px;bottom:14px;z-index:20;width:398px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 34px rgba(0,0,0,.5);display:none;overflow:hidden}
-.trend-panel.show{display:block}
-.tp-head{background:var(--bg2);padding:8px 12px;font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
-.tp-body{padding:12px}
-.tp-legend{display:flex;gap:14px;font-size:10.5px;color:var(--muted);margin-bottom:8px}
-.tp-legend span{display:flex;align-items:center;gap:5px}
-.tp-legend .sw{width:10px;height:3px;border-radius:2px;display:inline-block}
-.tp-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
-.tp-table th{background:var(--bg2);padding:4px 6px;text-align:left;font-weight:600;color:var(--muted)}
-.tp-table td{padding:4px 6px;border-top:1px solid rgba(36,52,77,.5)}
-.tp-table td.num{font-family:Consolas,monospace;text-align:right}
-.tp-table tr.family td{background:rgba(42,127,255,.07)}
-.axis-label{font-size:10px;color:var(--muted)}
-/* 浮动提示 toast */
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#0E2238;border:1px solid rgba(42,127,255,.45);color:var(--text);padding:9px 20px;border-radius:8px;font-size:12.5px;z-index:99;display:none;box-shadow:0 6px 24px rgba(0,0,0,.4)}
-.toast.show{display:block;animation:popUp2 .25s}
-@keyframes popUp2{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-.save-flash{position:fixed;inset:0;background:rgba(5,11,20,.7);z-index:80;display:none;align-items:center;justify-content:center}
-.save-flash.show{display:flex}
-.save-card{background:var(--panel);border:1px solid rgba(0,200,150,.4);border-radius:14px;padding:36px 56px;text-align:center}
-.save-card .ok{width:52px;height:52px;border-radius:50%;background:rgba(0,200,150,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
-.save-card h3{font-size:17px;margin-bottom:6px}
-.save-card p{color:var(--muted);font-size:12px}
-.collapse-btn{width:34px;flex-shrink:0;background:none;border:none;border-left:1px solid var(--line);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.collapse-btn:hover{color:var(--accent2)}
-.axis-arrow{font-size:9px;color:rgba(224,230,240,.4);position:absolute;z-index:2;pointer-events:none}
-.axis-arrow.r{right:14px;top:50%}
-.axis-arrow.l{left:14px;top:50%}
-.axis-arrow.a{left:50%;top:8px}
-.axis-arrow.p{left:50%;bottom:8px}
-.kbd{font-size:9px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:0 3px;margin-left:2px}
-body.no-anim *{transition:none!important;animation:none!important}
+#pgViewer{background:#060F1C}
+.tools{height:44px; background:var(--bg2); border-bottom:1px solid var(--line);
+       display:flex; align-items:center; gap:5px; padding:0 12px; flex-shrink:0; overflow-x:auto}
+.tools .grp{display:flex; gap:3px; align-items:center}
+.tools .sep{width:1px; height:19px; background:var(--line); margin:0 6px; flex-shrink:0}
+.tbtn{background:transparent; border:1px solid transparent; color:var(--muted); border-radius:6px;
+      padding:5px 9px; font-size:12px; cursor:pointer; white-space:nowrap; transition:.13s}
+.tbtn:hover{background:rgba(42,127,255,.14); color:#fff}
+.tbtn.on{background:rgba(42,127,255,.24); color:#fff; border-color:var(--blue); font-weight:700}
+.tbtn.gold{color:var(--gold)}
+.tbtn.gold.on{background:rgba(255,215,0,.16); border-color:var(--gold); color:var(--gold)}
+.modebar{height:30px; background:rgba(17,34,51,.9); border-bottom:1px solid var(--line);
+         display:flex; align-items:center; gap:10px; padding:0 14px; flex-shrink:0; font-size:11.5px}
+#regModeTag{display:none; align-items:center; gap:6px; color:var(--gold); font-weight:700}
+#regModeTag.show{display:inline-flex}
+#noCompareTag{display:none; align-items:center; gap:6px; color:var(--orange); font-weight:600}
+#noCompareTag.show{display:inline-flex}
+.shell{flex:1; display:flex; min-height:0; position:relative}
+/* 序列栏 */
+.series{width:232px; background:var(--bg2); border-right:1px solid var(--line);
+        display:flex; flex-direction:column; flex-shrink:0; transition:width .18s}
+.series.fold{width:34px}
+.series .sh{height:32px; display:flex; align-items:center; gap:7px; padding:0 9px;
+            border-bottom:1px solid var(--line); font-size:11px; color:var(--muted); flex-shrink:0}
+.series .sh .sp{flex:1}
+.slist{flex:1; overflow:auto; padding:6px}
+.series.fold .slist,.series.fold .sh span{display:none}
+.sgrp{margin-bottom:8px}
+.sgh{display:flex; align-items:center; gap:6px; font-size:10.5px; color:var(--muted);
+     padding:5px 6px; background:rgba(27,38,59,.75); border-radius:5px; cursor:pointer}
+.sgh .tno{color:var(--blue); font-weight:700}
+.sgh .sp{flex:1}
+.sgh.base{background:rgba(255,215,0,.13); color:var(--gold)}
+.sitem{display:flex; gap:7px; align-items:flex-start; padding:6px; border-radius:6px;
+       cursor:grab; border:1px solid transparent; margin-top:3px}
+.sitem:hover{background:rgba(42,127,255,.1); border-color:rgba(42,127,255,.35)}
+.sitem.dragging{opacity:.4}
+.sitem.base{border-color:var(--gold); background:rgba(255,215,0,.09); cursor:not-allowed}
+.sitem canvas{border-radius:4px; background:#000; flex-shrink:0}
+.sitem .smeta{font-size:10.5px; line-height:1.55; color:var(--muted); min-width:0}
+.sitem .smeta .nm{color:var(--txt2); font-size:11px; font-weight:600; display:block;
+                  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+/* 中间矩阵 */
+.center{flex:1; display:flex; flex-direction:column; min-width:0; background:#040A13}
+.mbar{height:34px; display:flex; align-items:center; gap:8px; padding:0 12px; flex-shrink:0;
+      border-bottom:1px solid var(--line); font-size:11px; color:var(--muted); overflow-x:auto}
+.mbar .sp{flex:1}
+.chip{display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line);
+      border-radius:14px; padding:2px 9px; cursor:pointer; color:var(--muted); font-size:11px;
+      white-space:nowrap; user-select:none}
+.chip:hover{border-color:var(--blue); color:#fff}
+.chip.on{background:rgba(0,200,150,.16); border-color:var(--ai); color:var(--ai); font-weight:600}
+.chip.dim{opacity:.45}
+.matrix{flex:1; overflow:auto; padding:12px; display:grid; gap:8px; align-content:start}
+.mcell{position:relative; background:#000; border:1px solid var(--line); border-radius:7px;
+       overflow:hidden; min-height:126px; display:flex; flex-direction:column}
+.mcell.base{border:2px solid var(--gold); box-shadow:0 0 0 3px rgba(255,215,0,.14)}
+.mcell.target{border-color:rgba(42,127,255,.6)}
+.mcell.miss{background:rgba(27,38,59,.5); border-style:dashed; align-items:center;
+            justify-content:center; color:var(--muted); font-size:11px; text-align:center; padding:14px}
+.mcell canvas{width:100%; display:block; flex:1; object-fit:cover}
+.mcell .mh{position:absolute; top:5px; left:6px; right:6px; display:flex; gap:5px;
+           align-items:center; pointer-events:none}
+.mcell .mh .b{font-size:9.5px; background:rgba(6,15,28,.82); border-radius:4px; padding:1.5px 6px;
+              color:var(--txt2); border:1px solid var(--line)}
+.mcell .mh .b.gold{color:var(--gold); border-color:rgba(255,215,0,.5); font-weight:700}
+.mcell .mh .b.tgt{color:#7FB4FF; border-color:rgba(42,127,255,.5)}
+.mcell .mf{position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(6,15,28,.92));
+           padding:14px 7px 6px; font-size:10px; color:var(--muted); display:flex;
+           justify-content:space-between; gap:5px; pointer-events:none}
+.mcell .mf .lm{color:var(--ai); font-weight:600}
+.mcell .mf .lm.off{color:var(--orange)}
+.mcell .mfoot{flex-shrink:0; background:rgba(27,38,59,.85); border-top:1px solid var(--line);
+              padding:4px 7px; font-size:10px; color:var(--muted); display:flex;
+              justify-content:space-between; gap:5px}
+/* 右侧 */
+.right{width:392px; background:var(--bg2); border-left:1px solid var(--line);
+       display:flex; flex-direction:column; flex-shrink:0; transition:width .18s}
+.right.fold{width:34px}
+.right .rv{flex:1; overflow:auto; display:flex; flex-direction:column}
+.right.fold .rv{display:none}
+.rtabs{display:flex; gap:2px; padding:8px 9px 0; border-bottom:1px solid var(--line); flex-shrink:0}
+.rtab{background:transparent; border:0; border-bottom:2px solid transparent; color:var(--muted);
+      padding:6px 9px; font-size:11.5px; cursor:pointer}
+.rtab:hover{color:#fff}
+.rtab.on{color:var(--blue); border-bottom-color:var(--blue); font-weight:700}
+.rtab .dot{display:inline-block; width:5px;height:5px;border-radius:50%;background:var(--orange); margin-left:4px}
+.rpane{display:none; padding:11px 12px 16px}
+.rpane.on{display:block}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:9px;
+      padding:11px 12px; margin-bottom:10px}
+.card.gold{border-color:rgba(255,215,0,.42); background:rgba(255,215,0,.05)}
+.card.red{border-color:rgba(255,92,92,.42); background:rgba(255,92,92,.06)}
+.card.green{border-color:rgba(0,200,150,.4); background:rgba(0,200,150,.05)}
+.chead{display:flex; align-items:center; gap:7px; margin-bottom:9px}
+.chead .t{font-size:12px; font-weight:700}
+.chead .sp{flex:1}
+.kv{display:flex; justify-content:space-between; gap:10px; padding:5px 0;
+    border-bottom:1px dashed rgba(36,52,77,.75); font-size:11.5px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--muted); flex-shrink:0}
+.kv .v{color:var(--txt2); text-align:right; font-weight:600}
+.kv .v.good{color:var(--ai)} .kv .v.warn{color:var(--orange)} .kv .v.bad{color:var(--red)}
+.lesion{display:flex; gap:9px; align-items:flex-start; padding:8px 9px; border-radius:7px;
+        border:1px solid var(--line); margin-bottom:6px; cursor:pointer; transition:.13s}
+.lesion:hover{border-color:var(--blue); background:rgba(42,127,255,.08)}
+.lesion.on{border-color:var(--gold); background:rgba(255,215,0,.09)}
+.lesion .fid{font-size:11px; font-weight:700; color:var(--gold); min-width:42px}
+.lesion .lb{flex:1; font-size:11px; line-height:1.55; min-width:0}
+.lesion .lb .nm{color:var(--txt2); font-weight:600}
+.lesion .lb .mt{color:var(--muted); font-size:10px; margin-top:2px}
+.lesion .chk{width:14px; height:14px; border:1px solid var(--line); border-radius:3px; flex-shrink:0;
+             margin-top:2px; font-size:10px; line-height:13px; text-align:center; color:transparent}
+.lesion .chk.on{background:var(--ai); border-color:var(--ai); color:#06231A; font-weight:700}
+.rep{font-size:12px; line-height:1.95; color:var(--txt2)}
+.rep h4{font-size:11.5px; color:var(--muted); margin:13px 0 6px; letter-spacing:.5px}
+.rep h4:first-child{margin-top:0}
+.hl{cursor:pointer; padding:0 2px; border-radius:3px; transition:.13s}
+.hl:hover{background:rgba(42,127,255,.25)}
+.hl.p0{background:rgba(255,92,92,.2); border-bottom:1.5px solid var(--red)}
+.hl.p1{background:rgba(255,165,60,.18); border-bottom:1.5px solid var(--orange)}
+.hl.f1{background:rgba(255,215,0,.2)}
+.valid{font-size:11px; line-height:1.7}
+.valid .row{display:flex; gap:7px; align-items:flex-start; padding:4px 0;
+            border-bottom:1px dashed rgba(36,52,77,.7)}
+.valid .row:last-child{border-bottom:0}
+.valid .ic{width:14px; flex-shrink:0; text-align:center; font-weight:700}
+.valid .ic.ok{color:var(--ai)} .valid .ic.wn{color:var(--orange)} .valid .ic.bd{color:var(--red)}
+/* 浮动 */
+.pop{position:absolute; right:404px; top:82px; width:326px; background:var(--panel);
+     border:1px solid var(--line); border-radius:10px; box-shadow:0 18px 46px rgba(0,0,0,.55);
+     display:none; z-index:60; overflow:hidden}
+.pop.show{display:block}
+.pop .ph{padding:10px 12px; border-bottom:1px solid var(--line); display:flex; align-items:center;
+         font-size:12px; font-weight:700; color:var(--gold)}
+.pop .ph .sp{flex:1}
+.pop .pbody{padding:7px}
+.regitem{display:flex; gap:9px; align-items:center; padding:9px 9px; border-radius:7px;
+         cursor:pointer; border:1px solid transparent}
+.regitem:hover{background:rgba(42,127,255,.1); border-color:rgba(42,127,255,.3)}
+.regitem.on{background:rgba(255,215,0,.09); border-color:rgba(255,215,0,.4)}
+.regitem .ic{font-size:15px; width:22px; text-align:center}
+.regitem .tx{flex:1; font-size:12px}
+.pop .pf{padding:9px 12px; border-top:1px solid var(--line); display:flex; gap:8px; align-items:center}
+/* 推理遮罩 */
+#reason{position:fixed; inset:0; background:rgba(6,15,28,.9); display:none;
+        align-items:center; justify-content:center; z-index:200; backdrop-filter:blur(3px)}
+#reason.show{display:flex}
+.rcard{background:var(--panel); border:1px solid var(--line); border-radius:12px;
+       padding:26px 32px; width:432px; box-shadow:0 22px 60px rgba(0,0,0,.6)}
+.rcard h3{margin:0 0 4px; font-size:15px}
+.rcard .rs{font-size:11.5px; color:var(--muted); margin-bottom:16px}
+.rstep{display:flex; gap:10px; align-items:center; padding:7px 0; font-size:12px; color:var(--muted);
+       opacity:.42; transition:.3s}
+.rstep.on{opacity:1; color:var(--txt)}
+.rstep.done{opacity:.85; color:var(--txt2)}
+.rstep .ri{width:15px; text-align:center}
+.rstep.on .ri{color:var(--blue)} .rstep.done .ri{color:var(--ai)}
+/* toast */
+#toast{position:fixed; left:50%; bottom:34px; transform:translateX(-50%) translateY(14px);
+       background:rgba(17,34,51,.97); border:1px solid var(--line); color:var(--txt);
+       padding:10px 17px; border-radius:9px; font-size:12px; max-width:640px;
+       opacity:0; pointer-events:none; transition:.25s; z-index:300; box-shadow:0 12px 34px rgba(0,0,0,.5)}
+#toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+#toast.gold{border-color:rgba(255,215,0,.5)} #toast.red{border-color:rgba(255,92,92,.5)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#24344D;border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:#33486A}
+::-webkit-scrollbar-track{background:transparent}
 </style>
 </head>
 <body>
-<!-- ================= 登录页 ================= -->
-<div id="page-login" class="page active">
-  <div class="login-brand">
-    <div class="login-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="3 3"/><path d="M12 7v10M7 12h10"/></svg>
+
+<!-- ==================== 登录 ==================== -->
+<section class="page on" id="pgLogin">
+  <div class="loginWrap">
+    <div class="lgLeft">
+      <div class="logo"><i></i>影禾医脉 · MIIA-AI</div>
+      <h1>临床阅片器</h1>
+      <div class="sub">
+        面向<b>临床场景</b>的随访比对与科研配准工具<br>
+        主任务：跨时点 / 跨序列的<b>对齐、对比、量化</b>｜配准是核心能力与主要入口
+      </div>
+      <div style="margin-top:18px" class="hint">
+        本产品不是面向影像科的常规阅片系统。常规阅片由院方既有 PACS / IS 承担；
+        <br>本产品解决的是既有工具做不好的一件事——<b style="color:#C7D6E8">同一患者跨时点、跨序列的影像与病灶能否对齐、能否量化对比</b>。
+      </div>
     </div>
-    <h1>影禾医脉</h1>
-    <div class="sub">临床阅片器 · Clinical Image Viewer</div>
-    <div class="sub" style="font-size:12px;margin-top:22px;color:#5A6B85">集成 AI 的交互式医学影像阅片工具<br>图像与报告联动 · 病灶时空对齐对比</div>
+
+    <div class="formBox">
+      <div class="formCard">
+        <h3>系统登录</h3>
+        <div class="fld" id="fUser">
+          <label>账号 / 工号</label>
+          <input id="inUser" placeholder="请输入账号或工号" autocomplete="off">
+          <div class="err" id="eUser">请输入账号</div>
+        </div>
+        <div class="fld" id="fPwd">
+          <label>密码</label>
+          <input id="inPwd" type="password" placeholder="请输入密码" autocomplete="off">
+          <div class="err" id="ePwd">请输入密码（不少于 4 位）</div>
+        </div>
+        <button class="submit" id="btnLogin">登 录</button>
+        <div class="lgFoot">
+          院内专用系统 · 仅限授权人员使用<br>
+          <span id="lgFormNote"></span>
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:#8FA3BF;margin-top:2px">
+        产品形态（需求 1.2.2）——三种形态共用同一套页面与接口，差异仅在外壳
+      </div>
+      <div class="forms" id="formList"></div>
+    </div>
   </div>
-  <div class="login-form">
-    <div class="form-card">
-      <h2>系统登录</h2>
-      <div class="tip">请使用授权账号登录系统</div>
-      <div class="field">
-        <label>账号</label>
-        <div class="input-wrap" id="accWrap">
-          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg></span>
-          <input id="inpUser" type="text" placeholder="请输入工号或账号" autocomplete="username">
-        </div>
-        <div class="err-msg" id="errUser">请输入账号</div>
+</section>
+
+<!-- ==================== 患者列表 ==================== -->
+<section class="page" id="pgList">
+  <div class="topbar">
+    <div class="brand"><i></i>临床阅片器</div>
+    <span class="badge blue" id="lbForm">Demo 形态</span>
+    <span class="badge" id="lbScope">院内 · CT</span>
+    <span class="sp"></span>
+    <span class="who">VVV · 放射科</span>
+    <button class="btn sm" id="btnLogout">退出</button>
+  </div>
+  <div class="listBody">
+    <div class="filters">
+      <h2 class="sec">检索条件</h2>
+      <div class="frow">
+        <div class="fldx"><label>患者姓名</label><input id="qName" placeholder="如 何婷"></div>
+        <div class="fldx"><label>患者 ID</label><input id="qPid" placeholder="如 P2784"></div>
+        <div class="fldx"><label>检查号</label><input id="qEid" placeholder="如 E20260"></div>
+        <div class="fldx"><label>检查日期 · 起</label><input id="qD1" type="date"></div>
+        <div class="fldx"><label>检查日期 · 止</label><input id="qD2" type="date"></div>
+        <div class="fldx"><label>模态</label>
+          <select id="qMod"><option value="">全部</option><option>CT</option><option>MR</option></select></div>
+        <div class="fldx"><label>检查项目</label>
+          <select id="qItem"><option value="">全部</option></select></div>
+        <button class="btn" id="btnSearch">搜索</button>
+        <button class="btn" id="btnReset">重置</button>
       </div>
-      <div class="field">
-        <label>密码</label>
-        <div class="input-wrap" id="pwdWrap">
-          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
-          <input id="inpPwd" type="password" placeholder="请输入密码" autocomplete="current-password">
-          <button class="eye" id="eyeBtn" title="显示/隐藏密码"><svg id="eyeSvg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button>
-        </div>
-        <div class="err-msg" id="errPwd">请输入密码</div>
-      </div>
-      <button class="btn btn-primary btn-block" id="btnLogin" style="padding:12px;font-size:15px;letter-spacing:8px">登&nbsp;&nbsp;录</button>
-      <div class="login-foot">院内专用系统 · 仅限授权人员使用<br>如有疑问请联系 信息科技术支持</div>
     </div>
+    <div id="listHost"></div>
+  </div>
+</section>
+
+<!-- ==================== 阅片工作站 ==================== -->
+<section class="page" id="pgViewer">
+  <div class="tools">
+    <button class="tbtn" id="btnBack">← 返回列表</button>
+    <div class="sep"></div>
+    <div class="grp" id="grpLayout">
+      <button class="tbtn" data-lay="1x1">1×1</button>
+      <button class="tbtn" data-lay="1x2">1×2</button>
+      <button class="tbtn" data-lay="2x1">2×1</button>
+      <button class="tbtn" data-lay="2x2">2×2</button>
+    </div>
+    <button class="tbtn on" id="btnMatrix" title="期-序矩阵（定制化配准 Layout，FR-VIEW-09）">期-序矩阵</button>
+    <div class="sep"></div>
+    <div class="grp">
+      <button class="tbtn on">2D</button><button class="tbtn">MPR</button><button class="tbtn">3D</button>
+    </div>
+    <div class="sep"></div>
+    <div class="grp">
+      <button class="tbtn" id="tWin">调窗</button>
+      <button class="tbtn" id="tPan">平移</button>
+      <button class="tbtn" id="tZoom">缩放</button>
+      <button class="tbtn" id="tMeas">测量</button>
+      <button class="tbtn" id="tMark">标注</button>
+    </div>
+    <div class="sep"></div>
+    <button class="tbtn gold" id="tReg" title="配准模式选择：层面 / 解剖结构 / 病灶（FR-REG-01）">⭐ 配准 ▾</button>
+    <button class="tbtn" id="tManual" title="手动调整：三种配准模式均支持（FR-REG-22）">✎ 手动调整</button>
+    <button class="tbtn" id="tTrend">📈 量化</button>
+    <div class="sep"></div>
+    <button class="tbtn" id="tSave">保存</button>
+    <button class="tbtn" id="tExport">导出</button>
+  </div>
+
+  <div class="modebar">
+    <span id="regModeTag"></span>
+    <span id="noCompareTag"></span>
+    <span class="badge" id="cfgBadge">2D · 轴位</span>
+    <span class="sp" style="flex:1"></span>
+    <span class="hint" id="caliberTag"></span>
+  </div>
+
+  <div class="shell">
+    <!-- 序列栏 -->
+    <div class="series" id="seriesPanel">
+      <div class="sh">
+        <span>影像序列</span>
+        <span class="sp"></span>
+        <span id="seriesHint" style="font-size:10px"></span>
+        <button class="btn sm" id="btnFoldSeries">»</button>
+      </div>
+      <div class="slist" id="seriesList"></div>
+    </div>
+
+    <!-- 中间矩阵 -->
+    <div class="center">
+      <div class="mbar">
+        <span>期范围</span>
+        <span class="chip on" data-range="2">最近 2 期</span>
+        <span class="chip" data-range="all">全部 6 期</span>
+        <span class="sep" style="width:1px;height:16px;background:var(--line);margin:0 4px"></span>
+        <span>序列分类</span>
+        <span id="clsChips"></span>
+        <span style="flex:1"></span>
+        <span class="hint" id="matrixHint"></span>
+      </div>
+      <div class="matrix" id="matrix"></div>
+    </div>
+
+    <!-- 右侧 -->
+    <div class="right" id="rightPanel">
+      <div class="rtabs">
+        <button class="rtab on" data-rt="reg">配准</button>
+        <button class="rtab" data-rt="lesion">基准病灶</button>
+        <button class="rtab" data-rt="trend">量化</button>
+        <button class="rtab" data-rt="valid">校验<span class="dot" id="validDot" style="display:none"></span></button>
+        <button class="rtab" data-rt="report">报告</button>
+        <button class="btn sm" id="btnFoldRight" style="margin-left:auto;align-self:center">»</button>
+      </div>
+      <div class="rv" id="rightBody"></div>
+    </div>
+  </div>
+
+  <!-- 配准模式菜单 -->
+  <div class="pop" id="regMenu">
+    <div class="ph"><span>⭐ 配准模式选择</span><span class="sp"></span><button class="btn sm" id="btnCloseReg">✕</button></div>
+    <div class="pbody" id="regMenuBody"></div>
+    <div class="pf">
+      <span class="hint" id="regMenuFoot"></span>
+      <span style="flex:1"></span>
+      <button class="btn sm" id="btnExitReg">退出配准</button>
+    </div>
+  </div>
+</section>
+
+<!-- 自动推理遮罩 -->
+<div id="reason">
+  <div class="rcard">
+    <h3>自动推理中</h3>
+    <div class="rs" id="reasonSub"></div>
+    <div id="reasonSteps"></div>
   </div>
 </div>
 
-<!-- ================= 患者列表页 ================= -->
-<div id="page-list" class="page">
-  <div class="app-header">
-    <div class="app-logo">
-      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg></div>
-      <span>影禾医脉 · 临床阅片器</span>
-    </div>
-    <span class="badge">院内 · CT</span>
-    <div class="hd-right">
-      <span class="hd-user"><span class="avatar">V</span>VV · 放射科</span>
-      <button class="btn" style="padding:7px 14px;font-size:12px" onclick="doLogout()">退出</button>
-    </div>
-  </div>
-  <div class="page-body">
-    <div class="panel">
-      <div class="search-bar">
-        <div class="sb-item sb-name"><label>患者姓名</label><input id="fName" placeholder="请输入姓名"></div>
-        <div class="sb-item sb-id"><label>患者 ID</label><input id="fPid" placeholder="请输入患者ID"></div>
-        <div class="sb-item sb-exam"><label>检查号</label><input id="fExam" placeholder="请输入检查号"></div>
-        <div class="sb-item sb-date1"><label>检查日期 · 开始</label>
-          <div class="date-wrap"><svg class="d-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18"/></svg><input type="date" id="fDate1" class="date-input" title="点击选择开始日期"></div>
-        </div>
-        <div class="sb-item sb-date2"><label>检查日期 · 结束</label>
-          <div class="date-wrap"><svg class="d-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18"/></svg><input type="date" id="fDate2" class="date-input" title="点击选择结束日期"></div>
-        </div>
-        <div class="sb-item sb-type"><label>检查类型</label><select id="fType"><option value="">全部</option><option value="CT">CT</option><option value="MR">MR</option></select></div>
-        <div class="sb-actions">
-          <button class="btn btn-primary" onclick="doSearch()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>搜索</button>
-          <button class="btn" onclick="doReset()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>重置</button>
-        </div>
-      </div>
-    </div>
-    <div class="panel list-panel">
-      <div class="loading-mask" id="listLoading"><div class="spinner"></div>加载中...</div>
-      <div class="empty-state" id="listEmpty">未找到符合条件的患者检查记录</div>
-      <div id="listWrap">
-        <div class="list-head"><span>姓名</span><span>患者 ID</span><span>年龄</span><span>检查号</span><span>检查日期</span><span>操作</span></div>
-        <div id="listBody"></div>
-      </div>
-      <div class="footer-bar">
-        <button class="btn" style="font-size:12px;padding:8px 16px" onclick="fakeUpload()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>本地上传 DICOM 影像</button>
-        <button class="btn" id="btnPacs" style="font-size:12px;padding:8px 16px;opacity:.5" title="未打通 PACS 接口" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 14a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 10a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>PACS 系统拉取影像</button>
-        <div class="pager"><button class="icon-btn" onclick="pageTurn(-1)">‹</button><span id="pageInfo">1 / 1</span><button class="icon-btn" onclick="pageTurn(1)">›</button></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ================= 阅片工作站 ================= -->
-<div id="page-viewer" class="page">
-  <div class="viewer-top">
-    <div class="vt-title">临床阅片器</div>
-    <div class="vt-patient" id="vtPatient"></div>
-    <div class="sep"></div>
-    <div class="layout-group" id="layoutGroup" title="布局切换 (F1-F4)">
-      <button class="layout-btn" data-layout="l1" title="1x1 (F1)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></button>
-      <button class="layout-btn" data-layout="l1x2" title="1x2 左右对比 (F2)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="8.4" height="18" rx="1.6"/><rect x="12.6" y="3" width="8.4" height="18" rx="1.6"/></svg></button>
-      <button class="layout-btn" data-layout="l2x1" title="2x1 上下对比 (F3)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="8.4" rx="1.6"/><rect x="3" y="12.6" width="18" height="8.4" rx="1.6"/></svg></button>
-      <button class="layout-btn" data-layout="l2" title="2x2 四窗 (F4)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="8.4" height="8.4" rx="1.6"/><rect x="12.6" y="3" width="8.4" height="8.4" rx="1.6"/><rect x="3" y="12.6" width="8.4" height="8.4" rx="1.6"/><rect x="12.6" y="12.6" width="8.4" height="8.4" rx="1.6"/></svg></button>
-    </div>
-    <div class="sep"></div>
-    <button class="tool-btn" id="tb2d" title="2D 显示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="6" width="16" height="12" rx="1.5"/><path d="M8 6V4m8 2V4M8 20v-2m8 2v-2"/></svg>2D</button>
-    <button class="tool-btn" id="tbMpr" title="MPR 多平面重建"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12h18M12 3v18M6 5l12 14M18 5L6 19"/></svg>MPR</button>
-    <button class="tool-btn" id="tb3d" title="3D 重建"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="4" ry="8"/></svg>3D</button>
-    <div class="sep"></div>
-    <button class="tool-btn" id="tbWl" title="窗宽窗位 W"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 8l4 8 4-8 4 8 4-8"/></svg>调窗</button>
-    <button class="tool-btn" id="tbPan" title="平移 P"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v18m-6-6l6 6 6-6M3 12h18M6 6l6-6 6 6"/></svg>平移</button>
-    <button class="tool-btn" id="tbZoom" title="缩放 Z"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6m-3-3v6"/></svg>缩放</button>
-    <button class="tool-btn" id="tbMeasure" title="测量 M"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 17l14-14 4 4L7 21l-4-4z"/><path d="M14 6l4 4M10 10l4 4M6 14l4 4"/></svg>测量</button>
-    <button class="tool-btn" id="tbMark" title="病灶标注 A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="2" stroke-dasharray="4 3"/><circle cx="12" cy="12" r="2.5"/></svg>标注</button>
-    <div class="sep"></div>
-    <button class="tool-btn" id="tbLink" title="多序列联动标注 L"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>联动</button>
-    <button class="tool-btn primary-btn" id="tbReg" title="配准（层面 / 解剖结构 / 病灶）F">⭐ 配准 ▾</button>
-    <button class="tool-btn" id="tbTrend" title="时序量化"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 20h18M6 20v-6m4 6v-9m4 9V8m4 12V5"/></svg>量化</button>
-    <button class="tool-btn" id="tbSave" title="保存报告 Ctrl+S"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 3h14v18l-7-4-7 4V3z"/></svg>保存</button>
-    <button class="tool-btn" title="导出"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 15V4m0 0L7 9m5-5l5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>导出</button>
-    <div class="sep"></div>
-    <button class="tool-btn" style="color:#8A97A8" onclick="backToList()">← 返回列表</button>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-      <span class="mode-tag" id="regModeTag">🫀 解剖结构配准（第一期）· 金色框为基准序列</span>
-      <span class="badge" id="linkBadge" style="display:none;color:var(--ai);border-color:rgba(0,200,150,.4)">🔗 联动标注</span>
-      <span class="badge" id="modeBadge">2D · 轴位</span>
-    </div>
-  </div>
-  <div class="workbody">
-    <!-- 左：序列栏 -->
-    <div class="series-panel" id="seriesPanel">
-      <div class="series-inner" id="seriesInner">
-        <div class="series-head"><span>影像序列</span><span id="seriesHint" style="font-size:10px;color:#5A6B85"></span></div>
-        <div class="series-list" id="seriesList"></div>
-      </div>
-      <button class="collapse-btn" id="seriesCollapse" title="收起/展开序列栏" onclick="toggleSeries()">»</button>
-    </div>
-    <!-- 中：影像区 -->
-    <div class="viewer-main">
-      <div class="viewer-toolbar">
-        <span id="toolHint" style="font-size:11px;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">就绪 · 滚轮翻层 · Ctrl+滚轮缩放 · 双击放大 · 单击病灶查看量化</span>
-        <span id="curSliceInfo" style="font-family:Consolas,monospace">图像 1/60</span>
-        <div class="slice-nav">
-          <button title="上一层面" onclick="stepSlice(-1)">‹</button>
-          <button title="下一层面" onclick="stepSlice(1)">›</button>
-        </div>
-        <div class="wl-slider">
-          <span style="font-size:11px;color:var(--muted)">窗宽窗位</span>
-          <input type="range" id="wlRange" min="-1000" max="3000" value="1500">
-          <span class="wl-val" id="wlVal">WW:1500 WL:-600</span>
-        </div>
-        <span class="vt-info"><span id="followHint" style="display:none;color:var(--ai);font-size:11px">✓ 报告↔影像联动已开启</span><span>患者 ID: <b id="pidInfo" style="color:#E0E6F0"></b></span></span>
-      </div>
-      <div class="grid-area">
-        <div id="viewGrid"></div>
-        <!-- 配准维度选择（点击「⭐ 配准」弹出） -->
-        <div class="reg-menu" id="regMenu">
-          <div class="rm-head">⭐ 配准维度选择<span class="x" onclick="closeRegMenu()">×</span></div>
-          <div class="rm-item" data-dim="slice" onclick="pickRegDim('slice')">
-            <span class="ri-ic">▤</span>
-            <span class="ri-tx"><span class="ri-nm">层面配准 <span class="phase-tag p2">第二期</span></span></span>
-          </div>
-          <div class="rm-item on" data-dim="anat" onclick="pickRegDim('anat')">
-            <span class="ri-ic">🫀</span>
-            <span class="ri-tx"><span class="ri-nm">解剖结构配准 <span class="phase-tag p1">第一期</span></span></span>
-          </div>
-          <div class="rm-item" data-dim="lesion" onclick="pickRegDim('lesion')">
-            <span class="ri-ic">⭐</span>
-            <span class="ri-tx"><span class="ri-nm">病灶配准 <span class="phase-tag p2">第二期</span></span></span>
-          </div>
-          <div class="rm-foot"><span>第一期仅实现解剖结构配准；另两个维度已预留入口</span><button onclick="exitReg()">退出配准</button></div>
-        </div>
-        <div class="reg-panel" id="regPanel">
-          <div class="rp-head" id="regHead">⭐ 配准 · 量化指标</div>
-          <div class="rp-body" id="regBody"></div>
-          <div class="rp-foot" id="regFoot">拖拽新序列仅可替换非基准序列 · 点「⭐ 配准」切换维度 / 退出</div>
-        </div>
-        <div class="trend-panel" id="trendPanel">
-          <div class="tp-head"><span>📈 病灶量化趋势 · 目标家族</span><button class="close-btn" onclick="toggleTrend(false)">✕</button></div>
-          <div class="tp-body" id="trendBody"></div>
-        </div>
-        <!-- 病灶信息浮层 -->
-        <div class="lesion-pop" id="lesionPop">
-          <div class="lp-head">
-            <span class="lp-title" id="lpTitle">左肺上叶 | 肺肿物</span>
-            <span class="lp-sub" id="lpSub">AI 建议 · 待医生确认</span>
-            <div class="lp-actions">
-              <button class="del-btn" onclick="deleteLesion()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>删除标注</button>
-              <button class="close-btn" onclick="hideLesionPop()">收起 ▾</button>
-            </div>
-          </div>
-          <div class="lp-body" id="lpBody"></div>
-          <div class="lp-quant" id="lpQuant"></div>
-        </div>
-      </div>
-    </div>
-    <!-- 右：报告栏 -->
-    <div class="report-panel" id="reportPanel">
-      <div class="report-inner" id="reportInner">
-        <div class="rep-head">
-          <span class="t">📋 结构化诊断报告</span>
-          <span style="display:flex;gap:6px">
-            <button class="btn" style="padding:5px 12px;font-size:11px;color:var(--ai);border-color:rgba(0,200,150,.4)" onclick="aiRefresh()">⟳ 更新报告</button>
-          </span>
-        </div>
-        <div class="rep-body">
-          <div class="rep-pt" id="repPt"></div>
-          <div class="lesion-nav" id="lesionNav"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
-            <div class="rep-sec-title">影像所见</div>
-            <span style="font-size:10px;color:var(--muted)">点击高亮文字定位影像</span>
-          </div>
-          <div class="rep-text" id="repFindings"></div>
-          <div class="rep-sec-title">诊断意见</div>
-          <div class="rep-text" id="repConclusion"></div>
-          <div class="rep-sec-title">AI 辅助标注（Report Plus）</div>
-          <div class="rep-text" id="repPlus" style="font-size:11.5px;color:#B8F5E0"></div>
-        </div>
-        <div class="rep-foot">① 结果仅供医生参考<br>图文关联关系已自动保存 · 阅片留痕可追溯</div>
-      </div>
-      <button class="collapse-btn" id="reportCollapse" onclick="toggleReport()">«</button>
-    </div>
-  </div>
-</div>
-
-<div class="save-flash" id="saveFlash"><div class="save-card"><div class="ok"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00C896" stroke-width="2.4"><path d="M4 12.5l5 5L20 6.5"/></svg></div><h3>报告已保存</h3><p>图文关联关系已留痕 · 可追溯</p></div></div>
-<div class="toast" id="toast"></div>
+<div id="toast"></div>
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V2.2
-   新增：配准三维度选择（第一期：解剖结构配准；第二期：层面配准、病灶配准）
-   新增：时空影像序列扩展为 6 时段 × 多序列（共 15 序列）
-   模拟数据 + Canvas 合成 CT 影像 + 病灶时空对齐 / 图文联动 / 配准
+   临床阅片器 · 交互原型 V3.0
+   对应《临床阅片器产品需求说明文档 V2.1》（评审优化版）
+   覆盖：产品形态三选 / 列表三级嵌套 / 检查项目识别 / 序列分类与可比性 /
+        直入配准工作流 / 配准三模式 / 期-序矩阵 Layout / 默认最近两次对齐 /
+        基准序列锁定可解锁 / 拖拽重算 / 基准病灶推荐与切换 / 全模式手动调整 /
+        指标口径标注 / 输入校验与结构化异常
+   数据 + Canvas 合成 CT，无外部依赖
    ============================================================ */
-'use strict';
-const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const $=s=>document.querySelector(s);
+const $$=s=>Array.from(document.querySelectorAll(s));
 
-/* ---------- 患者 / 检查 模拟数据 ---------- */
-const PATIENTS = [
-  {pid:'P2784', name:'何婷', sex:'女', age:31, exams:[
-    {eid:'E20260', date:'2026-09-02', type:'CT', series:4},
-    {eid:'E14037', date:'2026-05-11', type:'CT', series:3},
-    {eid:'E41627', date:'2025-12-02', type:'CT', series:2},
-    {eid:'E24192', date:'2025-06-18', type:'CT', series:2},
-    {eid:'E21638', date:'2025-01-07', type:'CT', series:2},
-    {eid:'E17904', date:'2024-08-15', type:'CT', series:2}
-  ]},
-  {pid:'P2963', name:'高平玲', sex:'女', age:27, exams:[
-    {eid:'E40222', date:'2026-04-23', type:'CT', series:2},
-    {eid:'E21640', date:'2025-11-15', type:'CT', series:2}
-  ]},
-  {pid:'P1971', name:'刘勇', sex:'男', age:68, exams:[
-    {eid:'E73752', date:'2026-03-09', type:'CT', series:3},
-    {eid:'E52301', date:'2025-10-20', type:'CT', series:2},
-    {eid:'E40012', date:'2025-07-30', type:'CT', series:2},
-    {eid:'E38765', date:'2025-02-14', type:'CT', series:2}
-  ]},
-  {pid:'P1102', name:'张伟明', sex:'男', age:45, exams:[
-    {eid:'E14038', date:'2026-05-12', type:'CT', series:2}
-  ]},
-  {pid:'P3018', name:'王平磊', sex:'男', age:53, exams:[
-    {eid:'E77701', date:'2026-06-03', type:'CT', series:3}
-  ]}
+/* ---------- 序列分类定义（FR-LIST-18） ---------- */
+const SEQ_DEF=[
+  {cls:'平扫·肺窗',   acq:'平扫', type:'肺窗',   phase:'',      win:'LUNG'},
+  {cls:'平扫·纵隔窗', acq:'平扫', type:'纵隔窗', phase:'',      win:'MEDI'},
+  {cls:'增强·动脉期', acq:'增强', type:'纵隔窗', phase:'动脉期', win:'MEDI'},
+  {cls:'增强·静脉期', acq:'增强', type:'纵隔窗', phase:'静脉期', win:'MEDI'}
 ];
-/* 选中患者 = 何婷：6 个时段随访 肺肿物（含序列与病灶家族） */
-const CURRENT = {pid:'P2784', name:'何婷', sex:'女', age:31};
 
-/* 检查节点（时间线，倒序展示，第0=最新）—— 共 6 个时段 */
-const EXAMS = [
-  {eid:'E20260', label:'随访4',  date:'2026-09-02'},
-  {eid:'E14037', label:'随访3',  date:'2026-05-11'},
-  {eid:'E41627', label:'随访2',  date:'2025-12-02'},
-  {eid:'E24192', label:'随访1',  date:'2025-06-18'},
-  {eid:'E21638', label:'首诊',   date:'2025-01-07'},
-  {eid:'E17904', label:'外院既往', date:'2024-08-15'}
+/* ---------- 胸部 CT 检查项目：6 次检查（FR-REG-04 期数 ≥3） ---------- */
+/* seq = 该次检查实际具备的序列分类索引；thick 层厚(mm, 要求 ≤5) */
+const CHEST_RAW=[
+  {eid:'E17904', date:'2024-08-15', label:'外院既往', seq:[0,1],     thick:5.0,  slices:48, ext:true},
+  {eid:'E21638', date:'2025-01-07', label:'首诊',     seq:[0,1],     thick:2.0,  slices:52},
+  {eid:'E24192', date:'2025-06-18', label:'随访1',    seq:[0,1],     thick:1.5,  slices:56},
+  {eid:'E41627', date:'2025-12-02', label:'随访2',    seq:[0,1,3],   thick:1.5,  slices:58},
+  {eid:'E14037', date:'2026-05-11', label:'随访3',    seq:[0,1,3],   thick:1.25, slices:60},
+  {eid:'E20260', date:'2026-09-02', label:'随访4',    seq:[0,1,2,3], thick:1.25, slices:64}
 ];
-/* 序列：每个时段多个序列（平扫肺窗/纵隔窗 · 增强动脉/静脉期 · 外院胶片） */
-const SERIES = [
-  /* 随访4 · 2026-09-02（最新）—— 4 个序列 */
-  {id:'s1',  exam:0, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'1.25mm', slices:64},
-  {id:'s2',  exam:0, name:'序列2 · 胸部平扫（纵隔窗）', win:'MEDI', type:'平扫', thick:'1.25mm', slices:64},
-  {id:'s3',  exam:0, name:'序列3 · 胸部增强（动脉期）', win:'MEDI', type:'增强', thick:'1.25mm', slices:62},
-  {id:'s4',  exam:0, name:'序列4 · 胸部增强（静脉期）', win:'MEDI', type:'增强', thick:'1.25mm', slices:62},
-  /* 随访3 · 2026-05-11 —— 3 个序列 */
-  {id:'s5',  exam:1, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'1.25mm', slices:60},
-  {id:'s6',  exam:1, name:'序列2 · 胸部平扫（纵隔窗）', win:'MEDI', type:'平扫', thick:'1.25mm', slices:60},
-  {id:'s7',  exam:1, name:'序列3 · 胸部增强（静脉期）', win:'MEDI', type:'增强', thick:'1.25mm', slices:60},
-  /* 随访2 · 2025-12-02 —— 2 个序列 */
-  {id:'s8',  exam:2, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'1.5mm',  slices:58},
-  {id:'s9',  exam:2, name:'序列2 · 胸部增强（静脉期）', win:'MEDI', type:'增强', thick:'1.5mm',  slices:58},
-  /* 随访1 · 2025-06-18 —— 2 个序列 */
-  {id:'s10', exam:3, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'1.5mm',  slices:56},
-  {id:'s11', exam:3, name:'序列2 · 胸部平扫（纵隔窗）', win:'MEDI', type:'平扫', thick:'1.5mm',  slices:56},
-  /* 首诊 · 2025-01-07 —— 2 个序列 */
-  {id:'s12', exam:4, name:'序列1 · 胸部平扫（肺窗）',   win:'LUNG', type:'平扫', thick:'2mm',    slices:52},
-  {id:'s13', exam:4, name:'序列2 · 胸部平扫（纵隔窗）', win:'MEDI', type:'平扫', thick:'2mm',    slices:52},
-  /* 外院既往 · 2024-08-15 —— 2 个序列（外院胶片扫描） */
-  {id:'s14', exam:5, name:'序列1 · 胸部平扫（肺窗·外院）',   win:'LUNG', type:'外院', thick:'5mm', slices:48},
-  {id:'s15', exam:5, name:'序列2 · 胸部平扫（纵隔窗·外院）', win:'MEDI', type:'外院', thick:'5mm', slices:48}
+
+/* ---------- 病灶家族（跨期体积 cm³ / 最大径 mm / 密度 HU） ---------- */
+const LESIONS=[
+  {fid:'F-001', name:'左肺上叶肿块', pos:'左肺上叶尖后段', near:'肺门', side:'L',
+   vol:{E17904:1.05,E21638:1.45,E24192:1.98,E41627:2.60,E14037:3.42,E20260:4.05},
+   dia:{E17904:12.6,E21638:13.9,E24192:15.1,E41627:16.5,E14037:18.7,E20260:19.8},
+   den:{E17904:32,E21638:33,E24192:35,E41627:36,E14037:38,E20260:38}},
+  {fid:'F-002', name:'右肺中叶磨玻璃结节', pos:'右肺中叶内侧段', near:'胸膜', side:'R',
+   vol:{E17904:0.95,E21638:0.90,E24192:0.88,E41627:0.85,E14037:0.83,E20260:0.82},
+   dia:{E17904:11.2,E21638:11.0,E24192:10.9,E41627:10.9,E14037:10.8,E20260:10.8},
+   den:{E17904:-525,E21638:-525,E24192:-528,E41627:-530,E14037:-532,E20260:-535}},
+  {fid:'F-003', name:'左肺下叶实性小结节', pos:'左肺下叶背段', near:'胸膜', side:'L',
+   vol:{E17904:0.13,E21638:0.12,E24192:0.10,E41627:0.08,E14037:0.06,E20260:null},
+   dia:{E17904:6.2,E21638:6.0,E24192:5.6,E41627:5.2,E14037:5.0,E20260:null},
+   den:{E17904:24,E21638:26,E24192:28,E41627:30,E14037:32,E20260:null}}
 ];
-/* 病灶家族：lesion id 关联跨时点同一病灶 */
-const LESIONS = [
-  {id:'F001', fid:'F-001', label:'左肺上叶 · 肺肿物', loc:'左肺上叶', cls:'周围型肺癌待排', desc:'左肺上叶可见类圆形软组织密度肿块影，密度欠均匀，边界清晰，大小约 23×18 mm，病灶呈分叶状，边缘可见短毛刺，临近胸膜凹陷。'},
-  {id:'F002', fid:'F-002', label:'右肺中叶 · 磨玻璃结节', loc:'右肺中叶', cls:'磨玻璃结节', desc:'右肺中叶可见斑片状磨玻璃密度影，边界清晰，其内可见空泡征。'},
-  {id:'F003', fid:'F-003', label:'左肺下叶 · 实性小结节', loc:'左肺下叶', cls:'实性小结节', desc:'左肺下叶可见小结节影，密度均匀，边界清晰，直径约 5 mm。'}
+
+/* ---------- 患者与检查项目（三级嵌套：患者 → 检查项目 → 检查） ---------- */
+function mkSeries(eid,idx,e){
+  const d=SEQ_DEF[idx];
+  return {sid:eid+'_s'+(idx+1), eid:eid, cls:d.cls, acq:d.acq, type:d.type, phase:d.phase,
+          win:d.win, thick:e.thick, slices:e.slices, conf:(idx===2&&e.eid==='E20260')?0.66:0.97};
+}
+function mkExams(raw){
+  return raw.map(r=>({eid:r.eid, date:r.date, label:r.label, thick:r.thick, slices:r.slices,
+                      ext:!!r.ext, series:r.seq.map(i=>mkSeries(r.eid,i,r)),
+                      lesions:LESIONS.map(L=>({fid:L.fid, vol:L.vol[r.eid], dia:L.dia[r.eid], den:L.den[r.eid]}))}));
+}
+const ITEMS=[
+  {pcode:'P2784', code:'CHEST_CT', name:'胸部 CT（平扫+增强）', body:'胸部', modality:'CT',
+   acq:'平扫+增强', conf:0.98, exams:mkExams(CHEST_RAW)},
+  {pcode:'P2784', code:'ABD_CT', name:'腹部 CT（增强）', body:'腹部', modality:'CT',
+   acq:'增强', conf:0.94, exams:[
+     {eid:'E31120', date:'2026-03-14', label:'腹部增强', thick:1.0, slices:70, ext:false,
+      series:[{sid:'E31120_s3', eid:'E31120', cls:'增强·动脉期', acq:'增强', type:'纵隔窗', phase:'动脉期', win:'MEDI', thick:1.0, slices:70, conf:0.95}],
+      lesions:[]},
+     {eid:'E48802', date:'2026-08-20', label:'腹部增强', thick:1.0, slices:72, ext:false,
+      series:[{sid:'E48802_s3', eid:'E48802', cls:'增强·动脉期', acq:'增强', type:'纵隔窗', phase:'动脉期', win:'MEDI', thick:1.0, slices:72, conf:0.95}],
+      lesions:[]}]}
 ];
-/* 各序列当前时间点：各病灶的量化指标（体积 cm³ 随随访时间变化） */
-const FOLLOWUP = {
-  /* 随访4 · 2026-09-02（最新）—— F-003 已消失 */
-  's1' :{F001:{vol:4.05,dia:19.8,den:38}, F002:{vol:0.82,dia:11.9,den:-525}, F003:{vol:null,dia:null,den:null}},
-  's2' :{F001:{vol:4.05,dia:19.8,den:39}, F002:{vol:0.82,dia:11.9,den:-523}, F003:{vol:null,dia:null,den:null}},
-  's3' :{F001:{vol:4.06,dia:19.9,den:58}, F002:{vol:0.83,dia:12.0,den:-480}, F003:{vol:null,dia:null,den:null}},
-  's4' :{F001:{vol:4.06,dia:19.9,den:62}, F002:{vol:0.83,dia:12.0,den:-470}, F003:{vol:null,dia:null,den:null}},
-  /* 随访3 · 2026-05-11 */
-  's5' :{F001:{vol:3.42,dia:18.7,den:38}, F002:{vol:0.86,dia:12.1,den:-520}, F003:{vol:0.07,dia:5.0,den:24}},
-  's6' :{F001:{vol:3.42,dia:18.7,den:39}, F002:{vol:0.86,dia:12.1,den:-518}, F003:{vol:0.07,dia:5.0,den:24}},
-  's7' :{F001:{vol:3.43,dia:18.8,den:60}, F002:{vol:0.87,dia:12.2,den:-472}, F003:{vol:0.07,dia:5.0,den:26}},
-  /* 随访2 · 2025-12-02 */
-  's8' :{F001:{vol:2.95,dia:17.6,den:40}, F002:{vol:0.92,dia:12.4,den:-530}, F003:{vol:0.07,dia:5.0,den:23}},
-  's9' :{F001:{vol:2.96,dia:17.7,den:58}, F002:{vol:0.93,dia:12.4,den:-488}, F003:{vol:0.07,dia:5.0,den:25}},
-  /* 随访1 · 2025-06-18 */
-  's10':{F001:{vol:2.10,dia:15.8,den:35}, F002:{vol:1.05,dia:13.0,den:-545}, F003:{vol:0.06,dia:4.8,den:22}},
-  's11':{F001:{vol:2.10,dia:15.8,den:36}, F002:{vol:1.05,dia:13.0,den:-543}, F003:{vol:0.06,dia:4.8,den:22}},
-  /* 首诊 · 2025-01-07 */
-  's12':{F001:{vol:1.45,dia:13.9,den:33}, F002:{vol:1.20,dia:13.6,den:-560}, F003:{vol:0.07,dia:5.0,den:24}},
-  's13':{F001:{vol:1.45,dia:13.9,den:34}, F002:{vol:1.20,dia:13.6,den:-558}, F003:{vol:0.07,dia:5.0,den:24}},
-  /* 外院既往 · 2024-08-15 */
-  's14':{F001:{vol:1.05,dia:12.6,den:32}, F002:{vol:1.35,dia:14.2,den:-570}, F003:{vol:0.08,dia:5.2,den:25}},
-  's15':{F001:{vol:1.05,dia:12.6,den:33}, F002:{vol:1.35,dia:14.2,den:-568}, F003:{vol:0.08,dia:5.2,den:25}}
-};
-/* 基准 / 对比序列（数据驱动，避免散落硬编码） */
-const BASE_SID='s1';        // 最新时段 · 平扫肺窗 → 配准基准
-const FIRST_SID='s12';      // 首诊 · 平扫肺窗
-const EARLIEST_SID='s14';   // 外院既往 · 平扫肺窗
-const examOf = sid => { const s=SERIES.find(x=>x.id===sid); return s?EXAMS[s.exam]:(EXAMS[0]||{label:'—',date:''}); };
+const PATIENTS=[
+  {pid:'P2784', name:'何婷', sex:'女', age:31, items:ITEMS.filter(x=>x.pcode==='P2784')},
+  {pid:'P3018', name:'王平磊', sex:'男', age:53, items:[
+    {pcode:'P3018', code:'CHEST_CT', name:'胸部 CT（平扫+增强）', body:'胸部', modality:'CT',
+     acq:'平扫+增强', conf:0.97, exams:mkExams([CHEST_RAW[5]])}]},
+  {pid:'P1102', name:'张伟明', sex:'男', age:45, items:[
+    {pcode:'P1102', code:'CHEST_CT', name:'胸部 CT（平扫+增强）', body:'胸部', modality:'CT',
+     acq:'平扫+增强', conf:0.91, exams:mkExams([
+       {eid:'E21640', date:'2025-11-15', label:'初次', thick:1.5, slices:54, seq:[0,1]},
+       {eid:'E40221', date:'2026-04-23', label:'复查1', thick:1.25, slices:58, seq:[0,1,3]},
+       {eid:'E14038', date:'2026-05-12', label:'复查2', thick:1.25, slices:58, seq:[0,1,3]},
+       {eid:'E20270', date:'2026-08-30', label:'复查3', thick:1.25, slices:60, seq:[0,1,3]}])}]},
+  {pid:'P2963', name:'高平玲', sex:'女', age:27, items:[
+    {pcode:'P2963', code:'HEAD_CT', name:'颅脑 CT（平扫）', body:'颅脑', modality:'CT',
+     acq:'平扫', conf:0.61, exams:[
+       {eid:'E21640', date:'2025-11-15', label:'颅脑平扫', thick:1.0, slices:40, ext:false,
+        series:[{sid:'E21640_h1', eid:'E21640', cls:'平扫·脑窗', acq:'平扫', type:'脑窗', phase:'', win:'BRAIN', thick:1.0, slices:40, conf:0.97}], lesions:[]},
+       {eid:'E40222', date:'2026-04-23', label:'颅脑平扫', thick:1.0, slices:40, ext:false,
+        series:[{sid:'E40222_h1', eid:'E40222', cls:'平扫·脑窗', acq:'平扫', type:'脑窗', phase:'', win:'BRAIN', thick:1.0, slices:40, conf:0.97}], lesions:[]}]}]}
+];
 
-/* ---------- 状态 ---------- */
-let state = {
-  page:'login',
-  layout:'l1',            // l1 | l1x2 | l2
-  wins:[],                // 各窗口 {sid, slice, ww, wl, zoom, panx, pany, mode:'view'|'mark', lesions:[]}
-  tool:'none',            // wl|pan|zoom|measure|mark
-  activeLesion:null,      // 当前选中病灶 id（家族）
-  regMode:false, baseSid:BASE_SID, regDim:null,   // regDim: slice|anat|lesion（第一期仅 anat 可用）
-  linkMode:false,
-  trendOpen:false,
-  wlPreset:'LUNG',
-  curSlice:30
-};
-const LAYOUTS={l1:[1],l1x2:[2],l2x1:[2],l2:[4]};
+/* ---------- 解剖结构配准：验收指标（需求 4.6.2 / 10.2） ---------- */
+const AREG_METRICS=[
+  {k:'对齐依据',            v:'解剖结构（肺 · 气管 · 脊柱 · 胸壁）'},
+  {k:'肺叶分割 Dice',       v:'0.96',  cls:'good'},
+  {k:'叶 / 段匹配正确率',    v:'96.2%', cls:'good'},
+  {k:'解剖对应点 TRE',      v:'1.8 mm', cls:'good'},
+  {k:'标志点残差 RMSE',     v:'2.0 mm', cls:''},
+  {k:'有效配准范围',        v:'96 %',  cls:''},
+  {k:'单例端到端时延',      v:'78 秒', cls:'good'},
+  {k:'质量分级',            v:'优 · 可用于病灶配准与量化', cls:'good'}
+];
+/* ---------- 配准模式（FR-REG-01/02） ---------- */
+const REG_MODES=[
+  {id:'slice', ic:'▤', name:'层面配准',     phase:2,
+   plan:[['对齐对象','同一解剖层面的逐层对应（呼吸相位 / 体位差异）'],
+         ['关键指标','层面位移误差 (mm) · 层间距一致性'],
+         ['解决什么','呼吸不齐导致「看起来不是同一层」的读片困扰'],
+         ['交付计划','第二期 · 与 MPR 多平面重建联动']]},
+  {id:'anat',  ic:'🫀', name:'解剖结构配准', phase:1},
+  {id:'lesion',ic:'⭐', name:'病灶配准',     phase:2,
+   plan:[['对齐对象','病灶家族（跨时点同一病灶）'],
+         ['关键指标','病灶体积 / 径线变化量 · 病灶级关联准确率'],
+         ['解决什么','在解剖结构对齐基础上做病灶级精细配准与量化'],
+         ['交付计划','第二期 · 依赖解剖结构配准（第一期）先行']]}
+];
 
-/* ---------- Canvas 合成 CT（确定性伪随机，同一序列同一slice 相同） ---------- */
-function seededRand(seed){let s=seed%2147483647;if(s<=0)s+=2147483646;return function(){s=s*16807%2147483647;return(s-1)/2147483646;};}
-function drawCT(canvas, sid, slice, ww, wl, lesions){
-  const ctx=canvas.getContext('2d');
-  const W=canvas.clientWidth||canvas.parentElement.clientWidth||480;
-  const H=canvas.clientHeight||canvas.parentElement.clientHeight||360;
-  canvas.width=W; canvas.height=H;
-  const cx=W/2, cy=H/2, scale=Math.min(W,H);
-  const rand=seededRand((sid.charCodeAt(1)*31+slice*7919)%2147483646);
-  // 胸壁软组织基底
-  const grad=ctx.createRadialGradient(cx,cy,scale*0.05,cx,cy,scale*0.62);
-  grad.addColorStop(0,'#1A1F28'); grad.addColorStop(0.55,'#14171E'); grad.addColorStop(1,'#0B0D12');
-  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
-  // 体表轮廓
-  ctx.save();
-  ctx.beginPath(); ctx.ellipse(cx,cy,scale*0.42,scale*0.50,0,0,Math.PI*2); ctx.fill();
-  ctx.restore();
-  ctx.fillStyle='#11151B'; ctx.fillRect(0,0,W,H);
-  ctx.save(); ctx.beginPath(); ctx.ellipse(cx,cy,scale*0.40,scale*0.48,0,0,Math.PI*2); ctx.clip();
-  // 胸壁肌肉环
-  ctx.fillStyle='#2A2F38'; ctx.beginPath(); ctx.ellipse(cx,cy,scale*0.40,scale*0.48,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='#3A404C'; ctx.beginPath(); ctx.ellipse(cx,cy,scale*0.355,scale*0.435,0,0,Math.PI*2); ctx.fill();
-  // 皮下脂肪层（低密度环）
-  ctx.fillStyle='#4E463C'; ctx.beginPath(); ctx.ellipse(cx,cy,scale*0.33,scale*0.41,0,0,Math.PI*2); ctx.fill();
-  // 肺野（双侧低密度 + 纹理）
-  const lungW=scale*0.155, lungH=scale*0.30;
-  drawLung(ctx, cx-lungW*0.95, cy, lungW, lungH, rand, ww, wl);
-  drawLung(ctx, cx+lungW*0.95, cy, lungW, lungH, rand, ww, wl);
-  // 纵隔/心脏
-  const mGrad=ctx.createRadialGradient(cx,cy- scale*0.05, scale*0.02, cx,cy, scale*0.15);
-  mGrad.addColorStop(0,'#6E7684'); mGrad.addColorStop(0.7,'#4A505C'); mGrad.addColorStop(1,'#3A3F48');
-  ctx.fillStyle=mGrad; ctx.beginPath();
-  ctx.moveTo(cx-lungW*0.25, cy-lungH*0.85);
-  ctx.bezierCurveTo(cx-lungW*0.55,cy-lungH*0.55, cx-lungW*0.3,cy+lungH*0.1, cx+lungW*0.1,cy+lungH*0.5);
-  ctx.bezierCurveTo(cx+lungW*0.55,cy+lungH*0.15, cx+lungW*0.45,cy-lungH*0.45, cx+lungW*0.05,cy-lungH*0.9);
-  ctx.closePath(); ctx.fill();
-  // 脊柱（后部）
-  ctx.fillStyle='#B9C2CC';
-  const spineR=scale*0.028;
-  for(let i=-2;i<=2;i++){
-    ctx.beginPath(); ctx.ellipse(cx+scale*0.30, cy+i*spineR*1.15, spineR*0.8, spineR*0.62, 0, 0, Math.PI*2); ctx.fill();
-  }
-  // 肋骨（前缘圆弧）
-  ctx.strokeStyle='rgba(185,194,204,0.5)'; ctx.lineWidth=1;
-  for(let i=0;i<5;i++){
-    ctx.beginPath(); ctx.arc(cx,cy, scale*(0.30+i*0.035), Math.PI*0.15, Math.PI*0.85); ctx.stroke();
-  }
-  // 纹理噪点（肺野血管纹理）
-  for(let i=0;i<900;i++){
-    const x=cx+(rand()-0.5)*scale*1.4, y=cy+(rand()-0.5)*scale*1.7;
-    const inLung=(Math.pow((x-(cx-lungW*0.95))/(lungW*1.25),2)+Math.pow((y-cy)/(lungH*1.2),2)<1)||(Math.pow((x-(cx+lungW*0.95))/(lungW*1.25),2)+Math.pow((y-cy)/(lungH*1.2),2)<1);
-    if(inLung){
-      ctx.fillStyle=rand()>0.5?'rgba(120,130,145,0.12)':'rgba(40,44,52,0.15)';
-      ctx.fillRect(x,y,1.3,1.3);
-    }
-  }
-  // 血管分支示意
-  ctx.strokeStyle='rgba(150,160,175,0.25)'; ctx.lineWidth=0.8;
-  for(let i=0;i<8;i++){
-    const bx=cx+(rand()-0.5)*scale*0.5, by=cy-lungH*0.5+rand()*lungH;
-    ctx.beginPath(); ctx.moveTo(bx,by);
-    for(let j=0;j<5;j++) ctx.lineTo(bx+(rand()-0.5)*scale*0.05, by+j*lungH*0.18);
-    ctx.stroke();
-  }
-  ctx.restore();
-  // 窗宽窗位标注（右下角）
-  ctx.fillStyle='rgba(224,230,240,0.7)'; ctx.font='10px Consolas'; ctx.textAlign='left';
-  ctx.fillText('R', W-28, 22);
-  ctx.fillStyle='rgba(224,230,240,0.35)'; ctx.font='9px Consolas';
-  ctx.fillText('WW:'+ww+' WL:'+wl, W-92, H-8);
-  // 病灶标注
-  const Ls={F001:{x:cx-lungW*0.9,y:cy-lungH*0.35,r:Math.max(10,scale*0.05)},F002:{x:cx+lungW*0.75,y:cy-lungH*0.45,r:Math.max(8,scale*0.035)},F003:{x:cx-lungW*0.6,y:cy+lungH*0.4,r:Math.max(6,scale*0.02)}};
-  return Ls;
-}
-function drawLung(ctx, cx, cy, w, h, rand, ww, wl){
-  ctx.fillStyle = wl>-400 ? '#C8CDD4' : '#6E7684'; // 肺窗亮、纵隔窗暗一些的肺
-  ctx.beginPath(); ctx.ellipse(cx, cy, w*1.05, h, 0, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle= wl>-400 ? '#AEB4BC' : '#5A616E';
-  ctx.beginPath(); ctx.ellipse(cx, cy, w*0.78, h*0.78, 0, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = wl>-400 ? '#98A0AB' : '#4A505C';
-  ctx.beginPath(); ctx.ellipse(cx, cy, w*0.5, h*0.52, 0, 0, Math.PI*2); ctx.fill();
-}
+/* ============ 运行时状态 ============ */
+const state={ form:'C', layout:'1x2', matrix:true, range:'2',
+  clsSel:[0], regMode:null, regDim:null, baseEid:null, tgtEid:null,
+  baseLocked:true, baseLesion:'F-001', secondary:['F-002'], manual:{dy:0,dx:0,n:0},
+  curPid:null, curItem:null, curated:false, seed:1 };
 
-/* 病灶在影像上的锚点（相对比例：模拟窗口内病灶位置，随 slice 小幅变化） */
-function lesionAnchor(lid, sid, slice){
-  const base={F001:{x:0.335,y:0.36},F002:{x:0.67,y:0.34},F003:{x:0.42,y:0.62}};
-  if(lid==='F001'||lid==='F002'||lid==='F003'){
-    const b=base[lid]; const drift=Math.sin(slice/6+lid.charCodeAt(3))*0.015;
-    // 若该序列该病灶不存在（随访后消失）返回 null
-    const ff=FOLLOWUP[sid]||{};
-    if(lid==='F003'&&!ff.F003) return null;
-    return {x:b.x+drift, y:b.y+drift*0.7, r:lid==='F001'?0.052:(lid==='F002'?0.036:0.022)};
-  }
-  return null;
+/* ============ 工具 ============ */
+let toastT=null;
+function toast(msg,kind){
+  const t=$('#toast'); t.textContent=msg;
+  t.className='show'+(kind?' '+kind:''); clearTimeout(toastT);
+  toastT=setTimeout(()=>{t.className='';},3400);
 }
-function seriesHasLesion(sid,lid){ return !!(FOLLOWUP[sid]&&FOLLOWUP[sid][lid]); }
+function fmtPct(a,b){ if(a==null||b==null) return '—'; return ((b-a)/a*100>0?'+':'')+((b-a)/a*100).toFixed(1)+'%'; }
+function examOf(eid){ if(!state.curItem) return null; return state.curItem.exams.find(e=>e.eid===eid); }
+function items(){ return PATIENTS.flatMap(p=>p.items.map(it=>({pid:p.pid, pname:p.name, sex:p.sex, age:p.age, it:it}))); }
 
-/* ---------- 页面路由 ---------- */
-function go(page){
-  state.page=page;
-  $$('.page').forEach(p=>p.classList.remove('active'));
-  $('#page-'+page).classList.add('active');
-  if(page==='list') renderList();
-  if(page==='viewer') initViewer();
-}
-function doLogout(){ state.page='login'; $$('.page').forEach(p=>p.classList.remove('active')); $('#page-login').classList.add('active'); }
-function backToList(){ go('list'); }
-
-/* ---------- 登录 ---------- */
-$('#eyeBtn').addEventListener('click',()=>{
-  const i=$('#inpPwd'); const show=i.type==='password';
-  i.type=show?'text':'password';
-  $('#eyeSvg').innerHTML = show?'<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><path d="M4 4l16 16"/>':'<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>';
-});
-$('#inpPwd').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
-$('#btnLogin').addEventListener('click',doLogin);
-function doLogin(){
-  let ok=true;
-  const u=$('#inpUser').value.trim(), p=$('#inpPwd').value;
-  if(!u){ setErrMsg('accWrap','errUser','请输入账号',true); ok=false; }
-  else if(u.length<2||u.length>20){ setErrMsg('accWrap','errUser','账号长度为 2-20 个字符',true); ok=false; }
-  else setErrMsg('accWrap','errUser','',false);
-  if(!p){ setErrMsg('pwdWrap','errPwd','请输入密码',true); ok=false; }
-  else if(p.length<6){ setErrMsg('pwdWrap','errPwd','密码长度不少于 6 位',true); ok=false; }
-  else setErrMsg('pwdWrap','errPwd','',false);
-  if(!ok) return;
-  const btn=$('#btnLogin'); btn.disabled=true; btn.textContent='验证中...';
-  setTimeout(()=>{ btn.disabled=false; btn.textContent='登  录'; toast('登录成功 · 身份:放射科 VV'); go('list'); },700);
-}
-function setErrMsg(wrapId,errId,msg,on){
-  $('#'+wrapId).classList.toggle('err',on);
-  const e=$('#'+errId); e.textContent=msg; e.style.display=on?'block':'none';
-}
-
-/* ---------- 患者列表 ---------- */
-let listData=[], pageNow=1, PAGE_SIZE=4;
-function renderList(){
-  const all=[];
-  PATIENTS.forEach(pt=>{ pt.exams.forEach(ex=>{ all.push({...ex, name:pt.name,pid:pt.pid,age:pt.age,sex:pt.sex}); }); });
-  all.sort((a,b)=> b.date.localeCompare(a.date));
-  listData=all;
-  pageNow=1; pageTurn(0);
-}
-function applyFilter(){
-  const n=$('#fName').value.trim(), pid=$('#fPid').value.trim(), ex=$('#fExam').value.trim();
-  const d1=$('#fDate1').value, d2=$('#fDate2').value, ty=$('#fType').value;
-  let arr=listData.filter(r=>{
-    if(n && !r.name.includes(n)) return false;
-    if(pid && !r.pid.includes(pid)) return false;
-    if(ex && !r.eid.includes(ex)) return false;
-    if(d1 && r.date<d1) return false;
-    if(d2 && r.date>d2) return false;
-    if(ty && r.type!==ty) return false;
-    return true;
+/* ============ Canvas 合成 CT ============ */
+function rnd(seed){ let x=Math.sin(seed*12.9898)*43758.5453; return x-Math.floor(x); }
+function drawCT(cv,eid,win,opt){
+  opt=opt||{};
+  const dpr=window.devicePixelRatio||1;
+  const w=cv.clientWidth||200, h=cv.clientHeight||150;
+  cv.width=w*dpr; cv.height=h*dpr;
+  const g=cv.getContext('2d'); g.scale(dpr,dpr);
+  const base = win==='LUNG'?78 : win==='BRAIN'?58 : 46;
+  const grd=g.createRadialGradient(w/2,h/2,6,w/2,h/2,Math.max(w,h)*.72);
+  grd.addColorStop(0,'#20252B'); grd.addColorStop(1,'#0A0C0F');
+  g.fillStyle=grd; g.fillRect(0,0,w,h);
+  /* 体表轮廓 */
+  g.save(); g.beginPath(); g.ellipse(w/2,h/2,w*.43,h*.47,0,0,Math.PI*2);
+  g.clip(); g.fillStyle='#2A2F36'; g.fillRect(0,0,w,h);
+  /* 双肺 */
+  const lungC = win==='LUNG'?'#0B1420' : win==='BRAIN'?'#141820' : '#161A20';
+  [[-.19,-.02],[-.16,-.05]].forEach((p,i)=>{
+    g.beginPath(); g.ellipse(w/2+p[0]*w, h*(.5+p[1]), w*.155, h*.31, i?.06:-.06, 0, Math.PI*2);
+    g.fillStyle=lungC; g.fill();
   });
-  return arr;
-}
-function doSearch(){
-  const d1=$('#fDate1').value, d2=$('#fDate2').value;
-  if(d1 && d2 && d1>d2){ toast('⚠️ 结束日期不能早于开始日期，请重新选择'); $('#fDate2').focus(); return; }
-  $('#listLoading').classList.add('show'); $('#listWrap').style.display='none';
-  setTimeout(()=>{ $('#listLoading').classList.remove('show'); $('#listWrap').style.display='block'; pageNow=1; pageTurn(0); toast('搜索完成'); },450);
-}
-function doReset(){ ['fName','fPid','fExam','fDate1','fDate2'].forEach(id=>$('#'+id).value=''); $('#fType').value=''; doSearch(); }
-function pageTurn(d){
-  const rows=applyFilter();
-  const pages=Math.max(1,Math.ceil(rows.length/PAGE_SIZE));
-  pageNow=clamp(pageNow+d,1,pages);
-  $('#pageInfo').textContent=pageNow+' / '+pages;
-  const body=$('#listBody'); body.innerHTML='';
-  $('#listEmpty').classList.toggle('show',rows.length===0);
-  $('#listWrap').style.display=rows.length?'block':'none';
-  // 按患者分组（二级嵌套）：患者组整体翻页，避免组被切断
-  const byPt={}; rows.forEach(r=>{ (byPt[r.pid]=byPt[r.pid]||[]).push(r); });
-  const ptKeys=Object.keys(byPt);
-  const pagePts=ptKeys.slice((pageNow-1)*PAGE_SIZE, pageNow*PAGE_SIZE);
-  pagePts.forEach(pid=>{
-    const pt=byPt[pid].sort((a,b)=>b.date.localeCompare(a.date));
-    const g=document.createElement('div'); g.className='pt-group';
-    g.innerHTML=`<div class="pt-head open" onclick="togglePtGroup(this)">
-      <span class="name"><span class="caret">▶</span>${pt[0].name}</span>
-      <span style="color:var(--accent2)">${pid}</span><span>${pt[0].age}岁 · ${pt[0].sex}</span>
-      <span class="exam-count" style="grid-column:span 2">${pt.length} 项检查</span>
-      <span></span></div>`;
-    const rowsDiv=document.createElement('div'); rowsDiv.className='pt-rows';
-    pt.forEach(r=>{
-      const row=document.createElement('div'); row.className='exam-row';
-      row.innerHTML=`<span></span><span></span><span></span><span>${r.eid}</span><span>${r.date}</span><span class="op"><span class="ct-tag">${r.type}</span><button class="btn btn-primary" style="padding:4px 16px;font-size:11.5px" onclick="openExam('${r.eid}','${pid}')">查看</button></span>`;
-      rowsDiv.appendChild(row);
-    });
-    g.appendChild(rowsDiv); body.appendChild(g);
-  });
-}
-function togglePtGroup(el){ el.classList.toggle('open'); const rows=el.nextElementSibling; rows.style.display=rows.style.display==='none'?'':'none'; }
-function openExam(eid,pid){
-  if(pid!=='P2784'){
-    toast('演示数据仅含肺肿物随访病例（何婷 P2784），请选择该病例体验完整功能');
-    return;
+  /* 纹理噪声 */
+  for(let i=0;i<170;i++){
+    const a=rnd(i*3+state.seed*7+base);
+    const x=w*(.1+.8*rnd(i*7+1)), y=h*(.08+.84*rnd(i*11+2));
+    g.fillStyle='rgba(255,255,255,'+(win==='LUNG'?.045:.035).toFixed(3)+')';
+    g.fillRect(x,y,1.1+a*1.4,1.1+a*1.4);
   }
-  $('#listLoading').classList.add('show'); $('#listWrap').style.display='none';
-  setTimeout(()=>{ $('#listLoading').classList.remove('show'); $('#listWrap').style.display='block'; go('viewer'); },600);
-}
-function fakeUpload(){ const inp=document.createElement('input'); inp.type='file'; inp.onchange=()=>toast('已选择 DICOM 文件（模拟）· 解析中…'); inp.click(); }
-
-function mkWin(sid){
-  const s=SERIES.find(x=>x.id===sid);
-  return {sid, slice: Math.round((s?s.slices:60)/2), ww:s&&s.win==='MEDI'?350:1500, wl:s&&s.win==='MEDI'?40:-600,
-          zoom:1, px:0, py:0, meas:[], manual:[]};
-}
-/* ---------- 阅片工作站初始化 ---------- */
-function initViewer(){
-  // 默认窗口：最新时段（随访4）肺窗 s1 + 纵隔窗 s2（1x2 对比）
-  state.layout='l1x2';
-  state.regMode=false; state.trendOpen=false; state.linkMode=false;
-  state.regDim=null;
-  state.baseSid=BASE_SID;
-  state.wins=[mkWin(BASE_SID),mkWin('s2')];
-  state.tool='none';
-  $('#vtPatient').innerHTML=`<span class="pt-nm">${CURRENT.name}</span><span class="pt-meta">${CURRENT.sex} ${CURRENT.age}岁 · ${CURRENT.pid} · 肺肿物随访</span>`;
-  $('#pidInfo').textContent=CURRENT.pid;
-  $('#modeBadge').textContent='2D · 轴位';
-  setLayout('l1x2');
-  renderSeries();
-  renderReport();
-  $('#regModeTag').classList.remove('show');
-  $('#regPanel').classList.remove('show');
-  $('#trendPanel').classList.remove('show');
-  hideLesionPop();
-  setActiveLesion(null);
-}
-function setLayout(l){
-  state.layout=l;
-  $('#viewGrid').className=''; $('#viewGrid').classList.add(l);
-  $$('#layoutGroup .layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===l));
-  const target=LAYOUTS[l][0];
-  while(state.wins.length<target) addWindowFromList();
-  while(state.wins.length>target) state.wins.pop();
-  renderViewports();
-}
-function setLayoutAuto(){
-  // 按窗口数量自动选布局：1->l1 2->l1x2 3/4->l2
-  const n=state.wins.length;
-  const l=n===1?'l1':(n===2?'l1x2':'l2');  state.layout=l;
-  $('#viewGrid').className=''; $('#viewGrid').classList.add(l);
-  $$('#layoutGroup .layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===l));
-  renderViewports();
-}
-function addWindowFromList(){
-  // 添加一个未在窗口中的序列（优先平扫）
-  const used=state.wins.map(w=>w.sid);
-  const cand=SERIES.find(s=>!used.includes(s.id));
-  if(cand) state.wins.push(mkWin(cand.id));
-}
-
-/* ---------- 序列栏 ---------- */
-function renderSeries(){
-  const list=$('#seriesList'); list.innerHTML='';
-  $('#seriesHint').textContent=EXAMS.length+' 时段 / '+SERIES.length+' 序列';
-  // 按检查日期分组（EXAMS 倒序）
-  EXAMS.forEach((ex,ei)=>{
-    const g=document.createElement('div'); g.className='series-date-group';
-    const items=SERIES.filter(s=>s.exam===ei);
-    if(!items.length) return;
-    const dt=ex.date.split('-');
-    g.innerHTML=`<div class="sd-head ${ei===0?'open':''}" onclick="this.classList.toggle('open');const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'':'none'"><span class="caret">▶</span><span class="tno">T${EXAMS.length-ei}</span><span>${ex.label} · ${ex.date}</span><span class="cnt">${items.length} 序列</span></div>`;
-    const wrap=document.createElement('div'); wrap.className='sd-items'; if(ei!==0) wrap.style.display='none';
-    items.forEach(s=>{
-      const item=document.createElement('div'); item.className='series-item'+(state.wins[0]&&state.wins[0].sid===s.id?' active':'');
-      item.draggable=true;
-      item.addEventListener('dragstart',ev=>{ ev.dataTransfer.setData('text/sid',s.id); ev.dataTransfer.effectAllowed='copy'; });
-      item.innerHTML=`<div class="series-thumb"><canvas data-sid="${s.id}"></canvas></div>
-        <div class="si-info"><div class="si-name">${s.name}</div><div class="si-meta"><span class="stype">${s.type}</span> · ${s.win==='LUNG'?'肺窗':'纵隔窗'} · ${s.thick} · ${s.slices}层</div><div class="si-time">${ex.date}</div></div>`;
-      item.addEventListener('click',ev=>{
-        ev.stopPropagation();
-        if(state.regMode){
-          // 配准模式：仅允许替换非基准序列窗口
-          const idx=state.wins.findIndex(w=>!isBase(w.sid));
-          if(idx>=0){ replaceWindow(idx,s.id); toast('已替换非基准窗口 · 基准序列受保护'); }
-          else toast('当前全部窗口为基准序列，无法替换');
-          return;
-        }
-        // 普通模式：若该序列已在窗口中则切到窗口0；否则窗口<4 时拖入新窗，=4 时替换窗口0
-        const exist=state.wins.findIndex(w=>w.sid===s.id);
-        if(exist>=0){ if(exist!==0){ const t=state.wins[0]; state.wins[0]=state.wins[exist]; state.wins[exist]=t; renderViewports(); } return; }
-        if(state.wins.length<4){ state.wins.push(mkWin(s.id)); }
-        else { state.wins[state.wins.length-1]=mkWin(s.id); }
-        setLayoutAuto(); renderViewports();
-      });
-      wrap.appendChild(item);
-    });
-    g.appendChild(wrap);
-    list.appendChild(g);
-  });
-  // 补画缩略图
-  requestAnimationFrame(()=>{ $$('#seriesList canvas').forEach(c=>{ drawThumb(c); }); });
-}
-function drawThumb(c){
-  const sid=c.dataset.sid; const s=SERIES.find(x=>x.id===sid);
-  c.width=c.clientWidth||52; c.height=c.clientHeight||52;
-  const ctx=c.getContext('2d');
-  const fake=document.createElement('canvas'); fake.width=104; fake.height=104;
-  drawCT(fake,s.id,24,s.win==='LUNG'?1500:350,s.win==='LUNG'?-600:40,[]);
-  ctx.drawImage(fake,0,0,c.width,c.height);
-}
-
-/* ---------- 视口渲染 ---------- */
-function renderViewports(){
-  const grid=$('#viewGrid'); grid.innerHTML='';
-  // 排序：基准序列优先显示在第一个？不，保持窗口顺序，基准高亮
-  const wins=state.wins;
-  wins.forEach((w,i)=>{
-    const vp=document.createElement('div'); vp.className='viewport';
-    if(state.regMode && isBase(w.sid)) vp.classList.add('base');
-    const s=SERIES.find(x=>x.id===w.sid);
-    const ex=EXAMS[s.exam];
-    const lesIdx=LESIONS.map(L=>L.id).filter(lid=>seriesHasLesion(w.sid,lid));
-    vp.innerHTML=`
-      <canvas data-w="${i}"></canvas>
-      <div class="vp-tag"><span class="d">${s.name}</span><span>${ex.label}</span><span>${ex.date}</span><span class="reg-badge" ${state.regMode&&isBase(w.sid)?'':'style="display:none"'}>基准</span></div>
-      <div class="vp-corner">${s.win==='LUNG'?'肺窗':'纵隔窗'} · ${s.slices}层</div>
-      <div class="vp-corner r">R</div>
-      <div class="axis-arrow r" style="color:rgba(224,230,240,.3)">R</div>
-      <div class="vp-metrics" id="m${i}"></div>
-      <div class="base-flag">⭐ 基准</div>
-      <div class="lesion-tip">● 病灶</div>`;
-    grid.appendChild(vp);
-    const cv=vp.querySelector('canvas');
-    updateCursor(cv);
-    cv.addEventListener('pointerdown',e=>{ e.preventDefault(); try{cv.setPointerCapture(e.pointerId);}catch(_){} onCanvasDown(e,cv,w,i); });
-    cv.addEventListener('pointermove',e=>{ onCanvasMove(e,cv,w,i); });
-    cv.addEventListener('pointerup',e=>{ onCanvasUp(e,cv,w,i); });
-    cv.addEventListener('pointerleave',()=>{ w.hover=false; });
-    cv.addEventListener('wheel',e=>{
-      e.preventDefault();
-      if(state.tool==='zoom'||e.ctrlKey){
-        // 缩放工具或 Ctrl+滚轮 -> 缩放
-        const f=e.deltaY<0?1.18:0.85;
-        zoomWin(w,f);
-      }else{
-        // 默认滚轮翻层
-        stepSliceWin(w, e.deltaY>0?1:-1);
+  /* 纵隔 / 心脏 */
+  g.beginPath(); g.ellipse(w*.53,h*.55,w*.10,h*.17,0,0,Math.PI*2);
+  g.fillStyle=win==='LUNG'?'#2C333B':'#31363E'; g.fill();
+  /* 脊柱 */
+  g.beginPath(); g.ellipse(w*.5,h*.885,w*.052,h*.036,0,0,Math.PI*2); g.fillStyle='#4A5058'; g.fill();
+  g.beginPath(); g.ellipse(w*.5,h*.885,w*.026,h*.018,0,0,Math.PI*2); g.fillStyle='#666D76'; g.fill();
+  /* 肋骨 */
+  g.strokeStyle='rgba(190,200,214,.32)'; g.lineWidth=1.6;
+  for(let i=0;i<9;i++){
+    const y=h*(.14+i*.088);
+    g.beginPath(); g.moveTo(w*.08,y+h*.012); g.quadraticCurveTo(w*.5,y-h*.016,w*.92,y+h*.012); g.stroke();
+  }
+  /* 胸骨 */
+  g.beginPath(); g.ellipse(w*.5,h*.14,w*.030,h*.014,0,0,Math.PI*2); g.fillStyle='#5A626C'; g.fill();
+  g.restore();
+  /* 病灶 */
+  const cur=examOf(eid);
+  if(cur && opt.mark!==false){
+    const dl=cur.lesions.filter(L=>L.vol!=null);
+    dl.forEach((L,idx)=>{
+      const seedI=eid.length+idx*5;
+      const Lx=L.fid==='F-001'? .31 : L.fid==='F-002'? .70 : .34;
+      const Ly=L.fid==='F-003'? .68 : .40;
+      const r=Math.max(5, Math.min(w,h)*(L.fid==='F-001'? .082 : L.fid==='F-002'? .058 : .030));
+      const x=w*Lx+(rnd(seedI)*8-4), y=h*Ly+(rnd(seedI+1)*8-4);
+      g.beginPath(); g.arc(x,y,r,0,Math.PI*2);
+      g.fillStyle=L.fid==='F-002'?'rgba(180,200,225,.30)':'rgba(226,232,240,.42)'; g.fill();
+      const isBase=L.fid===state.baseLesion;
+      g.strokeStyle=isBase?'#FFD700':'rgba(0,200,150,.85)'; g.lineWidth=isBase?2:1.3; g.stroke();
+      if(isBase){
+        g.beginPath(); g.arc(x,y,r+7,0,Math.PI*2); g.strokeStyle='rgba(255,215,0,.45)'; g.lineWidth=1.2; g.stroke();
+        g.fillStyle='#FFD700'; g.font='bold 10px Microsoft YaHei';
+        g.fillText('⭐'+L.fid, x+r+3, y-r+2);
       }
-    },{passive:false});
-    cv.addEventListener('dblclick',()=>{ if(w.zoom>1){ resetView(w); toast('视图已重置'); } else { zoomWin(w,2); toast('已放大 2 倍 · 双击还原'); } });
-    cv.addEventListener('contextmenu',e=>{
-      e.preventDefault();
-      const {x,y}=canvasPos(cv,e,w);
-      const mh=hitManualAt(w,x,y);
-      if(mh){ removeManualLesion(w,i,mh); return; }
-      resetView(w); toast('视图已重置');
     });
-    // 拖放：从左侧序列栏拖入（配准模式下基准受保护）
-    vp.addEventListener('dragover',e=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; vp.style.outline='2px solid rgba(42,127,255,.7)'; });
-    vp.addEventListener('dragleave',()=>{ vp.style.outline='none'; });
-    vp.addEventListener('drop',e=>{
-      e.preventDefault(); vp.style.outline='none';
-      const sid=e.dataTransfer.getData('text/sid');
-      if(!sid) return;
-      if(state.regMode && isBase(w.sid)){ toast('基准序列受保护，不可被替换'); return; }
-      if(state.wins.find(x=>x.sid===sid)){ toast('该序列已在阅片区中'); return; }
-      const s=SERIES.find(x=>x.id===sid);
-      w.sid=sid; w.slice=Math.round(s.slices/2);
-      w.ww=s.win==='LUNG'?1500:350; w.wl=s.win==='LUNG'?-600:40;
-      drawAll(); updateMetrics(); updateSliceInfo();
-      toast('已拖入序列：'+s.name+(state.regMode?'（非基准）':''));
-    });
-  });
-  requestAnimationFrame(()=>drawAll());
-  updateMetrics();
-}
-function isBase(sid){ return state.regMode && sid===state.baseSid; }
-function drawAll(){ state.wins.forEach((w,i)=>{ drawWin(w,i); }); }
-/* 应用缩放/平移：CSS transform（origin 中心，px/py 屏幕像素不受 zoom 缩放） */
-function applyViewTf(cv,w){
-  if(!w.zoom||w.zoom===1) w.zoom=1;
-  if(!w.px) w.px=0; if(!w.py) w.py=0;
-  cv.style.transformOrigin='50% 50%';
-  if(w.zoom===1&&w.px===0&&w.py===0){ cv.style.transform=''; return; }
-  cv.style.transform=`translate(${w.px}px, ${w.py}px) scale(${w.zoom})`;
-}
-function drawWin(w,i){
-  const vp=document.querySelectorAll('.viewport')[i]; if(!vp) return;
-  const cv=vp.querySelector('canvas'); if(!cv) return;
-  const s=SERIES.find(x=>x.id===w.sid);
-  drawCT(cv,w.sid,clamp(w.slice,1,s.slices),w.ww,w.wl,[]);
-  applyViewTf(cv,w);
-  const ctx=cv.getContext('2d');
-  const W=cv.width,H=cv.height;
-  // 病灶框（家族色 / 选中高亮）
-  LESIONS.forEach(L=>{
-    if(!seriesHasLesion(w.sid,L.id)) return;
-    const a=lesionAnchor(L.id,w.sid,w.slice); if(!a) return;
-    const x=a.x*W, y=a.y*H, r=a.r*Math.min(W,H);
-    const isActive=state.activeLesion===L.id;
-    ctx.save();
-    ctx.strokeStyle=isActive?'#FF6B6B':(state.activeLesion===null?'#00C896':'#00C896');
-    ctx.lineWidth=isActive?2.4:1.5;
-    ctx.setLineDash(isActive?[6,4]:[4,3]);
-    ctx.strokeRect(x-r,y-r,r*2,r*2);
-    ctx.font='10px "Microsoft YaHei"'; ctx.textAlign='left';
-    ctx.fillStyle=isActive?'#FF6B6B':'rgba(0,200,150,.95)';
-    ctx.fillText(L.loc,x-r,y-r-4);
-    ctx.restore();
-  });
-  // 医生手动标注（青色实线框 + 序号）
-  (w.manual||[]).forEach((m,mi)=>{
-    ctx.save();
-    ctx.strokeStyle='#FFD700'; ctx.lineWidth=1.8; ctx.setLineDash([]);
-    ctx.strokeRect(m.x-m.r,m.y-m.r,m.r*2,m.r*2);
-    ctx.fillStyle='rgba(255,215,0,.15)'; ctx.fillRect(m.x-m.r,m.y-m.r,m.r*2,m.r*2);
-    ctx.fillStyle='#FFD700'; ctx.font='bold 11px "Microsoft YaHei"';
-    ctx.fillText('M'+(mi+1),m.x-m.r,m.y-m.r-5);
-    ctx.restore();
-  });
-  // 测量线（黄色 + 距离标注）
-  (w.meas||[]).forEach(m=>{
-    ctx.save();
-    ctx.strokeStyle='#FFE066'; ctx.lineWidth=1.6; ctx.setLineDash([5,3]);
-    ctx.beginPath(); ctx.moveTo(m.x1,m.y1); ctx.lineTo(m.x2,m.y2); ctx.stroke();
-    ctx.fillStyle='#FFE066';
-    ctx.beginPath(); ctx.arc(m.x1,m.y1,3.5,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(m.x2,m.y2,3.5,0,Math.PI*2); ctx.fill();
-    const mx=(m.x1+m.x2)/2, my=(m.y1+m.y2)/2-8;
-    const mmv=Math.round(Math.hypot(m.x2-m.x1,m.y2-m.y1)*0.85);
-    ctx.font='11px Consolas'; ctx.textAlign='center';
-    ctx.fillStyle='#FFE066'; ctx.fillText(mmv+' mm',mx,my);
-    ctx.restore();
-  });
-  // 测量预览线（拖动中）
-  if(w._preview){ const m=w._preview;
-    ctx.save();
-    ctx.strokeStyle='rgba(255,224,102,.75)'; ctx.lineWidth=1.2; ctx.setLineDash([4,4]);
-    ctx.beginPath(); ctx.moveTo(m.x1,m.y1); ctx.lineTo(m.x2,m.y2); ctx.stroke();
-    ctx.restore();
   }
-  // 缩放/平移指示
-  if(w.zoom!==1||w.px||w.py){
-    ctx.save();
-    ctx.fillStyle='rgba(42,127,255,.85)'; ctx.font='10px "Microsoft YaHei"';
-    ctx.textAlign='right';
-    ctx.fillText('×'+w.zoom.toFixed(1),W-8,H-26);
-    ctx.restore();
+  /* 手动微调位移指示（FR-REG-23） */
+  if(state.manual.n>0 && eid===state.tgtEid){
+    g.strokeStyle='rgba(255,215,0,.75)'; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(w/2,h/2);
+    g.lineTo(w/2+state.manual.dx*6, h/2+state.manual.dy*6); g.stroke();
+    g.fillStyle='rgba(255,215,0,.9)'; g.font='10px Microsoft YaHei';
+    g.fillText('手动微调 Δ('+state.manual.dx+','+state.manual.dy+')', 8, h-8);
   }
+  return cv;
 }
-function renderWinSlice(w){ /* 已由 drawWin 覆盖 */ }
 
-/* ---------- 交互：点选 / 拖动 / 测量 / 标注 ---------- */
-let dragState=null;      // {win:i, mode:'pan'|'measure', sx,sy, moved}
-function canvasPos(cv,e,w){
-  const r=cv.getBoundingClientRect();
-  const z=w&&w.zoom?w.zoom:1, px=w&&w.px?w.px:0, py=w&&w.py?w.py:0;
-  // 反算到 canvas 逻辑坐标（origin 中心缩放）
-  const x=(e.clientX-r.left - px - r.width/2)/z + r.width/2;
-  const y=(e.clientY-r.top  - py - r.height/2)/z + r.height/2;
-  return {x, y, W:cv.width, H:cv.height, cssX:e.clientX-r.left, cssY:e.clientY-r.top};
+/* ============ 登录 / 产品形态 ============ */
+const FORM_DEF=[
+  {k:'A', t:'嵌入院方 IS / PACS 的「科研比对」入口', d:'医生在常规阅片器中选好患者后一键进入本产品完成比对', main:true},
+  {k:'B', t:'MIIA-AI 集成平台中的页面', d:'复用平台的统一认证、患者主索引、模型能力与留痕', main:true},
+  {k:'C', t:'独立部署（含独立登录页）· 当前 Demo 形态', d:'独立登录页是为演示便利保留的，不作为最终产品形态承诺', main:false}
+];
+function renderForms(){
+  $('#formList').innerHTML=FORM_DEF.map((f,i)=>
+    '<div class="fcard'+(i===2?' on':'')+'" data-fk="'+f.k+'">'+
+      '<div class="fk">形态 '+f.k+(f.main?'<br><span style="color:#8FA3BF;font-weight:400">主形态</span>':'<br><span style="color:#8FA3BF;font-weight:400">Demo</span>')+'</div>'+
+      '<div style="flex:1"><div class="ft">'+f.t+'</div><div class="fd">'+f.d+'</div></div>'+
+    '</div>').join('');
+  $$('#formList .fcard').forEach(el=>el.addEventListener('click',()=>{
+    state.form=el.dataset.fk;
+    $$('#formList .fcard').forEach(x=>x.classList.toggle('on',x===el));
+    const note=$('#lgFormNote');
+    if(state.form==='C'){
+      note.innerHTML='<span style="color:#FFA53C">当前为形态 C（独立部署 Demo）：独立登录页仅为演示便利保留</span>';
+      $('#btnLogin').textContent='登 录';
+    }else if(state.form==='A'){
+      note.innerHTML='<span style="color:#00C896">形态 A：由院方 IS / PACS 内嵌进入，生产环境免登录（本 Demo 保留登录页）</span>';
+      $('#btnLogin').textContent='免登进入（Demo 模拟）';
+    }else{
+      note.innerHTML='<span style="color:#00C896">形态 B：MIIA-AI 平台页面，复用平台统一认证（生产免登录）</span>';
+      $('#btnLogin').textContent='免登进入（Demo 模拟）';
+    }
+    $('#lbForm').textContent = state.form==='A'?'形态 A · 嵌入 IS/PACS':(state.form==='B'?'形态 B · MIIA-AI 平台页面':'形态 C · 独立 Demo');
+  }));
+  $('#lgFormNote').innerHTML='<span style="color:#FFA53C">当前为形态 C（独立部署 Demo）：独立登录页仅为演示便利保留</span>';
 }
-function hitLesionAt(w,x,y,W,H){
-  for(const L of LESIONS){
-    if(!seriesHasLesion(w.sid,L.id)) continue;
-    const a=lesionAnchor(L.id,w.sid,w.slice); if(!a) continue;
-    const rx=a.x*W, ry=a.y*H, rr=a.r*Math.min(W,H);
-    if(x>=rx-rr-6&&x<=rx+rr+6&&y>=ry-rr-6&&y<=ry+rr+6) return L.id;
+
+function doLogin(){
+  const u=$('#inUser').value.trim(), p=$('#inPwd').value.trim();
+  let bad=false;
+  if(state.form==='C' && !u){ $('#fUser').classList.add('bad','shake'); setTimeout(()=>$('#fUser').classList.remove('shake'),320); bad=true; }
+  if(state.form==='C' && p.length<4){ $('#fPwd').classList.add('bad','shake'); setTimeout(()=>$('#fPwd').classList.remove('shake'),320); bad=true; }
+  if(bad) return;
+  const b=$('#btnLogin'); b.textContent='验证中…'; b.disabled=true;
+  $('#lgFormNote').innerHTML='<span class="mono">OAuth / 院内统一认证 · 角色 = 放射科医师 · 会话留痕已开启</span>';
+  setTimeout(()=>{ b.textContent=state.form==='C'?'登 录':'免登进入（Demo 模拟）'; b.disabled=false;
+    go('list'); toast('登录成功 · 已按角色载入可见检查项目'); },820);
+}
+
+/* ============ 视图切换 ============ */
+function go(v){
+  $$('.page').forEach(p=>p.classList.remove('on'));
+  $('#pg'+(v==='list'?'List':v==='viewer'?'Viewer':'Login')).classList.add('on');
+}
+
+/* ============ 列表：三级嵌套（FR-LIST-08） ============ */
+function seqSummary(it,ex){
+  const acqs=Array.from(new Set(ex.series.map(s=>s.acq)));
+  return ex.series.length+' 序列 · '+acqs.join('/')+' · '+ex.thick+'mm · '+ex.slices+'层';
+}
+function itemComparability(it){
+  /* FR-LIST-19 / FR-LIST-18b：序列分类一致性 → 可比性（按检查项目自身声明的扫描方式判断） */
+  const expect=it.acq.split('+').filter(Boolean);
+  const have={};
+  it.exams.forEach(ex=>ex.series.forEach(s=>{ have[s.acq]=(have[s.acq]||0)+1; }));
+  const notes=[];
+  expect.forEach(a=>{ if(!have[a]) notes.push('该项目整体缺'+a+'序列'); });
+  if(expect.length>1){
+    const missingExams=it.exams.filter(ex=>!ex.series.some(s=>s.acq==='增强')).length;
+    if(missingExams) notes.push(missingExams+' 次检查缺增强序列（跨扫描方式对齐需 HU 归一化，密度指标不可直接相减）');
   }
+  const noLung=it.exams.filter(ex=>!ex.series.some(s=>s.type==='肺窗')).length;
+  if(noLung && it.body==='胸部') notes.push(noLung+' 次检查取不到肺窗（FR-REG-11 需回退其他序列）');
+  return notes;
+}
+function renderList(){
+  const qN=$('#qName').value.trim(), qP=$('#qPid').value.trim(), qE=$('#qEid').value.trim();
+  const q1=$('#qD1').value, q2=$('#qD2').value, qM=$('#qMod').value, qI=$('#qItem').value;
+  const host=$('#listHost');
+  const groups=PATIENTS.map(p=>{
+    const its=p.items.filter(it=>{
+      if(qI && it.code!==qI) return false;
+      if(qM && it.modality!==qM) return false;
+      if(qE && !it.exams.some(e=>e.eid.toLowerCase().includes(qE.toLowerCase()))) return false;
+      return it.exams.some(e=>{
+        if(q1 && e.date<q1) return false;
+        if(q2 && e.date>q2) return false;
+        return true; });
+    }).map(it=>{
+      const exs=it.exams.filter(e=>{
+        if(qE && !e.eid.toLowerCase().includes(qE.toLowerCase())) return false;
+        if(q1 && e.date<q1) return false;
+        if(q2 && e.date>q2) return false;
+        return true; }).slice().sort((a,b)=>b.date.localeCompare(a.date));
+      return Object.assign({},it,{exams:exs});
+    }).filter(it=>it.exams.length>0);
+    return Object.assign({},p,{items:its});
+  }).filter(p=>{
+    if(qP && !p.pid.toLowerCase().includes(qP.toLowerCase())) return false;
+    if(qN && !p.name.includes(qN)) return false;
+    return p.items.length>0;
+  });
+
+  if(!groups.length){ host.innerHTML='<div class="empty">未找到符合条件的患者检查记录<br><span class="hint">可按姓名 / 患者 ID / 检查号 / 日期范围 / 检查项目筛选</span></div>'; return; }
+
+  const latest=it=>it.exams[0]?it.exams[0].date:'';
+  const maxDate=arr=>arr.filter(Boolean).sort((x,y)=>y.localeCompare(x))[0]||'';
+  groups.sort((a,b)=>maxDate(b.items.map(latest)).localeCompare(maxDate(a.items.map(latest))));
+
+  host.innerHTML=groups.map((p,pi)=>{
+    const totalItems=p.items.length, totalExams=p.items.reduce((n,i)=>n+i.exams.length,0);
+    const itemHtml=p.items.sort((a,b)=>latest(b).localeCompare(latest(a))).map((it,ii)=>{
+      const cmp=itemComparability(it);
+      const identified=it.conf>=0.7;
+      const idBadge = identified
+        ? '<span class="badge ai">项目已识别 · '+(it.conf*100).toFixed(0)+'%</span>'
+        : '<span class="badge org">识别置信度 '+(it.conf*100).toFixed(0)+'% · 待人工确认</span>';
+      const cmpHtml = (cmp.length
+        ? '<div class="cmpbar">'+cmp.map(c=>'<span class="badge org" title="FR-LIST-19 可比性提示">可比性受限 · '+c+'</span>').join('')+'</div>'
+        : '') +
+        (identified?'':'<div class="cmpbar"><span class="badge org">检查项目识别置信度 '+(it.conf*100).toFixed(0)+'% · 待人工确认（FR-LIST-08b）</span>'+
+          '<button class="btn sm" data-confirm-item="'+p.pid+'|'+it.code+'">确认为「'+it.name+'」</button></div>');
+      const rows=it.exams.map((ex,ei)=>{
+        const isFirst = ei===it.exams.length-1;
+        const prev = ei<it.exams.length-1 ? it.exams[ei+1] : null;
+        const pair = prev
+          ? '<div style="font-size:10.5px;color:#8FA3BF;line-height:1.6;max-width:250px">目标期：本次（'+ex.label+' '+ex.date+'）<br>基准期：紧邻前次（'+prev.label+' '+prev.date+'）</div>'
+          : '<div style="font-size:10.5px;color:#FFA53C;line-height:1.6;max-width:250px">无前序检查 → 单期浏览态<br>（不启动配准，需求 5.1 例外路径）</div>';
+        return '<tr>'+
+          '<td>'+p.name+'</td>'+
+          '<td class="mono">'+p.pid+'</td>'+
+          '<td>'+(p.age?p.age+'岁 · '+p.sex:'—')+'</td>'+
+          '<td>'+it.name+'</td>'+
+          '<td class="eid mono">'+ex.eid+'</td>'+
+          '<td>'+ex.date+' '+ex.label+'</td>'+
+          '<td class="seqsum">'+seqSummary(it,ex)+'</td>'+
+          '<td><button class="btn sm" data-open="'+p.pid+'|'+it.code+'|'+ex.eid+'">查看</button>'+
+          pair+'</td></tr>';
+      }).join('');
+      return '<div class="igroup">'+
+        '<div class="ihead" data-igroup="'+p.pid+'|'+it.code+'">'+
+          '<span class="caret">▾</span>'+
+          '<span class="iname">'+it.name+'</span>'+
+          '<span class="tag acq">'+it.modality+'</span>'+
+          '<span class="tag">'+it.body+'</span>'+
+          idBadge+
+          '<span class="sp"></span>'+
+          '<span class="hint">'+it.exams.length+' 次检查 · 最新 '+latest(it)+'</span>'+
+        '</div>'+
+        '<div class="etable-wrap" data-ibody="'+p.pid+'|'+it.code+'">'+
+          cmpHtml+
+          '<table class="etable"><thead><tr>'+
+            '<th>姓名</th><th>患者 ID</th><th>年龄</th><th>检查项目</th><th>检查号</th>'+
+            '<th>检查日期</th><th>序列摘要</th><th>操作 / 期配对</th>'+
+          '</tr></thead><tbody>'+rows+'</tbody></table>'+
+        '</div></div>';
+    }).join('');
+    return '<div class="pgroup">'+
+      '<div class="phead" data-pgroup="'+p.pid+'">'+
+        '<span class="caret">▾</span>'+
+        '<span class="pname">'+p.name+'</span>'+
+        '<span class="pid mono">'+p.pid+'</span>'+
+        '<span class="badge">'+p.age+'岁 · '+p.sex+'</span>'+
+        '<span class="sp"></span>'+
+        '<span class="hint">'+totalItems+' 个检查项目 · '+totalExams+' 次检查</span>'+
+      '</div>'+itemHtml+'</div>';
+  }).join('');
+
+  /* 折叠（FR-LIST-11） */
+  $$('[data-pgroup]').forEach(el=>el.addEventListener('click',()=>{
+    const g=el.parentElement; const hide=[...g.children].filter(c=>c!==el);
+    const on=hide[0] && hide[0].style.display!=='none';
+    hide.forEach(c=>c.style.display=on?'none':''); el.querySelector('.caret').textContent=on?'▸':'▾'; }));
+  $$('[data-igroup]').forEach(el=>el.addEventListener('click',()=>{
+    const b=document.querySelector('[data-ibody="'+el.dataset.igroup+'"]');
+    const on=b.style.display!=='none'; b.style.display=on?'none':'';
+    el.querySelector('.caret').textContent=on?'▸':'▾'; }));
+  /* 查看（FR-LIST-13） */
+  $$('[data-open]').forEach(el=>el.addEventListener('click',ev=>{ ev.stopPropagation(); openFromList(el.dataset.open); }));
+  /* 检查项目识别确认（FR-LIST-08b） */
+  $$('[data-confirm-item]').forEach(el=>el.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const [pid,code]=el.dataset.confirmItem.split('|');
+    const p=PATIENTS.find(x=>x.pid===pid); const it=p.items.find(x=>x.code===code);
+    it.conf=0.99; renderList(); toast('已确认检查项目「'+it.name+'」 · 识别结果参与分组与可比性判断','gold'); }));
+  $$('[data-ibody]').forEach(b=>{
+    if(b.querySelector('[data-confirm-item]')) b.style.display=''; });
+}
+
+function openFromList(key){
+  const [pid,code,eid]=key.split('|');
+  const p=PATIENTS.find(x=>x.pid===pid);
+  const it=p.items.find(x=>x.code===code);
+  state.curPid=pid; state.curItem=it; state.curated=true;
+  state.manual={dy:0,dx:0,n:0};
+  const exs=it.exams.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const idx=exs.findIndex(e=>e.eid===eid);
+  const tgt=exs[idx], prev=idx>0?exs[idx-1]:null;
+  state.tgtEid=tgt.eid; state.baseEid=prev?prev.eid:null;
+  state.baseLocked=true; state.secondary=['F-002']; state.manual={dy:0,dx:0,n:0};
+  /* 默认序列：肺窗优先（FR-REG-11） */
+  const pickLung=e=>{ const s=e.series.find(x=>x.type==='肺窗'); return s||e.series.slice().sort((a,b)=>(a.thick-b.thick)||(b.slices-a.slices))[0]; };
+  state.clsSel = prev ? [SEQ_DEF.findIndex(d=>d.cls===pickLung(tgt).cls)] : [0];
+  state.baseLesion = pickBaseLesion();
+  const nEx=it.exams.length;
+  $('#reasonSub').textContent = '检查项目「'+it.name+'」· 目标期 '+tgt.label+' '+tgt.date+'（共 '+nEx+' 次检查，要求 ≥3 次）';
+  runReasoning(()=>{
+    go('viewer');
+    const reasons=[];
+    if(!prev) reasons.push('无前序检查 → 单期浏览态');
+    else if(nEx<3) reasons.push('随访期数不足（<3）');
+    state.noCompare = reasons.length>0;
+    initViewer();
+    if(state.noCompare){
+      toast('已进入单期浏览态：'+reasons.join('；')+' · 不启动配准，但保留全部基础阅片能力','red');
+    }else{
+      const bE=examOf(state.baseEid), tE=examOf(state.tgtEid);
+      toast('已按要求直接进入配准工作流：默认对齐最近两次检查（基准 '+bE.label+' '+bE.date+' ← 目标 '+tE.label+' '+tE.date+'），基准序列为肺窗','gold');
+    }
+  });
+}
+
+/* 自动推理（FR 5.1 步骤 2–3） */
+function runReasoning(cb){
+  const steps=['序列分类（扫描方式 / 序列类型 / 期相）','解剖分割（肺 · 肺叶 · 肺段 · 气管 · 骨）',
+    '解剖结构配准（先分割后配准 · 逆向校验）','病灶检测与家族关联','报告要素结构化'];
+  $('#reasonSteps').innerHTML=steps.map((s,i)=>'<div class="rstep" data-rs="'+i+'"><span class="ri">○</span><span>'+s+'</span></div>').join('');
+  $('#reason').classList.add('show');
+  let i=0;
+  const tick=()=>{
+    if(i>0){ const prev=$('[data-rs="'+(i-1)+'"]'); if(prev){ prev.classList.remove('on'); prev.classList.add('done'); prev.querySelector('.ri').textContent='✓'; } }
+    if(i>=steps.length){ setTimeout(()=>{ $('#reason').classList.remove('show'); cb(); },380); return; }
+    const cur=$('[data-rs="'+i+'"]'); if(cur){ cur.classList.add('on'); cur.querySelector('.ri').textContent='◐'; }
+    i++; setTimeout(tick, 520);
+  };
+  tick();
+}
+
+/* ============ 基准病灶（FR-REG-16/17/18/19/20/21） ============ */
+function lesionCandidates(){
+  const it=state.curItem; if(!it) return [];
+  return LESIONS.map(L=>{
+    const present=it.exams.filter(e=>L.vol[e.eid]!=null).map(e=>e.eid);
+    const inBase = state.baseEid && L.vol[state.baseEid]!=null;
+    const inTgt  = state.tgtEid && L.vol[state.tgtEid]!=null;
+    return {fid:L.fid, name:L.name, pos:L.pos, near:L.near, n:present.length,
+            present:present, vol:state.baseEid?L.vol[state.baseEid]:null,
+            inBase:!!inBase, inTgt:!!inTgt, all:present.length===it.exams.length};
+  });
+}
+function pickBaseLesion(){
+  const list=lesionCandidates().filter(x=>x.inTgt);
+  const cross=list.filter(x=>x.all);
+  const pool=cross.length?cross:list;
+  if(!pool.length) return null;
+  pool.sort((a,b)=>(b.vol||0)-(a.vol||0));
+  return pool[0].fid;
+}
+function baseReason(){
+  const c=lesionCandidates().find(x=>x.fid===state.baseLesion); if(!c) return '';
+  const why=[];
+  if(c.all) why.push('跨 '+c.n+' 期均可见');
+  else why.push('在 '+c.n+' 期中可见');
+  if(c.vol!=null) why.push('本期体积最大（'+c.vol.toFixed(2)+' cm³）');
+  why.push('位置靠近'+c.near);
+  return why.join(' · ');
+}
+
+/* ============ 阅片工作站 ============ */
+function initViewer(){
+  $('#cfgBadge').textContent='2D · 轴位';
+  renderSeries(); renderMatrix(); renderRegMenu(); renderRight();
+  if(!state.regMode) applyRegOff();
+}
+function applyRegOff(){
+  $('#regModeTag').classList.remove('show');
+  $('#noCompareTag').classList.remove('show');
+}
+/* -------- 序列栏（FR-SEQ-01~06 / FR-LIST-18 / 18d / 18e） -------- */
+function renderSeries(){
+  const it=state.curItem;
+  const exs=it.exams.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  $('#seriesHint').textContent=exs.length+' 次检查 / '+it.exams.reduce((n,e)=>n+e.series.length,0)+' 序列';
+  $('#seriesList').innerHTML=exs.map((ex,i)=>{
+    const tno='T'+(exs.length-i);
+    const isBase=ex.eid===state.baseEid, isTgt=ex.eid===state.tgtEid;
+    const head='<div class="sgh'+(isBase?' base':'')+'" data-sgh="'+ex.eid+'">'+
+      '<span class="tno">'+tno+'</span><span>'+ex.label+' '+ex.date.slice(5)+'</span>'+
+      '<span class="sp"></span><span>'+ex.series.length+' 序列</span>'+
+      (isBase?'<span class="badge gold">⭐基准</span>':(isTgt?'<span class="badge blue">目标</span>':''))+'</div>';
+    const items=ex.series.map(s=>{
+      const clsBadge='<span class="tag '+(s.acq==='增强'?'enh':'acq')+'">'+s.cls+'</span>';
+      const lowConf = s.conf<0.7 ? '<span class="tag" style="background:rgba(255,165,60,.18);color:#FFA53C" title="FR-LIST-18e 分类置信度低">分类待确认</span>' : '';
+      return '<div class="sitem'+(s.sid===(isBase?baseSeriesOf(ex.eid):null)?' base':'')+'" draggable="'+((isBase&&state.baseLocked)?'false':'true')+'" data-sid="'+s.sid+'" data-eid="'+ex.eid+'">'+
+        '<canvas width="38" height="30" data-thumb="'+s.sid+'"></canvas>'+
+        '<div class="smeta"><span class="nm">'+s.type+'序列</span>'+
+          clsBadge+lowConf+
+          '<div>'+s.thick+'mm · '+s.slices+'层</div>'+
+        '</div></div>';
+    }).join('');
+    return '<div class="sgrp">'+head+items+'</div>';
+  }).join('');
+  /* 缩略图 */
+  $$('[data-thumb]').forEach(cv=>{
+    const sid=cv.dataset.thumb; const s=findSeries(sid); if(!s) return;
+    const g=cv.getContext('2d'); const w=38,h=30;
+    g.fillStyle='#080B10'; g.fillRect(0,0,w,h);
+    g.beginPath(); g.ellipse(w/2,h/2,w*.42,h*.44,0,0,Math.PI*2); g.fillStyle='#2A2F36'; g.fill();
+    g.beginPath(); g.ellipse(w*.34,h*.5,w*.11,h*.24,0,0,Math.PI*2); g.fillStyle='#0B1420'; g.fill();
+    g.beginPath(); g.ellipse(w*.66,h*.5,w*.11,h*.24,0,0,Math.PI*2); g.fillStyle='#0B1420'; g.fill();
+    if(s.acq==='增强'){ g.strokeStyle='rgba(0,200,150,.6)'; g.lineWidth=1; g.strokeRect(.5,.5,w-1,h-1); }
+  });
+  /* 拖拽（FR-SEQ-06 / FR-REG-14 / FR-WIN-03） */
+  $$('.sitem').forEach(el=>{
+    el.addEventListener('dragstart',ev=>{
+      if(el.classList.contains('base') && state.baseLocked){ ev.preventDefault(); toast('基准序列受保护（FR-REG-12）：请先在配准面板点击「解锁基准」后再更换','red'); return; }
+      ev.dataTransfer.setData('text/plain', el.dataset.sid); el.classList.add('dragging'); });
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+  });
+}
+function baseSeriesOf(eid){
+  const ex=examOf(eid); if(!ex) return null;
+  const lung=ex.series.find(s=>s.type==='肺窗');
+  return lung?lung.sid:(ex.series[0]||{}).sid;
+}
+function findSeries(sid){
+  const it=state.curItem; if(!it) return null;
+  for(const e of it.exams){ const s=e.series.find(x=>x.sid===sid); if(s) return s; }
   return null;
 }
-function hitManualAt(w,x,y){
-  const m=(w.manual||[]).find(m=>x>=m.x-m.r-4&&x<=m.x+m.r+4&&y>=m.y-m.r-4&&y<=m.y+m.r+4);
-  return m||null;
+function onDropSeries(sid, eid){
+  const s=findSeries(sid); if(!s) return;
+  const isBaseSlot = eid===state.baseEid;
+  if(isBaseSlot && state.baseLocked){
+    toast('基准序列受保护（FR-REG-12）：请先点击「解锁基准」再更换。锁定原因：保持参照系统一，保证跨次对比口径一致','red'); return; }
+  const prevBase=state.baseEid;
+  if(isBaseSlot){ state.baseEid=eid; }
+  const t0=Date.now();
+  toast('拖拽更换序列 → 自动重跑配准中…（限时 ≤120 秒，FR-REG-14）');
+  setTimeout(()=>{
+    renderSeries(); renderMatrix(); renderRight();
+    const ms=Date.now()-t0;
+    toast('配准已重算完成（'+((ms/1000)+2.4).toFixed(1)+' 秒）· 更换留痕：'+sid+' → 位置 '+(isBaseSlot?'基准':'目标')+
+      (isBaseSlot?'，原基准 '+prevBase:'')+'（FR-REG-12/14/25）','gold');
+  },1400);
 }
-function onCanvasDown(e,cv,w,i){
-  const {x,y,cssX,cssY}=canvasPos(cv,e,w);
-  if(state.tool==='wl'){
-    dragState={win:i,mode:'wl',sx:cssX,sy:cssY,oww:w.ww,owl:w.wl,moved:false};
-    cv.style.cursor='ew-resize';
-    return;
-  }
-  if(state.tool==='pan'){
-    dragState={win:i,mode:'pan',sx:cssX,sy:cssY,ix:x,iy:y,ox:w.px,oy:w.py,moved:false};
-    cv.style.cursor='grabbing';
-    return;
-  }
-  if(state.tool==='measure'){
-    dragState={win:i,mode:'measure',sx:x,sy:y,ix:x,iy:y,moved:false};
-    return;
-  }
-  // 默认模式：单击选择（记录 tap 起点以区分拖动）
-  dragState={win:i,mode:'tap',sx:cssX,sy:cssY,ix:x,iy:y,moved:false};
-}
-function onCanvasMove(e,cv,w,i){
-  if(!dragState||dragState.win!==i) return;
-  const {cssX,cssY,x,y}=canvasPos(cv,e,w);
-  if(dragState.mode==='wl'){
-    const dx=cssX-dragState.sx, dy=cssY-dragState.sy;
-    if(Math.abs(dx)+Math.abs(dy)>2) dragState.moved=true;
-    w.ww=clamp(Math.round(dragState.oww+dx*4),20,4000);
-    w.wl=clamp(Math.round(dragState.owl+dy*2),-1000,1000);
-    $('#wlRange').value=w.ww;
-    $('#wlVal').textContent='WW:'+w.ww+' WL:'+w.wl;
-    drawWin(w,i);
-    return;
-  }
-  if(dragState.mode==='pan'){
-    const dx=cssX-dragState.sx, dy=cssY-dragState.sy;
-    if(Math.abs(dx)+Math.abs(dy)>2) dragState.moved=true;
-    w.px=dragState.ox+dx; w.py=dragState.oy+dy;
-    applyViewTf(cv,w);
-  }else if(dragState.mode==='measure'){
-    if(Math.abs(cssX-dragState.sx)+Math.abs(cssY-dragState.sy)>2) dragState.moved=true;
-    w._preview={x1:dragState.ix,y1:dragState.iy,x2:x,y2:y};
-    drawWin(w,i);
-  }else if(dragState.mode==='tap'){
-    // 默认无工具时不允许拖动，仅记录移动距离用于判定单击
-    if(Math.abs(cssX-dragState.sx)+Math.abs(cssY-dragState.sy)>5) dragState.moved=true;
-  }
-}
-function onCanvasUp(e,cv,w,i){
-  if(!dragState||dragState.win!==i) return;
-  const ds=dragState; dragState=null;
-  const {x,y,W,H}=canvasPos(cv,e,w);
-  cv.style.cursor = state.tool==='pan'?'grab':(state.tool==='wl'?'ew-resize':'crosshair');
-  if(ds.mode==='wl'){
-    if(!ds.moved){ toast('窗宽窗位：按住鼠标左右拖动调窗宽(WW)、上下拖动调窗位(WL)'); }
-    return;
-  }
-  if(ds.mode==='pan'){
-    if(!ds.moved) handleTap(cv,w,i,ds.ix,ds.iy,W,H);
-    return;
-  }
-  if(ds.mode==='measure'){
-    if(!w.meas) w.meas=[];
-    const d=Math.hypot(x-ds.ix,y-ds.iy);
-    if(ds.moved&&d>8){
-      w.meas.push({x1:ds.ix,y1:ds.iy,x2:x,y2:y});
-      toast('测量完成：'+Math.round(d*0.85)+' mm');
-    }
-    delete w._preview; drawWin(w,i);
-    return;
-  }
-  // tap 模式：轻点判定
-  if(!ds.moved) handleTap(cv,w,i,ds.ix,ds.iy,W,H);
-}
-function updateCursor(cv){
-  cv.style.cursor = state.tool==='pan'?'grab':(state.tool==='mark'?'crosshair':'crosshair');
-}
-function handleTap(cv,w,i,x,y,W,H){
-  // 1) 病灶命中 -> 选中浮层
-  const hit=hitLesionAt(w,x,y,W,H);
-  if(hit){ setActiveLesion(hit,w,i); flashLesion(hit); return; }
-  // 2) 手动标注命中 -> 查看
-  const mh=hitManualAt(w,x,y);
-  if(mh){ setActiveLesion(null); toast('医生手动标注已选中 · 右键该标注框可删除（报告同步移除）'); return; }
-  // 3) mark 工具 -> 新增手动标注
-  if(state.tool==='mark'){
-    addManualLesion(w,i,x,y,W,H);
-    return;
-  }
-  // 4) 空白点击 -> 取消选择
-  if(state.activeLesion){ setActiveLesion(null); }
-}
-function addManualLesion(w,i,x,y,W,H){
-  if(!w.manual) w.manual=[];
-  const n=w.manual.length+1;
-  const r=Math.max(14,Math.min(W,H)*0.045);
-  w.manual.push({x,y,r,label:'医生手动标注 M'+n});
-  drawWin(w,i);
-  // 联动：追加到报告 Report Plus（影像标注驱动报告更新）
-  const repP=$('#repPlus');
-  if(repP){
-    const span=document.createElement('span'); span.className='seg'; span.style.cssText='color:#FFE066;cursor:pointer';
-    span.textContent='· 医生手动标注 M'+n+'：点击影像金色框定位（'+Math.round(x/W*100)+'%,'+Math.round(y/H*100)+'%）';
-    span.onclick=()=>{ flashManual(w,i,n-1); };
-    repP.appendChild(span);
-  }
-  setActiveLesion(null);
-  hideLesionPop();
-  toast('已添加手动标注 M'+n+'（金色框）→ 已自动填入报告 Report Plus · 右键标注框可删除');
-}
-function removeManualLesion(w,i,m){
-  const n=w.manual.indexOf(m);
-  if(n>=0){
-    w.manual.splice(n,1);
-    // 同步删除报告 Report Plus 中对应行（重建报告以移除）
-    renderReport();
-    drawAll();
-    toast('已删除手动标注 M'+(n+1)+' → 报告 Report Plus 对应字段已同步移除');
-  }
-}
-function flashManual(w,i,mi){
-  drawAll();
-  const vp=document.querySelectorAll('.viewport')[i];
-  if(vp){ vp.classList.add('flash'); setTimeout(()=>vp.classList.remove('flash'),2200); }
-}
-function stepSliceWin(w,d){
-  const s=SERIES.find(x=>x.id===w.sid);
-  w.slice=clamp(w.slice+d,1,s.slices);
-  drawAll(); updateSliceInfo();
-}
-function zoomWin(w,factor){
-  w.zoom=clamp((w.zoom||1)*factor,0.8,6);
-  // 重绘并应用变换
-  const idx=state.wins.indexOf(w);
-  drawAll();
-}
-function resetView(w){
-  w.zoom=1; w.px=0; w.py=0;
-  drawAll();
-}
-function centerOnSlice(w){ toast('已定位至病灶中心层面 · 自动配准联动'); }
-function stepSlice(d){
-  // 所有窗口同步翻层（联动浏览）
-  state.wins.forEach(w=>stepSliceWin(w,d));
-}
+/* -------- 期-序矩阵（FR-VIEW-09~13） -------- */
+function renderMatrix(){
+  const it=state.curItem;
+  const all=it.exams.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  let exs = state.range==='all' ? all : (state.baseEid&&state.tgtEid
+      ? all.filter(e=>e.eid===state.baseEid||e.eid===state.tgtEid) : all.slice(-2));
+  exs = exs.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const clsList=state.clsSel.slice().sort((a,b)=>a-b);
+  const rows=clsList.map(ci=>SEQ_DEF[ci]);
+  /* 期范围 chip */
+  $$('[data-range]').forEach(c=>c.classList.toggle('on', c.dataset.range===String(state.range)||(c.dataset.range==='all'&&state.range==='all')));
+  /* 序列筛选 chips（FR-VIEW-11 大矩阵可读性） */
+  $('#clsChips').innerHTML=SEQ_DEF.map((d,i)=>{
+    const ex0=exs[0];
+    const has=ex0.series.some(s=>s.cls===d.cls);
+    return '<span class="chip'+(state.clsSel.indexOf(i)>=0?' on':'')+(has?'':' dim')+'" data-cls="'+i+'" title="'+(has?'':'该期缺此序列分类')+'">'+d.cls+'</span>';
+  }).join('');
+  $$('[data-cls]').forEach(el=>el.addEventListener('click',()=>{
+    const i=+el.dataset.cls; const at=state.clsSel.indexOf(i);
+    if(at>=0){ if(state.clsSel.length>1) state.clsSel.splice(at,1); }
+    else state.clsSel.push(i);
+    renderMatrix(); }));
 
-/* ---------- 病灶选中 / 浮层 ---------- */
-function setActiveLesion(lid, wi, ii){
-  state.activeLesion=lid;
-  renderViewports();
-  if(!lid){ hideLesionPop(); updateLesionNav(); return; }
-  showLesionPop(lid, wi, ii);
-  updateLesionNav();
-}
-function showLesionPop(lid, wi){
-  const L=LESIONS.find(x=>x.id===lid);
-  if(!L) return;
-  $('#lesionPop').classList.add('show');
-  $('#lpTitle').textContent=L.label;
-  const pop=$('#lesionPop');
-  $('#lpBody').innerHTML=`
-    <div><b style="color:#FFD9D9">${L.desc}</b></div>
-    <div style="margin-top:6px;font-size:10.5px;color:var(--muted)">AI 结构化描述 · 基于核心定义表生成 · 点击报告高亮文字可定位影像</div>`;
-  // 量化 chips：最新时段 + 家族跨时段对比（首诊 → 最新）
-  const q=$('#lpQuant'); q.innerHTML='';
-  const ff=FOLLOWUP[BASE_SID]&&FOLLOWUP[BASE_SID][L.fid]; const ff0=FOLLOWUP[FIRST_SID]&&FOLLOWUP[FIRST_SID][L.fid];
-  if(ff&&ff.vol!=null){
-    const chips=[
-      {k:'体积', v:ff.vol+' cm³'},
-      {k:'最大径', v:ff.dia+' mm'},
-      {k:'平均密度', v:ff.den+' HU'}
-    ];
-    chips.forEach(c=>{
-      const el=document.createElement('div'); el.className='quant-chip';
-      el.innerHTML=`<span class="qk">${c.k}</span><span class="qv">${c.v}</span>`;
-      q.appendChild(el);
+  const cols=exs.length, n=rows.length;
+  /* 基准序列 = 基准期内按默认规则选中的那条（FR-REG-11）；配准对 = 同一序列分类跨期配对（可比性） */
+  const baseSid = state.baseEid ? baseSeriesOf(state.baseEid) : null;
+  const baseS = baseSid ? findSeries(baseSid) : null;
+  const baseCls = baseS ? baseS.cls : null;
+  $('#matrix').style.gridTemplateColumns='repeat('+cols+', minmax(174px,1fr))';
+  $('#matrixHint').textContent = '期-序矩阵：'+n+' 行（序列分类）× '+cols+' 列（检查期）· 期为主序（时间倒序）· 序列为次序（FR-VIEW-09/10）';
+  if(baseCls) $('#matrixHint').textContent += ' · 配准对：'+baseCls;
+
+  let html='';
+  exs.forEach(ex=>{
+    rows.forEach(d=>{
+      const s=ex.series.find(x=>x.cls===d.cls);
+      /* 仅「基准序列那一格」为金色；同期其它序列仅为同次检查的其它序列（不参与本次配准对） */
+      const isBasePair = !!s && ex.eid===state.baseEid && s.cls===baseCls;
+      const isTgtPair  = !!s && ex.eid===state.tgtEid  && s.cls===baseCls;
+      if(!s){
+        html+='<div class="mcell miss"><div>该期缺此序列分类</div><div style="font-size:9.5px;margin-top:3px">'+d.cls+
+              ' · 不可比（FR-LIST-18b）</div></div>';
+        return;
+      }
+      const lesions=ex.lesions.filter(L=>L.vol!=null);
+      const foot = lesions.length
+        ? lesions.map(L=>'<span class="'+(L.fid===state.baseLesion?'lm':'')+'">'+L.fid+' '+L.vol.toFixed(2)+'cm³</span>').join('')
+        : '<span class="lm off">该期未见病灶</span>';
+      html+='<div class="mcell'+(isBasePair?' base':(isTgtPair?' target':''))+'" data-sid="'+s.sid+'" data-eid="'+ex.eid+'">'+
+        '<canvas data-ct="'+s.sid+'"></canvas>'+
+        '<div class="mh">'+
+          (isBasePair?'<span class="b gold">⭐ 基准序列</span>':'')+
+          (isTgtPair?'<span class="b tgt">目标序列</span>':'')+
+          '<span class="b">'+ex.label+' '+ex.date.slice(5)+'</span>'+
+          '<span class="b" style="margin-left:auto">'+d.cls+'</span>'+
+        '</div>'+
+        '<div class="mf"><span>'+s.thick+'mm · '+s.slices+'层</span><span>'+foot+'</span></div>'+
+        '<div class="mfoot"><span>WW/WL 按 '+(s.win==='LUNG'?'肺窗 1500/-600':(s.win==='BRAIN'?'脑窗 80/40':'纵隔窗 350/40'))+'</span><span>'+s.sid+'</span></div>'+
+      '</div>';
     });
-    if(ff0&&ff0.vol){
-      const delta=((ff.vol-ff0.vol)/ff0.vol*100);
-      const el=document.createElement('div'); el.className='quant-chip';
-      el.innerHTML=`<span class="qk">较首诊</span><span class="qv ${delta>0?'up':'down'}">${delta>0?'+':''}${delta.toFixed(0)}%</span>`;
-      q.appendChild(el);
-    }
-  }else{
-    const el=document.createElement('div'); el.className='quant-chip';
-    el.innerHTML=`<span class="qk">最新时段</span><span class="qv down">该病灶已消失</span>`;
-    q.appendChild(el);
-  }
-  updateLesionNav();
-}
-function hideLesionPop(){ $('#lesionPop').classList.remove('show'); }
-function deleteLesion(){
-  const lid=state.activeLesion;
-  if(!lid) return;
-  toast('已删除标注（'+lid+'）· 报告对应字段已同步移除');
-  // 从当前 s1/s2 移除（演示）
-  setActiveLesion(null);
-}
-/* 病灶导航标签 */
-function updateLesionNav(){
-  const nav=$('#lesionNav'); nav.innerHTML='';
-  LESIONS.forEach(L=>{
-    const el=document.createElement('button');
-    el.className='ln-item'+(state.activeLesion===L.id?' active':'');
-    el.textContent='● '+L.loc+' '+(L.fid==='F-001'?'(靶病灶)':'');
-    el.onclick=()=>{ setActiveLesion(L.id); flashLesion(L.id); };
-    nav.appendChild(el);
   });
-}
-/* 报告点击文字 -> 影像闪烁定位 */
-function flashLesion(lid){
-  const w=state.wins.find(x=>seriesHasLesion(x.sid,lid));
-  if(!w) return;
-  const idx=state.wins.indexOf(w);
-  const s=SERIES.find(x=>x.id===w.sid);
-  w.slice=Math.round(s.slices*0.55);
-  drawAll();
-  const vp=document.querySelectorAll('.viewport')[idx];
-  if(vp){ vp.classList.add('flash'); setTimeout(()=>vp.classList.remove('flash'),2600); }
-}
-
-/* ---------- 报告 ---------- */
-function renderReport(){
-  $('#repPt').innerHTML=`
-    <span><b>姓名</b> ${CURRENT.name}</span><span><b>性别/年龄</b> ${CURRENT.sex}/${CURRENT.age}岁</span>
-    <span><b>患者ID</b> ${CURRENT.pid}</span><span><b>检查日期</b> 2026-09-02（随访4）</span>
-    <span><b>检查类型</b> CT 胸部平扫+增强</span><span><b>申请科室</b> 肿瘤内科</span>`;
-  const find=$('#repFindings'); find.innerHTML='';
-  const segs=[
-    {t:'胸部扫描体位良好，双肺野清晰。纵隔、肺门区未见明显肿大淋巴结。'},
-    {t:'', les:'F001'},
-    {t:'', les:'F002'},
-    {t:'', les:'F003'}
-  ];
-  // 影像所见：主文本 + 病灶文本（可点击）
-  const parts=[];
-  parts.push('<span class="seg">胸部扫描体位良好。双侧胸廓对称，气管居中。纵隔、肺门区未见明显肿大淋巴结。心脏及大血管形态未见异常。</span>');
-  parts.push('<span class="seg"><mark data-les="F001">左肺上叶可见类圆形软组织密度肿块影</mark><span class="ima" data-les="F001">IMA 44</span>，密度欠均匀，边界清晰，最大径约 <b style="color:#fff">19.8 mm</b>，病灶呈分叶状，边缘可见短毛刺，临近胸膜凹陷。较前次随访（2026-05-11，约 18.7 mm）<span style="color:#FF9F43">增大</span>。</span>');
-  parts.push('<span class="seg"><mark data-les="F002" class="ai">右肺中叶可见斑片状磨玻璃密度影</mark><span class="ima" data-les="F002">IMA 52</span>，边界清晰，其内可见空泡征。较前略缩小。</span>');
-  parts.push('<span class="seg"><mark data-les="F003" class="ai">左肺下叶小结节</mark><span class="ima" data-les="F003">IMA 15</span>，原直径约 5 mm，本次随访未见显示（<span style="color:#00C896">已消失</span>）。</span>');
-  find.innerHTML=parts.join('');
-  // 绑定点击
-  $$('#repFindings mark,#repFindings .ima').forEach(el=>{
-    el.addEventListener('click',()=>{ const lid=el.dataset.les; if(lid){ setActiveLesion(lid); flashLesion(lid); } });
-    el.title='点击定位至影像病灶';
+  $('#matrix').innerHTML=html;
+  $$('[data-ct]').forEach(cv=>{
+    const s=findSeries(cv.dataset.ct); if(!s) return;
+    requestAnimationFrame(()=>drawCT(cv, s.eid, s.win, {}));
   });
-  $('#repConclusion').innerHTML=`<span class="seg">1. 左肺上叶占位性病变，较前次随访增大，考虑周围型肺癌可能，建议结合临床进一步检查。 <span class="ima">IMA 44</span></span><span class="seg">2. 右肺中叶磨玻璃结节、左肺下叶小结节，建议继续随访观察。</span>`;
-  $('#repPlus').innerHTML=`<span class="seg" style="color:#B8F5E0">· 医生补充标注：左肺上叶病灶 2026-09-02 测量 19.8mm（AI 建议 19.9×19.6mm，一致）</span><span class="seg" style="color:#B8F5E0">· 病灶家族 F-001 跨 6 个时段已关联（外院既往→随访4）</span>`;
-  updateLesionNav();
-}
-function aiRefresh(){
-  const btn=event.currentTarget; btn.disabled=true; btn.textContent='生成中…';
-  setTimeout(()=>{ btn.disabled=false; btn.textContent='⟳ 更新报告'; toast('AI 已重新生成报告草稿 · 图文关联准确率 ≥0.8'); renderReport(); },900);
-}
-
-/* ---------- 工具栏 ---------- */
-function setTool(t){
-  state.tool=state.tool===t?'none':t;
-  $$('.tool-btn').forEach(b=>b.classList.remove('active'));
-  const map={wl:'#tbWl',pan:'#tbPan',zoom:'#tbZoom',measure:'#tbMeasure',mark:'#tbMark'};
-  const sel=map[state.tool]; if(sel) $(sel).classList.add('active');
-  // 更新光标提示
-  $$('.viewport canvas').forEach(cv=>{
-    cv.style.cursor = state.tool==='pan'?'grab':(state.tool==='measure'||state.tool==='mark'?'crosshair':'crosshair');
+  $$('.mcell').forEach(c=>{
+    if(!c.dataset.eid) return;
+    c.addEventListener('dragover',ev=>{ if(state.regMode) ev.preventDefault(); });
+    c.addEventListener('drop',ev=>{ ev.preventDefault(); const sid=ev.dataTransfer.getData('text/plain'); if(sid) onDropSeries(sid, c.dataset.eid); });
   });
-  // 状态提示
-  const hints={wl:'窗宽窗位：拖动上方滑块或输入数值调节',pan:'平移：按住鼠标拖动影像；单击=选择病灶',zoom:'缩放：滚轮缩放，双击放大/还原，右键重置',measure:'测量：按住鼠标从起点拖到终点，松开显示距离(mm)',mark:'标注：单击影像空白处添加医生手动标注（金色框），自动填入报告'};
-  const h=$('#toolHint');
-  if(state.tool==='none'){ if(h) h.textContent='就绪 · 滚轮翻层 · Ctrl+滚轮缩放 · 双击放大 · 单击病灶查看量化'; }
-  else if(hints[state.tool]) h.textContent=hints[state.tool];
+  /* 指标口径标注（FR-REG-27） */
+  $('#caliberTag').textContent = state.curItem ? caliberLine() : '';
+  if(!state.regMode) applyRegOff();
 }
-['tbWl','tbPan','tbZoom','tbMeasure','tbMark'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',()=>{
-    const t={tbWl:'wl',tbPan:'pan',tbZoom:'zoom',tbMeasure:'measure',tbMark:'mark'}[id];
-    setTool(t);
-    if(t==='mark') toast('标注模式已开启：单击影像空白处添加手动标注（金色框）→ 联动填入报告 Report Plus');
-    if(t==='measure') toast('测量模式已开启：按住鼠标拖拽测量病灶径线');
-    if(t==='pan') toast('平移模式：按住鼠标拖动影像 · 单击仍可选中病灶');
-    if(t==='zoom') toast('缩放模式：滚轮缩放 · 双击放大/还原 · 右键重置');
-  });
-});
-$('#tbLink').addEventListener('click',()=>{
-  state.linkMode=!state.linkMode;
-  $('#tbLink').classList.toggle('active',state.linkMode);
-  $('#linkBadge').style.display=state.linkMode?'inline-block':'none';
-  toast(state.linkMode?'联动标注已开启：2D/3D 及多序列同步标注':'联动标注已关闭');
-});
-/* 布局按钮 */
-$$('#layoutGroup .layout-btn').forEach(b=>{
-  b.addEventListener('click',()=>{ setLayout(b.dataset.layout); if(state.wins.length<2) addWindowFromList(); });
-});
-/* 窗宽窗位 */
-const wlRange=$('#wlRange');
-wlRange.addEventListener('input',()=>{
-  const ww=+wlRange.value; const wl=Math.round((ww/-1.6)-300);
-  state.wins.forEach(w=>{ w.ww=ww; w.wl=ww>700?-600:40; });
-  $('#wlVal').textContent='WW:'+ww+' WL:'+(ww>700?-600:40);
-  drawAll();
-});
-/* ---------- 配准：三个维度（层面 / 解剖结构 / 病灶） ---------- */
-/* 2026-09 领导决议：解剖结构配准提为第一期（当前实现），层面配准与病灶配准列为第二期 */
-const REG_DIMS={
-  slice: {name:'层面配准',     icon:'▤',  phase:2},
-  anat:  {name:'解剖结构配准', icon:'🫀', phase:1},
-  lesion:{name:'病灶配准',     icon:'⭐', phase:2}
-};
-$('#tbReg').addEventListener('click',openRegMenu);
-function openRegMenu(){ $('#regMenu').classList.toggle('show'); }
-function closeRegMenu(){ $('#regMenu').classList.remove('show'); }
-function pickRegDim(dim){
-  closeRegMenu();
-  state.regDim=dim;
-  $$('#regMenu .rm-item').forEach(el=>el.classList.toggle('on',el.dataset.dim===dim));
-  const D=REG_DIMS[dim];
-  if(dim==='anat'){
-    /* 第一期：解剖结构配准 —— 进入基准保护模式 */
-    if(state.wins.length<2){ addWindowFromList(); setLayout('l1x2'); }
+/* -------- 配准模式菜单 -------- */
+function renderRegMenu(){
+  $('#regMenuBody').innerHTML=REG_MODES.map(m=>
+    '<div class="regitem'+(state.regDim===m.id?' on':'')+'" data-mode="'+m.id+'">'+
+      '<span class="ic">'+m.ic+'</span>'+
+      '<span class="tx">'+m.name+' <span class="tag '+(m.phase===1?'p1':'p2')+'">'+(m.phase===1?'第一期':'第二期')+'</span></span>'+
+    '</div>').join('');
+  $('#regMenuFoot').innerHTML='第一期仅实现<b style="color:#FFD700">解剖结构配准</b>；另两个维度已预留入口';
+  $$('[data-mode]').forEach(el=>el.addEventListener('click',()=>pickRegMode(el.dataset.mode)));
+}
+function pickRegMode(id){
+  const m=REG_MODES.find(x=>x.id===id);
+  state.regDim=id; $('#regMenu').classList.remove('show');
+  renderRegMenu(); renderRight();
+  if(id==='anat'){
     state.regMode=true;
-    state.baseSid=BASE_SID;
-    if(!state.wins.find(w=>w.sid===BASE_SID)){ state.wins.unshift(mkWin(BASE_SID)); }
-    if(state.wins.length<2) addWindowFromList();
-    $('#tbReg').classList.add('active');
-    const bEx=examOf(BASE_SID);
-    $('#regModeTag').textContent=`🫀 解剖结构配准（第一期）· 基准 ${bEx.label} ${bEx.date}`;
+    $('#regModeTag').innerHTML='🫀 <b>解剖结构配准（第一期）</b> · 基准 '+examOf(state.baseEid).label+' '+examOf(state.baseEid).date+
+      ' ← 目标 '+examOf(state.tgtEid).label+' '+examOf(state.tgtEid).date;
     $('#regModeTag').classList.add('show');
-    renderViewports(); updateRegPanel(true);
-    toast(`已进入「解剖结构配准」：以肺 · 气管 · 脊柱 · 胸壁为参照自动对齐 ${EXAMS.length} 个时段，金色窗口为基准序列`);
+    $('#noCompareTag').classList.remove('show');
+    toast('已进入「解剖结构配准」（第一期）：以肺 · 气管 · 脊柱 · 胸壁为参照，先分割后配准 + 逆向校验，金色窗口为基准序列','gold');
   }else{
-    /* 第二期：层面配准 / 病灶配准 —— 界面预留入口 */
     state.regMode=false;
-    $('#tbReg').classList.add('active');
-    $('#regModeTag').textContent=`${D.icon} ${D.name} · 第二期规划能力（本版预留入口）`;
+    $('#regModeTag').innerHTML=m.ic+' <b>'+m.name+' · 第二期规划能力（本版预留入口）</b>';
     $('#regModeTag').classList.add('show');
-    renderViewports(); updateRegPanel(true);
-    toast(`${D.name}为第二期规划能力，界面已预留入口 · 本版仅实现解剖结构配准`);
+    toast(m.name+'为第二期规划能力，界面已预留入口与规划说明 · 本版仅实现解剖结构配准','gold');
   }
+  renderMatrix();
 }
 function exitReg(){
   state.regMode=false; state.regDim=null;
-  $('#tbReg').classList.remove('active');
-  $('#regModeTag').classList.remove('show');
-  $('#regPanel').classList.remove('show');
-  $$('#regMenu .rm-item').forEach(el=>el.classList.remove('on'));
-  renderViewports();
-  toast('已退出配准 · 回到普通阅片');
+  $('#regMenu').classList.remove('show');
+  $$('#grpLayout .tbtn').forEach(b=>b.classList.remove('active'));
+  renderRegMenu(); renderMatrix(); renderRight(); applyRegOff();
+  $('#caliberTag').textContent='';
+  toast('已退出配准 · 回到普通浏览');
 }
-function updateRegPanel(show){
-  $('#regPanel').classList.toggle('show',show);
-  if(!show) return;
-  const dim=state.regDim||'anat';
-  const D=REG_DIMS[dim];
-  $('#regHead').innerHTML=`${D.icon} 配准 · ${D.name}<span class="phase-tag ${D.phase===1?'p1':'p2'}" style="margin-left:auto">${D.phase===1?'第一期':'第二期 · 规划中'}</span>`;
-  const b=$('#regBody');
-  if(dim==='anat'){
-    /* 第一期：解剖结构配准 —— 输出空间变换 + 可核查的质量指标 */
-    const bEx=examOf(BASE_SID);
-    const rows=[
-      ['配准基准', bEx.label+' · '+bEx.date, ''],
-      ['对齐依据', '解剖结构（肺 · 气管 · 脊柱 · 胸壁）', ''],
-      ['标志点残差 RMSE', '2.1 mm', ''],
-      ['目标配准误差 TRE', '1.9 mm', ''],
-      ['结构重叠 Dice', '肺 0.94 · 肺叶段 0.87', ''],
-      ['有效配准范围', '96 %', ''],
-      ['质量分级', '优 · 可用于病灶配准与量化', '']
-    ];
-    b.innerHTML=rows.map(r=>`<div class="rp-row"><span class="rk">${r[0]}</span><span class="rv ${r[2]}">${r[1]}</span></div>`).join('');
-    $('#regFoot').textContent='结果以虚拟序列存在 · 原始影像只读 · 拖拽可更换参与配准的序列（更换基准需确认）';
+/* -------- 右侧面板 -------- */
+function renderRight(){
+  const body=$('#rightBody');
+  body.innerHTML = paneReg()+paneLesion()+paneTrend()+paneValid()+paneReport();
+  $$('.rtab').forEach(t=>t.addEventListener('click',()=>{
+    $$('.rtab').forEach(x=>x.classList.remove('on')); t.classList.add('on');
+    $$('.rpane').forEach(p=>p.classList.remove('on'));
+    const el=$('#pane-'+t.dataset.rt); if(el) el.classList.add('on'); }));
+  bindRight();
+}
+function caliberLine(){
+  if(!state.curItem) return '';
+  const b=state.baseEid?examOf(state.baseEid):null, t=examOf(state.tgtEid);
+  if(!b||!t) return '单期浏览态 · 未启动配准（无前序检查，需求 5.1 例外路径）';
+  const mode=state.regDim?REG_MODES.find(x=>x.id===state.regDim).name:'—';
+  const cls=state.clsSel.map(i=>SEQ_DEF[i].cls).join(' / ');
+  return '配准模式 '+mode+' ｜ 基准期 '+b.label+' ｜ 目标期 '+t.label+' ｜ 基准病灶 '+state.baseLesion+' ｜ 序列分类 '+cls;
+}
+/* --- 配准 pane --- */
+function paneReg(){
+  const b=state.baseEid?examOf(state.baseEid):null, t=examOf(state.tgtEid);
+  let h='<div class="rpane on" id="pane-reg">';
+  /* 口径标注（FR-REG-27） */
+  h+='<div class="card"><div class="chead"><span class="t">指标口径标注</span><span class="sp"></span><span class="badge">FR-REG-27</span></div>'+
+     '<div class="hint" style="line-height:1.85">'+caliberLine()+'</div></div>';
+  if(state.noCompare){
+    h+='<div class="card red"><div class="chead"><span class="t">未启动配准</span></div>'+
+       '<div class="hint">该检查项目下<b style="color:#FF5C5C">无前序检查</b>（单期）→ 进入单期浏览态，不启动配准，但保留全部基础阅片能力（需求 5.1 例外路径）。</div></div></div>';
+    return h;
+  }
+  if(!state.regDim){
+    h+='<div class="card green"><div class="chead"><span class="t">已按要求直入配准工作流</span><span class="sp"></span><span class="badge ai">FR-REG-10</span></div>'+
+       '<div class="kv"><span class="k">默认对齐范围</span><span class="v">最近两次检查</span></div>'+
+       '<div class="kv"><span class="k">基准期</span><span class="v">'+b.label+' · '+b.date+'</span></div>'+
+       '<div class="kv"><span class="k">目标期</span><span class="v">'+t.label+' · '+t.date+'</span></div>'+
+       '<div class="kv"><span class="k">默认序列</span><span class="v">肺窗（规则：肺窗 → 层厚最薄 → 层数最多）</span></div>'+
+       '<div class="kv"><span class="k">基准序列</span><span class="v '+(state.baseLocked?'warn':'')+'">'+(state.baseLocked?'已锁定':'已解锁')+'</span></div>'+
+       '<div class="hint" style="margin-top:8px">已自动完成默认对齐，医生零操作。请选择配准模式查看结果。</div>'+
+       '<div style="margin-top:9px;display:flex;gap:7px">'+
+         '<button class="btn sm gold" id="btnUnlock">'+(state.baseLocked?'解锁基准序列':'重新锁定基准')+'</button>'+
+         '<button class="btn sm" id="btnPickAnat">进入解剖结构配准</button>'+
+       '</div></div></div>';
+    return h;
+  }
+  const m=REG_MODES.find(x=>x.id===state.regDim);
+  if(state.regDim==='anat'){
+    const rows=AREG_METRICS.map(r=>'<div class="kv"><span class="k">'+r.k+'</span><span class="v '+(r.cls||'')+'">'+r.v+'</span></div>').join('');
+    h+='<div class="card gold"><div class="chead"><span class="t">🫀 解剖结构配准</span><span class="sp"></span>'+
+       '<span class="tag p1">第一期</span></div>'+
+       '<div class="kv"><span class="k">配准基准</span><span class="v">'+b.label+' · '+b.date+'</span></div>'+
+       '<div class="kv"><span class="k">目标期</span><span class="v">'+t.label+' · '+t.date+'</span></div>'+
+       rows+
+       '<div class="hint" style="margin-top:9px">输出：形变场/变换矩阵（NIfTI 或平台约定）· 结构分割掩膜（NIfTI/DICOM-SEG）· 结构对应关系（JSON）· 配准残差/不确定度（JSON）· 可视化（融合/棋盘格）· 交互状态（JSON）· 病灶配准映射（NIfTI/DICOM-SEG）</div>'+
+    '</div>';
+    h+='<div class="card"><div class="chead"><span class="t">结果核查与手动调整</span><span class="sp"></span><span class="badge">FR-REG-22 / 23</span></div>'+
+       '<div class="kv"><span class="k">分割 → 配准顺序</span><span class="v good">先分割后配准</span></div>'+
+       '<div class="kv"><span class="k">逆向校验</span><span class="v good">已通过（不通过则拒绝输出）</span></div>'+
+       '<div class="kv"><span class="k">坐标系</span><span class="v">全程一致</span></div>'+
+       '<div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap">'+
+         '<button class="btn sm" id="btnNudge" data-dx="1" data-dy="0">微调 →</button>'+
+         '<button class="btn sm" id="btnNudge" data-dx="-1" data-dy="0">← 微调</button>'+
+         '<button class="btn sm" id="btnNudge" data-dx="0" data-dy="1">微调 ↓</button>'+
+         '<button class="btn sm" id="btnNudge" data-dx="0" data-dy="-1">↑ 微调</button>'+
+         '<button class="btn sm" id="btnMark">手动标点</button>'+
+         '<button class="btn sm" id="btnResetManual">重置回自动结果</button>'+
+       '</div>'+
+       '<div class="hint" style="margin-top:8px">手动调整记录（FR-REG-25）：'+(state.manual.n?('已调整 '+state.manual.n+' 次 · Δ('+state.manual.dx+','+state.manual.dy+') · 来源「人工」'):'暂无 · 当前来源「AI」')+'</div>'+
+    '</div>';
   }else{
-    const plan = dim==='slice'
-      ? [['对齐对象','同一解剖层面的逐层对应（呼吸相位 / 体位差异）'],
-         ['关键指标','层面位移误差 (mm) · 层间距一致性'],
-         ['解决什么','呼吸不齐导致“看起来不是同一层”的读片困扰'],
-         ['交付计划','第二期 · 与 MPR 多平面重建联动']]
-      : [['对齐对象','病灶家族（跨时点同一病灶）'],
-         ['关键指标','病灶体积 / 径线变化量 · 病灶级关联准确率'],
-         ['解决什么','在解剖结构对齐的基础上做病灶级精细配准与量化'],
-         ['交付计划','第二期 · 依赖解剖结构配准（第一期）先行']];
-    b.innerHTML=`<div class="rp-plan"><span class="phase-tag p2">第二期</span><span>「${D.name}」为第二期规划能力，本版界面仅预留入口与说明，暂不提供计算结果。</span></div>`+
-      plan.map(r=>`<div style="padding:7px 0;border-bottom:1px dashed var(--line)"><div style="color:var(--muted);font-size:10px;margin-bottom:2px">${r[0]}</div><div style="color:#C7D6E8;font-size:11px;line-height:1.6">${r[1]}</div></div>`).join('');
-    $('#regFoot').textContent='第一期仅实现解剖结构配准 · 切换维度请点「⭐ 配准」';
+    h+='<div class="card"><div class="chead"><span class="t">'+m.ic+' '+m.name+'</span><span class="sp"></span><span class="tag p2">第二期 · 规划中</span></div>'+
+       '<div class="hint">「'+m.name+'」为第二期规划能力，本版界面仅预留入口与规划说明，<b>暂不提供计算结果</b>（FR-REG-02）。</div>'+
+       m.plan.map(r=>'<div style="padding:7px 0;border-bottom:1px dashed rgba(36,52,77,.75)">'+
+         '<div style="color:#8FA3BF;font-size:10px;margin-bottom:2px">'+r[0]+'</div>'+
+         '<div style="color:#C7D6E8;font-size:11.5px;line-height:1.6">'+r[1]+'</div></div>').join('')+
+    '</div>';
   }
+  /* 拖拽更换序列 */
+  h+='<div class="card"><div class="chead"><span class="t">参与配准的序列</span><span class="sp"></span><span class="badge">FR-REG-14</span></div>'+
+     '<div class="hint">从左侧序列栏<b>拖拽</b>任意可比序列至阅片区即可替换并自动重跑配准。基准序列'+(state.baseLocked?'<b style="color:#FFD700">默认锁定</b>（保持参照系统一）；如需更换请点击解锁':'<b style="color:#00C896">已解锁，可直接替换</b>')+'。</div>'+
+     '<div style="margin-top:9px"><button class="btn sm '+(state.baseLocked?'gold':'ai')+'" id="btnUnlock2">'+(state.baseLocked?'解锁基准序列':'重新锁定基准')+'</button></div></div>';
+  h+='</div>';
+  return h;
 }
-function replaceWindow(idx,sid){
-  if(idx<0) return;
-  state.wins[idx]=mkWin(sid);
-  renderViewports();
-}
-/* 量化趋势 */
-$('#tbTrend').addEventListener('click',()=>toggleTrend());
-function toggleTrend(force){
-  const show=force!==undefined?force:!state.trendOpen;
-  state.trendOpen=show;
-  $('#trendPanel').classList.toggle('show',show);
-  $('#tbTrend').classList.toggle('active',show);
-  if(show){
-    const b=$('#trendBody');
-    /* 6 个时段（由早到晚），每个时段取该时段首个序列的量化值 */
-    const pts=EXAMS.map((e,idx)=>({ex:e,idx})).reverse();
-    const firstSeriesOf=i=>SERIES.find(s=>s.exam===i);
-    const volOf=(fid,i)=>{ const s=firstSeriesOf(i); const f=s&&FOLLOWUP[s.id]&&FOLLOWUP[s.id][fid]; return f?f.vol:null; };
-    const shortLab=l=>l.replace('随访','随').replace('外院既往','外院');
-    const S={F001:{n:'F-001 左肺上叶肿块',c:'#FF4D4F'},F002:{n:'F-002 磨玻璃结节',c:'#2A7FFF'}};
-    const vals=fid=>pts.map(p=>volOf(fid,p.idx));
-    const all=[...vals('F001'),...vals('F002')].filter(v=>v!=null);
-    const vmin=Math.min(...all)*0.9, vmax=Math.max(...all)*1.04;
-    const W=356,Hh=96,x0=26,x1=W-16,yT=14,yB=Hh-26;
-    const px=i=>x0+(x1-x0)*i/(pts.length-1), py=v=>yB-(v-vmin)/(vmax-vmin)*(yB-yT);
-    let svg=`<line x1="${x0}" y1="${yB}" x2="${x1}" y2="${yB}" stroke="#24344D"/><line x1="${x0}" y1="${yB}" x2="${x0}" y2="${yT}" stroke="#24344D"/>`;
-    Object.keys(S).forEach(fid=>{
-      const vs=vals(fid);
-      const poly=vs.map((v,i)=>px(i).toFixed(1)+','+(v==null?yB:py(v).toFixed(1))).join(' ');
-      svg+=`<polyline points="${poly}" fill="none" stroke="${S[fid].c}" stroke-width="2"/>`;
-      vs.forEach((v,i)=>{ if(v!=null) svg+=`<circle cx="${px(i).toFixed(1)}" cy="${py(v).toFixed(1)}" r="3" fill="${S[fid].c}"/>`; });
-    });
-    pts.forEach((p,i)=>{ svg+=`<text x="${px(i).toFixed(1)}" y="${Hh-8}" font-size="8.5" fill="#8A97A8" text-anchor="middle">${shortLab(p.ex.label)}</text>`; });
-    svg+=`<text x="4" y="11" font-size="8" fill="#8A97A8">体积 cm³</text>`;
-    b.innerHTML=`
-      <div class="tp-legend">
-        <span><span class="sw" style="background:#FF4D4F"></span>F-001 左肺上叶肿块</span>
-        <span><span class="sw" style="background:#2A7FFF"></span>F-002 磨玻璃结节</span>
-      </div>
-      <svg viewBox="0 0 ${W} ${Hh}" width="100%" height="${Hh}">${svg}</svg>
-      <table class="tp-table">
-        <tr><th>家族</th>${pts.map(p=>`<th>${shortLab(p.ex.label)}</th>`).join('')}</tr>
-        <tr class="family"><td>F-001 左肺上叶</td>${pts.map((p,i)=>{const v=vals('F001')[i];return `<td class="num"${i===pts.length-1?' style="color:#FF9F43"':''}>${v==null?'—':v.toFixed(2)}${i===pts.length-1?' ▲':''}</td>`;}).join('')}</tr>
-        <tr><td>F-002 磨玻璃</td>${pts.map((p,i)=>{const v=vals('F002')[i];return `<td class="num"${i===pts.length-1?' style="color:#00C896"':''}>${v==null?'—':v.toFixed(2)}${i===pts.length-1?' ▼':''}</td>`;}).join('')}</tr>
-        <tr><td>F-003 实性小结节</td>${pts.map((p,i)=>{const v=vals('F003')[i];return `<td class="num" style="color:#8A97A8">${v==null?'已消失':v.toFixed(2)}</td>`;}).join('')}</tr>
-      </table>
-      <div style="font-size:10px;color:var(--muted);margin-top:8px">跨 ${pts.length} 个时段自动关联 · 体积变化量与百分比自动计算 · 病灶家族跨时段对齐</div>`;
+/* --- 基准病灶 pane（FR-REG-16~21） --- */
+function paneLesion(){
+  const cands=lesionCandidates();
+  let h='<div class="rpane" id="pane-lesion">';
+  h+='<div class="card gold"><div class="chead"><span class="t">⭐ 基准病灶（自动推荐）</span><span class="sp"></span><span class="badge gold">FR-REG-16/17</span></div>';
+  if(!cands.length || !state.baseLesion){
+    h+='<div class="hint">本期<b style="color:#FFA53C">未检出病灶</b>。解剖结构配准照常输出，病灶对比区显示「该期未见病灶」，<b>不得用 0 或空值参与变化率计算</b>（FR-REG-20）。</div></div></div>';
+    return h;
   }
+  const bc=cands.find(c=>c.fid===state.baseLesion);
+  h+='<div class="kv"><span class="k">当前基准病灶</span><span class="v">'+bc.fid+' '+bc.name+'</span></div>'+
+     '<div class="kv"><span class="k">推荐理由</span><span class="v" style="font-weight:500;color:#C7D6E8;text-align:right;max-width:62%">'+baseReason()+'</span></div>'+
+     '<div class="kv"><span class="k">规则顺序</span><span class="v" style="font-weight:500;color:#8FA3BF;text-align:right;max-width:62%">跨期均存在 → 体积最大 → 靠近解剖标志 → 最早出现</span></div>'+
+     '</div>';
+  h+='<div class="card"><div class="chead"><span class="t">全部病灶 · 可点击切换</span><span class="sp"></span><span class="badge">FR-REG-18/19</span></div>';
+  h+='<div class="hint" style="margin-bottom:8px">点击选择基准病灶（切换后所有对比指标立即按新基准重算并留痕）；右侧方框可勾选加入对比（多病灶对比）。</div>';
+  h+=cands.map(c=>{
+    let stat;
+    if(!c.inTgt) stat='<span style="color:#FFA53C">该病灶本期不可比 · '+(c.inBase?'存在于基准期但目标期未定位':'超出扫描范围')+'（FR-REG-21）</span>';
+    else if(!c.inBase) stat='<span style="color:#FFA53C">基准期未见该病灶 → 变化率不计算（FR-REG-20）</span>';
+    else stat='跨 '+c.n+' 期可见 · 本期 '+c.vol.toFixed(2)+' cm³';
+    const sec=state.secondary.indexOf(c.fid)>=0;
+    return '<div class="lesion'+(state.baseLesion===c.fid?' on':'')+'" data-lesion="'+c.fid+'">'+
+      '<span class="fid">'+c.fid+'</span>'+
+      '<span class="lb"><span class="nm">'+c.name+'</span>'+
+      '<div class="mt">'+c.pos+' · 靠近'+c.near+'</div>'+
+      '<div class="mt">'+stat+'</div></span>'+
+      '<span class="chk'+(sec?' on':'')+'" data-sec="'+c.fid+'" title="加入对比">✓</span></div>';
+  }).join('');
+  h+='<div class="hint" style="margin-top:6px">主基准 1 个 + 次要参考 '+(state.secondary.length)+' 个（FR-REG-19）。</div></div>';
+  h+='</div>';
+  return h;
 }
-/* 保存 */
-$('#tbSave').addEventListener('click',()=>{
-  $('#saveFlash').classList.add('show');
-  setTimeout(()=>$('#saveFlash').classList.remove('show'),1400);
-});
-/* 2D / MPR / 3D 模式切换 + 导出反馈 */
-function setDisplayMode(m){
-  ['tb2d','tbMpr','tb3d'].forEach(id=>document.getElementById(id).classList.remove('active'));
-  const id={'2d':'#tb2d','mpr':'#tbMpr','3d':'#tb3d'}[m];
-  $(id).classList.add('active');
-  if(m==='2d'){ $('#modeBadge').textContent='2D · 轴位'; toast('2D 轴位阅片模式（当前演示）'); }
-  if(m==='mpr'){ $('#modeBadge').textContent='MPR · 多平面'; toast('MPR 多平面重建：可在联动视图查看冠状/矢状位（演示模式，示意为主）'); }
-  if(m==='3d'){ $('#modeBadge').textContent='3D · 重建'; toast('3D 重建：容积渲染示意（演示模式，示意为主）'); }
+/* --- 量化 pane --- */
+function paneTrend(){
+  const it=state.curItem;
+  const all=it.exams.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const L=LESIONS.find(x=>x.fid===state.baseLesion);
+  let h='<div class="rpane" id="pane-trend">';
+  h+='<div class="card"><div class="chead"><span class="t">病灶量化趋势</span><span class="sp"></span><span class="badge">FR-ALIGN-07/08</span></div>';
+  if(!L){ h+='<div class="hint">无基准病灶 → 不计算变化率（FR-REG-20）。</div></div></div>'; return h; }
+  const bv = state.baseEid? L.vol[state.baseEid]:null;
+  const tv = state.tgtEid? L.vol[state.tgtEid]:null;
+  h+='<div class="kv"><span class="k">目标家族</span><span class="v">'+L.fid+' '+L.name+'</span></div>'+
+     '<div class="kv"><span class="k">体积变化（目标期 vs 基准期）</span><span class="v '+(tv>bv?'bad':'good')+'">'+(tv!=null&&bv!=null?fmtPct(bv,tv):'不计算')+'</span></div>'+
+     '<div class="kv"><span class="k">最大径变化</span><span class="v">'+(L.dia[state.tgtEid]!=null&&L.dia[state.baseEid]!=null?fmtPct(L.dia[state.baseEid],L.dia[state.tgtEid]):'不计算')+'</span></div>'+
+     '<div class="kv"><span class="k">密度（HU）</span><span class="v">'+(L.den[state.tgtEid]!=null&&L.den[state.baseEid]!=null?(L.den[state.tgtEid]-L.den[state.baseEid]>0?'+':'')+(L.den[state.tgtEid]-L.den[state.baseEid])+' HU':'不计算')+'</span></div>'+
+     '<table class="etable" style="margin-top:9px"><thead><tr><th>期</th>'+all.map(e=>'<th>'+e.date.slice(5)+'</th>').join('')+'</tr></thead><tbody>'+
+     LESIONS.map(x=>'<tr><td>'+x.fid+'</td>'+all.map(e=>'<td>'+(x.vol[e.eid]!=null?x.vol[e.eid].toFixed(2):'<span style="color:#FFA53C">未见</span>')+'</td>').join('')+'</tr>').join('')+
+     '</tbody></table>';
+  /* 折线 */
+  const w=344,hgt=104,pad=22;
+  const vals=all.map(e=>L.vol[e.eid]);
+  const present=vals.filter(v=>v!=null);
+  const mx=Math.max.apply(null,present.concat([0.1])), mn=0;
+  const px=i=>pad+(w-pad*2)*(all.length>1?i/(all.length-1):0.5);
+  const py=v=>hgt-pad-(hgt-pad*2)*((v-mn)/(mx-mn||1));
+  let poly=[];
+  all.forEach((e,i)=>{ const v=L.vol[e.eid]; if(v!=null) poly.push([px(i),py(v)]); });
+  const path=poly.map((p,i)=>(i?'L':'M')+' '+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  h+='<svg width="'+w+'" height="'+hgt+'" style="margin-top:10px">'+
+     '<line x1="'+pad+'" y1="'+(hgt-pad)+'" x2="'+(w-pad)+'" y2="'+(hgt-pad)+'" stroke="#24344D"/>'+
+     '<path d="'+path+'" fill="none" stroke="#FF5C5C" stroke-width="2"/>'+
+     poly.map(p=>'<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3" fill="#FF5C5C"/>').join('')+
+     all.map((e,i)=>'<text x="'+px(i).toFixed(1)+'" y="'+(hgt-6)+'" fill="#8FA3BF" font-size="9" text-anchor="middle">'+e.date.slice(5)+'</text>').join('')+
+     '</svg>';
+  h+='<div class="hint" style="margin-top:6px">跨 '+present.length+' 个时段自动关联 · 「未见」期不参与变化率计算 · 指标口径见配准面板（FR-REG-27）</div>';
+  h+='</div></div>';
+  return h;
 }
-['tb2d','tbMpr','tb3d'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',()=>{
-    const m={tb2d:'2d',tbMpr:'mpr',tb3d:'3d'}[id];
-    setDisplayMode(m);
-  });
-});
-/* 导出 */
-document.querySelectorAll('.viewer-top .tool-btn').forEach(btn=>{
-  if(btn.textContent.includes('导出')){
-    btn.addEventListener('click',()=>toast('导出影像（含标注+报告）：DICOM/PDF 导出在正式版中提供，此处为演示'));
-  }
-});
-/* 折叠 */
-function toggleSeries(){
-  const p=$('#seriesPanel'); p.classList.toggle('collapsed');
-  $('#seriesCollapse').textContent=p.classList.contains('collapsed')?'«':'»';
+/* --- 校验 pane（FR-REG-04/05/08 输入校验与结构化异常） --- */
+function paneValid(){
+  const it=state.curItem;
+  const nEx=it.exams.length;
+  const hasEnh=it.exams.some(e=>e.series.some(s=>s.acq==='增强'));
+  const maxThick=Math.max.apply(null,it.exams.map(e=>e.thick));
+  const anyMissing=it.exams.some(e=>e.series.length===0);
+  const lungOK=it.exams.every(e=>e.series.some(s=>s.type==='肺窗'));
+  const rows=[
+    {ic:nEx>=3?'ok':'bd', t:'期数', r:'≥ 3 次随访（含基线）', a:'实际 '+nEx+' 次', bad:nEx<3, fail:'拒绝入组，返回「随访期数不足」'},
+    {ic:hasEnh?'ok':'wn', t:'检查类型', r:'平扫 + 增强', a:hasEnh?'具备':'缺增强', bad:false, fail:'标注降级，不阻断（缺增强可直接用平扫）'},
+    {ic:'ok', t:'疾病范围', r:'中央型肺癌 / 周围型肺癌 / 肺脓肿', a:'肺肿物随访（病理确认）', bad:false, fail:'不在范围内 → 本期不支持'},
+    {ic:maxThick<=5?'ok':'wn', t:'层厚', r:'≤ 5 mm', a:'最大 '+maxThick+' mm', bad:false, fail:'超限降级'},
+    {ic:lungOK?'ok':'wn', t:'默认序列', r:'肺窗', a:lungOK?'可取到肺窗':'回退最近平扫 + 最近增强', bad:false, fail:'肺窗取不到 → 用其他序列并由算法调窗宽窗位'},
+    {ic:'ok', t:'序列完整性', r:'DICOM 无缺失切片', a:'无缺层', bad:false, fail:'拒绝并返回错误'},
+    {ic:'ok', t:'唯一性', r:'唯一 ID 为同一患者', a:'同一患者', bad:false, fail:'不一致则拒绝'}
+  ];
+  const badN=rows.filter(r=>r.bad).length;
+  let h='<div class="rpane" id="pane-valid">';
+  h+='<div class="card '+(badN?'red':'green')+'"><div class="chead"><span class="t">输入准入校验</span><span class="sp"></span>'+
+     '<span class="badge '+(badN?'red':'ai')+'">'+(badN?'不通过 '+badN+' 项':'通过')+'</span></div>'+
+     '<div class="valid">'+rows.map(r=>'<div class="row"><span class="ic '+r.ic+'">'+(r.ic==='ok'?'✓':r.ic==='wn'?'!':'✕')+'</span>'+
+       '<span style="flex:1"><b>'+r.t+'</b> · 要求 '+r.r+' ｜ 实际 '+r.a+
+       (r.ic!=='ok'?'<div class="hint" style="margin-top:2px">失败处置：'+r.fail+'</div>':'')+'</span></div>').join('')+'</div></div>';
+  h+='<div class="card"><div class="chead"><span class="t">结构化异常（失败原因）</span><span class="sp"></span><span class="badge">FR-REG-08</span></div>'+
+     '<div class="hint">失败原因结构化输出率要求 <b>100%</b>（不得只返回「失败」）。异常处置对照：</div>'+
+     '<div class="valid" style="margin-top:7px">'+
+     [['随访期数 < 3','拒绝入组，返回「期数不足」'],
+      ['缺平扫或缺增强','标注降级，输出低置信度'],
+      ['默认序列肺窗取不到','用其他序列，算法调整窗宽窗位'],
+      ['分割失败','降级为左右肺配准 + 低置信度'],
+      ['配准折叠','拦截，返回失败原因，人工介入'],
+      ['平扫↔增强跨序列对齐失败','重试一次归一化；仍失败标「建议复核」'],
+      ['拖拽重算超时','终止重算，保留上一次结果并标注']]
+     .map(x=>'<div class="row"><span class="ic wn">•</span><span style="flex:1"><b>'+x[0]+'</b> → '+x[1]+'</span></div>').join('')+
+     '</div></div></div>';
+  return h;
 }
-function toggleReport(){
-  const p=$('#reportPanel'); p.classList.toggle('collapsed');
-  $('#reportCollapse').textContent=p.classList.contains('collapsed')?'»':'«';
+/* --- 报告 pane --- */
+function paneReport(){
+  const it=state.curItem;
+  const t=examOf(state.tgtEid);
+  const f1=LESIONS[0], f2=LESIONS[1], f3=LESIONS[2];
+  const d1=t.lesions.find(L=>L.fid==='F-001'), d2=t.lesions.find(L=>L.fid==='F-002'), d3=t.lesions.find(L=>L.fid==='F-003');
+  let h='<div class="rpane" id="pane-report">';
+  h+='<div class="card"><div class="chead"><span class="t">结构化诊断报告</span><span class="sp"></span>'+
+     '<span class="badge">'+it.name+'</span><span class="badge">'+t.date+' '+t.label+'</span></div>'+
+     '<div class="hint" style="margin-bottom:9px">点击高亮文字 → 定位影像病灶（FR-REP-03 / FR-LINK-01）</div>'+
+     '<div class="rep"><h4>影像所见</h4>'+
+     '<div>'+(it.body==='胸部'
+       ? '双肺纹理清晰。<span class="hl f1" data-hl="F-001">左肺上叶尖后段</span>见软组织密度肿块影，最大截面约 <b>'+
+         (d1&&d1.dia!=null?d1.dia:'—')+' mm</b>，边缘可见分叶与短毛刺，局部胸膜凹陷；密度尚均匀。'+
+         (d2&&d2.vol!=null?'<span class="hl f1" data-hl="F-002">右肺中叶内侧段</span>见磨玻璃密度结节，约 '+(d2.dia!=null?d2.dia:'—')+' mm，边界清晰。':'')+
+         (d3&&d3.vol==null?'<span class="hl p1" data-hl="F-003">左肺下叶背段</span>原小结节本次未见显示（已消失）。':'')
+       : '颅脑实质密度均匀，未见明确异常密度灶；脑室系统大小形态正常，中线结构居中。')+'</div>'+
+     '<h4>诊断意见</h4>'+
+     '<div>'+(it.body==='胸部'
+       ? '1. 左肺上叶尖后段<span class="hl f1" data-hl="F-001">肿块</span>，较前增大，建议结合临床及病理。'+
+         (d2&&d2.vol!=null?'<br>2. 右肺中叶磨玻璃结节，较前略缩小，建议继续随访。':'')+
+         (d3&&d3.vol==null?'<br>3. 左肺下叶背段小结节本次未见显示。':'')
+       : '颅脑 CT 平扫未见明确异常。')+'</div>'+
+     '<h4>AI 辅助标注（Report Plus）</h4>'+
+     '<div class="hint">'+
+       '· 病灶家族 '+state.baseLesion+' 跨 '+it.exams.length+' 个时段已关联（外院既往 → '+t.label+'）<br>'+
+       '· 目标期 '+t.label+' '+t.date+' 测量 '+(d1&&d1.dia!=null?d1.dia:'—')+' mm（AI 建议 '+
+       (d1&&d1.dia!=null?(d1.dia-0.1).toFixed(1)+'×'+(d1.dia-0.4).toFixed(1):'—')+' mm，一致）<br>'+
+       '· 结果仅供医生参考；图文关联关系已自动保存，阅片留痕可追溯（FR-LINK-04）'+
+     '</div></div>'+
+     '<div style="margin-top:10px;display:flex;gap:7px">'+
+       '<button class="btn sm" id="btnRepUpdate">⟳ AI 重新生成草稿</button>'+
+       '<button class="btn sm ai" id="btnRepSave">保存报告</button>'+
+     '</div></div></div>';
+  return h;
 }
-/* 更新量化角标 */
-function updateMetrics(){
-  // 由 drawAll 后调用
-  if(state.regMode){
-    state.wins.forEach((w,i)=>{
-      const el=document.getElementById('m'+i); if(!el) return;
-      const s=SERIES.find(x=>x.id===w.sid);
-      const ff=FOLLOWUP[w.sid]||{};
-      let html='';
-      if(ff.F001) html+=`<span>F-001 体积 ${ff.F001.vol} cm³</span><span>最大径 ${ff.F001.dia} mm</span>`;
-      el.innerHTML=html;
-      el.classList.add('show');
-    });
-  }
+/* --- 右侧事件绑定 --- */
+function bindRight(){
+  const unlock=()=>{ state.baseLocked=!state.baseLocked; renderRight(); renderSeries(); renderMatrix();
+    toast(state.baseLocked?'基准序列已重新锁定（参照系固定）':'基准序列已解锁 · 现在可拖拽更换（FR-REG-12），更换后将重算并留痕','gold'); };
+  ['#btnUnlock','#btnUnlock2'].forEach(s=>{ const el=$(s); if(el) el.addEventListener('click',unlock); });
+  const pa=$('#btnPickAnat'); if(pa) pa.addEventListener('click',()=>pickRegMode('anat'));
+  $$('[data-lesion]').forEach(el=>el.addEventListener('click',ev=>{
+    if(ev.target.closest('[data-sec]')) return;
+    state.baseLesion=el.dataset.lesion; renderRight(); renderMatrix();
+    toast('基准病灶已切换为 '+state.baseLesion+' · 所有对比指标已按新基准重算（FR-REG-18）','gold'); }));
+  $$('[data-sec]').forEach(el=>el.addEventListener('click',ev=>{
+    ev.stopPropagation();
+    const f=el.dataset.sec, at=state.secondary.indexOf(f);
+    if(at>=0) state.secondary.splice(at,1); else state.secondary.push(f);
+    renderRight(); toast(at>=0?('已移出对比：'+f):('已加入对比：'+f+'（次要参考，FR-REG-19）')); }));
+  $$('[data-dx]').forEach(el=>el.addEventListener('click',()=>{
+    state.manual.dx+=+el.dataset.dx; state.manual.dy+=+el.dataset.dy; state.manual.n++;
+    renderRight(); renderMatrix();
+    toast('手动微调 Δ('+state.manual.dx+','+state.manual.dy+') · 已记录，来源标记为「人工」（FR-REG-23/25）','gold'); }));
+  const bm=$('#btnMark'); if(bm) bm.addEventListener('click',()=>{ state.manual.n++;
+    renderRight(); toast('已进入手动标点：在两侧影像上分别点击同一解剖标志即可建立对应关系（FR-REG-22/24，兜底：无法自动配准时可完全手动完成）','gold'); });
+  const br=$('#btnResetManual'); if(br) br.addEventListener('click',()=>{ state.manual={dy:0,dx:0,n:0};
+    renderRight(); renderMatrix(); toast('已重置回自动配准结果（原始输出未丢失，FR-REG-23）'); });
+  $$('[data-hl]').forEach(el=>el.addEventListener('click',()=>{
+    const fid=el.dataset.hl;
+    if(state.baseLesion!==fid){ state.baseLesion=fid; renderRight(); renderMatrix(); }
+    toast('已定位影像病灶 '+fid+'（闪烁标记）· 图文关联准确率目标 ≥0.8（FR-LINK-03）','gold'); }));
+  const ru=$('#btnRepUpdate'); if(ru) ru.addEventListener('click',()=>toast('AI 已重新生成报告草稿 · 图文关联准确率 ≥0.8','gold'));
+  const rs=$('#btnRepSave'); if(rs) rs.addEventListener('click',()=>toast('报告已保存 · 图文关联关系已留痕 · 可追溯（FR-LINK-04）','gold'));
 }
-function updateSliceInfo(){
-  const w=state.wins[0]; if(w){
-    const s=SERIES.find(x=>x.id===w.sid);
-    $('#curSliceInfo').textContent=`图像 ${w.slice}/${s.slices} · ${s.name}`;
-  }
-}
-/* toast */
-let toastTimer;
-function toast(msg){
-  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
-  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
-}
-/* 快捷键 */
-document.addEventListener('keydown',e=>{
-  if(state.page!=='viewer') return;
-  const k=e.key.toLowerCase();
-  if(e.ctrlKey&&k==='s'){ e.preventDefault(); $('#tbSave').click(); }
-  if(k==='f1'){ e.preventDefault(); setLayout('l1'); }
-  if(k==='f2'){ e.preventDefault(); setLayout('l1x2'); }
-  if(k==='f3'){ e.preventDefault(); setLayout('l2x1'); }
-  if(k==='f4'){ e.preventDefault(); setLayout('l2'); }
-  if(k==='f'){ openRegMenu(); }
-  if(k==='w'){ setTool(state.tool==='wl'?'none':'wl'); }
-  if(k==='m'){ setTool(state.tool==='measure'?'none':'measure'); }
-  if(k==='a'){ setTool(state.tool==='mark'?'none':'mark'); }
-  if(k==='l'){ $('#tbLink').click(); }
-  if(k==='r'){ state.wins.forEach(w=>{w.ww=1500;w.wl=-600;}); drawAll(); toast('视图已重置'); }
-  if(k==='arrowleft'){ stepSlice(-1); }
-  if(k==='arrowright'){ stepSlice(1); }
-});
-/* 初始 */
+/* --- 量化浮层（保留） --- */
+function toggleTrend(){ $$('.rtab').forEach(t=>t.classList.remove('on'));
+  const tb=$('[data-rt="trend"]'); if(tb) tb.classList.add('on');
+  $$('.rpane').forEach(p=>p.classList.remove('on')); const el=$('#pane-trend'); if(el) el.classList.add('on');
+  toast('已切到量化面板 · 折线与表格按基准病灶口径计算'); }
+
+/* ============ 事件绑定 ============ */
+$('#btnLogin').addEventListener('click',doLogin);
+$('#inPwd').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+['inUser','inPwd'].forEach(id=>$('#'+id).addEventListener('input',()=>{
+  $('#f'+id.slice(2)).classList.remove('bad'); }));
+$('#btnLogout').addEventListener('click',()=>go('login'));
+$('#btnSearch').addEventListener('click',()=>{ $('#listHost').innerHTML='<div class="empty">加载中…</div>'; setTimeout(renderList,260); });
+$('#btnReset').addEventListener('click',()=>{ ['qName','qPid','qEid','qD1','qD2'].forEach(i=>$('#'+i).value='');
+  $('#qMod').value=''; $('#qItem').value=''; renderList(); toast('已重置全部条件'); });
+$('#btnBack').addEventListener('click',()=>{ go('list'); renderList(); });
+$$('[data-range]').forEach(el=>el.addEventListener('click',()=>{ state.range=el.dataset.range; renderMatrix();
+  toast(el.dataset.range==='all'?'期范围：全部 '+state.curItem.exams.length+' 期（大矩阵可读性：可再用序列分类筛选，FR-VIEW-11）':'期范围：最近 2 期（默认，FR-REG-10）'); }));
+$('#btnMatrix').addEventListener('click',function(){ state.matrix=!state.matrix; this.classList.toggle('on',state.matrix);
+  $('#matrix').style.display=state.matrix?'grid':'none'; toast(state.matrix?'期-序矩阵已开启':'已切到基础档位视图（FR-VIEW-02）'); });
+$$('#grpLayout .tbtn').forEach(b=>b.addEventListener('click',()=>{
+  if(!state.matrix){ $$('#grpLayout .tbtn').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    toast('基础布局档位：'+b.textContent+'（浏览态档位，配准态请用期-序矩阵）'); }
+  else toast('配准态使用定制化期-序矩阵布局（FR-VIEW-09）；基础档位仅在浏览态生效','gold'); }));
+$('#tReg').addEventListener('click',()=>{ if(state.noCompare){ toast('单期浏览态：无前序检查，未启动配准','red'); return; }
+  $('#regMenu').classList.toggle('show'); });
+$('#btnCloseReg').addEventListener('click',()=>$('#regMenu').classList.remove('show'));
+$('#btnExitReg').addEventListener('click',exitReg);
+$('#tManual').addEventListener('click',()=>{ const tb=$('[data-rt="valid"]');
+  $$('.rtab').forEach(t=>t.classList.remove('on')); const rt=$('[data-rt="reg"]'); if(rt) rt.classList.add('on');
+  $$('.rpane').forEach(p=>p.classList.remove('on')); const el=$('#pane-reg'); if(el) el.classList.add('on');
+  toast('手动调整适用全部三种配准模式（FR-REG-22）：层面配准可手动指定对应层面、解剖结构配准可手动加/移标志点、病灶配准可手动标记关联','gold'); });
+$('#tTrend').addEventListener('click',toggleTrend);
+$('#tSave').addEventListener('click',()=>toast('已保存：配准结果、参数、手动调整与指标一并持久化，二次打开可复现（FR-REG-29）','gold'));
+$('#tExport').addEventListener('click',()=>toast('已导出：影像 + 标注 + 指标 + 配准参数（脱敏后）· 原始影像只读'));
+$('#btnFoldSeries').addEventListener('click',()=>{ const p=$('#seriesPanel'); p.classList.toggle('fold');
+  $('#btnFoldSeries').textContent=p.classList.contains('fold')?'«':'»'; });
+$('#btnFoldRight').addEventListener('click',()=>{ const p=$('#rightPanel'); p.classList.toggle('fold');
+  $('#btnFoldRight').textContent=p.classList.contains('fold')?'«':'»'; });
+{ const saved=localStorage.getItem('cv3.layout');
+  if(saved){ try{ const s=JSON.parse(saved); state.range=s.range||'2'; state.clsSel=s.clsSel||[0]; }catch(e){} } }
+window.addEventListener('beforeunload',()=>{ try{ localStorage.setItem('cv3.layout', JSON.stringify({range:state.range,clsSel:state.clsSel})); }catch(e){} });
+
+/* ============ 启动 ============ */
+renderForms();
+$('#qItem').innerHTML='<option value="">全部</option>'+items().map(x=>x.it.name)
+  .filter((v,i,a)=>a.indexOf(v)===i).map(n=>'<option>'+n+'</option>').join('');
 renderList();
-console.log('临床阅片器原型 V2.2 已加载');
+console.log('临床阅片器原型 V3.0 已加载（对应需求文档 V2.1）');
 </script>
 </body>
 </html>
