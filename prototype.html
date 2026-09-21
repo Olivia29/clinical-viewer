@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V3.6（配准改为分步弹窗向导：检查→模态→SID 序列层级 / 多格布局 1×1–4×4 / 自动·手动关联同步翻页缩放调窗 / 配准工作界面：参考图像↔浮动图像 + 自动·手动 + 三视图 Alpha 融合 + 刚性变换 + 序列·检查应用范围）</title>
+<title>临床阅片器 · 交互原型 V3.7（检索条件「检查日期」改为深色自定义日期选择器；配准为分步弹窗向导：参考图像↔浮动图像 + 自动·手动 + 三视图 Alpha 融合 + 序列·检查应用范围；布局 检查→模态→SID + 自动/手动关联）</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
@@ -501,6 +501,37 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
 .rwnote.warn{color:#FFA53C;margin-top:6px}
 .rwapplied{margin-top:10px;font-size:11.5px;color:#22E0A8;background:rgba(0,200,150,.1);
   border:1px solid rgba(0,200,150,.38);border-radius:8px;padding:8px 11px;line-height:1.7}
+/* ==================== V3.7 深色日期选择器（替代原生 type=date 的系统浅色弹层） ==================== */
+.dpick{position:relative; display:inline-block}
+.dpick .dpv{background:var(--bg2); border:1px solid var(--line); border-radius:6px; padding:6px 26px 6px 9px;
+  color:var(--txt); font-size:12px; outline:none; min-width:136px; cursor:pointer; font-family:inherit}
+.dpick .dpv::placeholder{color:var(--muted)}
+.dpick .dpi{position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:10px;
+  color:var(--muted); font-style:normal; pointer-events:none}
+.dpick.on .dpv{border-color:var(--blue); box-shadow:0 0 0 2px rgba(42,127,255,.18)}
+.dpop{position:absolute; z-index:400; top:calc(100% + 7px); left:0; width:252px; background:var(--panel);
+  border:1px solid var(--line); border-radius:10px; padding:10px 11px 9px;
+  box-shadow:0 18px 44px rgba(0,0,0,.6)}
+.dpop[hidden]{display:none}
+.dph{display:flex; align-items:center; gap:4px; margin-bottom:8px}
+.dph b{flex:1; text-align:center; font-size:12.5px; color:var(--txt); font-weight:600}
+.dpn{width:22px; height:22px; border-radius:6px; border:1px solid var(--line); background:var(--bg2);
+  color:var(--txt); cursor:pointer; font-size:10px; line-height:1; padding:0; font-family:inherit}
+.dpn:hover{background:rgba(42,127,255,.28); border-color:var(--blue)}
+.dpw{display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:3px}
+.dpw span{text-align:center; font-size:10.5px; color:var(--muted); padding:2px 0}
+.dpg{display:grid; grid-template-columns:repeat(7,1fr); gap:1px}
+.dpg button{height:27px; border:none; background:transparent; color:var(--txt); font-size:11.5px;
+  border-radius:5px; cursor:pointer; font-family:inherit; padding:0}
+.dpg button:hover:not(:disabled){background:rgba(42,127,255,.3)}
+.dpg button.out{color:var(--dim); cursor:default}
+.dpg button.today{box-shadow:inset 0 0 0 1px rgba(42,127,255,.7)}
+.dpg button.sel{background:var(--blue); color:#fff; font-weight:700}
+.dpf{display:flex; gap:6px; margin-top:8px; padding-top:8px; border-top:1px solid var(--line)}
+.dpf button{flex:1; padding:5px 0; border-radius:6px; font-size:11.5px; cursor:pointer; font-family:inherit;
+  border:1px solid var(--line); background:var(--bg2); color:var(--txt)}
+.dpf button:hover{background:rgba(42,127,255,.25)}
+.dpf button.pri{border-color:var(--blue); background:rgba(30,136,229,.22); color:#DCEAFF}
 </style>
 </head>
 <body>
@@ -566,8 +597,18 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
         <div class="fldx"><label>患者姓名</label><input id="qName" placeholder="如 何婷"></div>
         <div class="fldx"><label>患者 ID</label><input id="qPid" placeholder="如 P2784"></div>
         <div class="fldx"><label>检查号</label><input id="qEid" placeholder="如 E20260"></div>
-        <div class="fldx"><label>检查日期 · 起</label><input id="qD1" type="date"></div>
-        <div class="fldx"><label>检查日期 · 止</label><input id="qD2" type="date"></div>
+        <div class="fldx"><label>检查日期 · 起</label>
+          <div class="dpick" id="dpw-qD1">
+            <input id="qD1" class="dpv" type="text" readonly autocomplete="off" placeholder="年 - 月 - 日">
+            <i class="dpi">▾</i>
+            <div class="dpop" id="dp-qD1" hidden></div>
+          </div></div>
+        <div class="fldx"><label>检查日期 · 止</label>
+          <div class="dpick" id="dpw-qD2">
+            <input id="qD2" class="dpv" type="text" readonly autocomplete="off" placeholder="年 - 月 - 日">
+            <i class="dpi">▾</i>
+            <div class="dpop" id="dp-qD2" hidden></div>
+          </div></div>
         <div class="fldx"><label>模态</label>
           <select id="qMod"><option value="">全部</option><option>CT</option><option>MR</option></select></div>
         <div class="fldx"><label>检查项目</label>
@@ -767,12 +808,15 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V3.6
+   临床阅片器 · 交互原型 V3.7
    ------------------------------------------------------------
    V3.5 变更：配准工作界面 → 【弹窗 + 分步向导】（样式参照影像工作站配准面板）
    V3.6 变更：修「切到第二期维度后无法切回解剖结构配准」——维度/步骤 chip 改事件委托
               （regHead() 重建 #rwDims.innerHTML 会清掉直接绑定的监听器）；
               第二期分支底栏按钮状态显式归位、清掉遗留的自动配准状态文案。
+   V3.7 变更：检索条件「检查日期 · 起/止」由原生 type=date 改为深色自定义日期选择器
+              （原生弹的是系统浅色日历，与深色主题不符）；值仍写回 #qD1/#qD2（ISO），
+              筛选逻辑与「重置」按钮零改动。
    · 弹窗 1180px 居中卡片（遮罩不模糊），标题栏「配准」+ 维度 chip + ✕
    · 顶部步骤条，一次只显示一步：① 选择影像数据 ② 设置配准参数 ③ 执行配准 ④ 结果评估
    · 底栏：左键移动 / 右键缩放 / *滚动翻页（三个提示都真的生效）+ ⚡自动 📄读档 🧹清除 + 应用范围下拉 + 应 用
@@ -3049,12 +3093,102 @@ function aregRows(){
 }
 
 
+/* ============ V3.7 深色日期选择器（替代原生 type=date 的系统弹层） ============ */
+/* 值仍写回 #qD1 / #qD2 的 value（ISO: YYYY-MM-DD）→ renderList() 与「重置」按钮无需改动。
+   弹层内容每次重建 innerHTML，因此点击一律用 document 事件委托（直接绑会被清掉）。 */
+const DP_VIEW = {};
+const DP_WEEK = ['日','一','二','三','四','五','六'];
+function dpPad2(v){ return (v<10?'0':'')+v; }
+function dpISO(y,m,d){ return y+'-'+dpPad2(m+1)+'-'+dpPad2(d); }
+function dpParse(v){ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||''); return m?{y:+m[1],m:+m[2]-1,d:+m[3]}:null; }
+function dpToday(){ const t=new Date(); return {y:t.getFullYear(),m:t.getMonth(),d:t.getDate()}; }
+function dpVal(id){ const e=$('#'+id); return e?e.value:''; }
+function dpDraw(id){
+  const box=$('#dp-'+id); if(!box) return;
+  const sel=dpParse(dpVal(id)), t=dpToday();
+  const v=DP_VIEW[id]||(DP_VIEW[id]=(sel?{y:sel.y,m:sel.m}:{y:t.y,m:t.m}));
+  const lead=new Date(v.y,v.m,1).getDay();
+  const days=new Date(v.y,v.m+1,0).getDate();
+  const prevN=new Date(v.y,v.m,0).getDate();
+  const cells=[];
+  for(let i=lead-1;i>=0;i--) cells.push({n:prevN-i, iso:null});
+  for(let d=1;d<=days;d++) cells.push({n:d, iso:dpISO(v.y,v.m,d)});
+  let nx=1; while(cells.length%7) cells.push({n:nx++, iso:null});
+  box.innerHTML =
+    '<div class="dph">'+
+      '<button class="dpn" data-dpn="y-1" title="上一年">«</button>'+
+      '<button class="dpn" data-dpn="m-1" title="上一月">‹</button>'+
+      '<b>'+v.y+' 年 '+(v.m+1)+' 月</b>'+
+      '<button class="dpn" data-dpn="m1" title="下一月">›</button>'+
+      '<button class="dpn" data-dpn="y1" title="下一年">»</button>'+
+    '</div>'+
+    '<div class="dpw">'+DP_WEEK.map(w=>'<span>'+w+'</span>').join('')+'</div>'+
+    '<div class="dpg">'+cells.map(c=>{
+      const cls=[]; if(!c.iso) cls.push('out');
+      else if(sel && c.iso===dpISO(sel.y,sel.m,sel.d)) cls.push('sel');
+      else if(c.iso===dpISO(t.y,t.m,t.d)) cls.push('today');
+      return '<button data-dpd="'+(c.iso||'')+'"'+(c.iso?'':' disabled')+
+             ' class="'+cls.join(' ')+'">'+c.n+'</button>';
+    }).join('')+'</div>'+
+    '<div class="dpf">'+
+      '<button data-dpq="today">今天</button>'+
+      '<button data-dpq="clear">清除</button>'+
+      '<button data-dpq="ok" class="pri">确定</button>'+
+    '</div>';
+}
+function dpShow(id){
+  ['qD1','qD2'].forEach(k=>dpHide(k));
+  const w=$('#dpw-'+id); if(!w) return;
+  const sel=dpParse(dpVal(id)), t=dpToday();
+  DP_VIEW[id]= sel?{y:sel.y,m:sel.m}:{y:t.y,m:t.m};
+  dpDraw(id);
+  $('#dp-'+id).hidden=false; w.classList.add('on');
+}
+function dpHide(id){ const p=$('#dp-'+id), w=$('#dpw-'+id); if(p) p.hidden=true; if(w) w.classList.remove('on'); }
+function dpHideAll(){ ['qD1','qD2'].forEach(k=>dpHide(k)); }
+function dpSet(id, iso){
+  const e=$('#'+id); if(!e) return;
+  e.value = iso||'';
+  const p=dpParse(iso); if(p) DP_VIEW[id]={y:p.y,m:p.m};
+  dpDraw(id);
+}
+function dpShift(id, dir){
+  const v=DP_VIEW[id]; if(!v) return;
+  if(dir==='m-1'){ if(--v.m<0){v.m=11;v.y--;} }
+  else if(dir==='m1'){ if(++v.m>11){v.m=0;v.y++;} }
+  else if(dir==='y-1'){ v.y--; }
+  else if(dir==='y1'){ v.y++; }
+  dpDraw(id);
+}
+document.addEventListener('click', ev=>{
+  const t=ev.target; if(!t||!t.closest) return;
+  const day=t.closest('.dpg button[data-dpd]');
+  if(day){ const id=day.closest('.dpop').id.slice(3);
+    if(day.dataset.dpd){ dpSet(id, day.dataset.dpd); dpHide(id); }
+    return; }
+  const nav=t.closest('.dpop .dpn');
+  if(nav){ dpShift(nav.closest('.dpop').id.slice(3), nav.dataset.dpn); return; }
+  const q=t.closest('.dpop .dpf button');
+  if(q){ const id=q.closest('.dpop').id.slice(3), how=q.dataset.dpq;
+    if(how==='today'){ const d=dpToday(); dpSet(id, dpISO(d.y,d.m,d.d)); dpHide(id); }
+    else if(how==='clear'){ dpSet(id,''); }
+    else { dpHide(id); }
+    return; }
+  if(t.closest('.dpop')) return;                       /* 点在弹层空白处：不关 */
+  const fld=t.closest('.dpick');
+  if(fld){ const id=fld.querySelector('.dpv').id;
+    if($('#dp-'+id).hidden) dpShow(id); else dpHide(id);
+    return; }
+  dpHideAll();                                          /* 点页面其它地方：关掉 */
+});
+document.addEventListener('keydown', ev=>{ if(ev.key==='Escape') dpHideAll(); });
+
 /* ============ 启动 ============ */
 renderForms();
 $('#qItem').innerHTML='<option value="">全部</option>'+items().map(x=>x.it.name)
   .filter((v,i,a)=>a.indexOf(v)===i).map(n=>'<option>'+n+'</option>').join('');
 renderList();
-console.log('临床阅片器原型 V3.6 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
+console.log('临床阅片器原型 V3.7 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
 </script>
 </body>
 </html>
