@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V5.2（影像渲染专业化：真窗宽窗位灰阶 + 圆 FOV + 四角信息/方位/比例尺/病灶黄框标注 + 配准联动光标；配准弹窗单页左右结构；布局 检查→模态→SID + 自动/手动关联）</title>
+<title>临床阅片器 · 交互原型 V5.3（影像渲染专业化：真窗宽窗位灰阶 + 圆 FOV + 四角信息/方位/比例尺/病灶黄框标注 + 配准联动光标；配准弹窗单页左右结构；布局 检查→模态→SID + 自动/手动关联）</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
@@ -751,7 +751,7 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V5.2
+   临床阅片器 · 交互原型 V5.3
    ------------------------------------------------------------
    V3.5 变更：配准工作界面 → 【弹窗 + 分步向导】（样式参照影像工作站配准面板）
    V3.6 变更：修「切到第二期维度后无法切回解剖结构配准」——维度/步骤 chip 改事件委托
@@ -2638,7 +2638,8 @@ function drawRegFusion(cv, plane, o){
   const dpr = window.devicePixelRatio || 1;
   const w = cv.clientWidth || 300, h = cv.clientHeight || 220;
   const off = document.createElement('canvas');
-  drawCT(off, fl.eid, fl.win, {plane:plane, slice:v.slice, w:w, h:h, tint:'PET', mark:false});
+  /* V5.3：浮动层不再用 PET 伪彩 —— 两序列都是 CT，应做标准灰度叠加（原蓝色浮层即此伪彩所致） */
+  drawCT(off, fl.eid, fl.win, {plane:plane, slice:v.slice, w:w, h:h, mark:false});
   const t = o.before ? (function(){ const i = regIntrinsic(state.reg.baseSid, state.reg.floatSid, plane);
                                     return {dx:i.dx, dy:i.dy, rot:i.rot}; })()
                      : regTotal(state.reg.baseSid, state.reg.floatSid, plane);
@@ -3206,9 +3207,9 @@ renderForms();
 $('#qItem').innerHTML='<option value="">全部</option>'+items().map(x=>x.it.name)
   .filter((v,i,a)=>a.indexOf(v)===i).map(n=>'<option>'+n+'</option>').join('');
 renderList();
-setTimeout(function(){ try{ toast('影像底图 = 真实 CT（16 层真实 DICOM 切片）· 已简化 · V5.2','gold'); }catch(e){} }, 900);
-setTimeout(function(){ try{ var tb=document.querySelector('#pgLogin .topbar, .topbar'); if(tb && !document.getElementById('verBadge')){ var sp=document.createElement('span'); sp.id='verBadge'; sp.className='badge blue'; sp.textContent='真实CT · V5.2（已简化）'; tb.appendChild(sp);} }catch(e){} }, 700);
-console.log('临床阅片器原型 V5.2 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
+setTimeout(function(){ try{ toast('影像底图 = 真实 CT · 去蓝色浮层 · V5.3','gold'); }catch(e){} }, 900);
+setTimeout(function(){ try{ var tb=document.querySelector('#pgLogin .topbar, .topbar'); if(tb && !document.getElementById('verBadge')){ var sp=document.createElement('span'); sp.id='verBadge'; sp.className='badge blue'; sp.textContent='真实CT · V5.3'; tb.appendChild(sp);} }catch(e){} }, 700);
+console.log('临床阅片器原型 V5.3 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
 </script>
 </body>
 </html>
