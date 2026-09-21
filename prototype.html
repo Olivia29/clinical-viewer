@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V4.1（影像渲染专业化：真窗宽窗位灰阶 + 圆 FOV + 四角信息/方位/比例尺/病灶黄框标注 + 配准联动光标；配准弹窗单页左右结构；布局 检查→模态→SID + 自动/手动关联）</title>
+<title>临床阅片器 · 交互原型 V4.2（影像渲染专业化：真窗宽窗位灰阶 + 圆 FOV + 四角信息/方位/比例尺/病灶黄框标注 + 配准联动光标；配准弹窗单页左右结构；布局 检查→模态→SID + 自动/手动关联）</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
@@ -751,7 +751,7 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V4.1
+   临床阅片器 · 交互原型 V4.2
    ------------------------------------------------------------
    V3.5 变更：配准工作界面 → 【弹窗 + 分步向导】（样式参照影像工作站配准面板）
    V3.6 变更：修「切到第二期维度后无法切回解剖结构配准」——维度/步骤 chip 改事件委托
@@ -782,6 +782,9 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
               四周被肋骨/软组织亮带包住，观感不像 CT）；肺-软组织边界锐化（inr 0.90~1.055）；
               胸壁/皮下脂肪收薄、肋骨带外移贴壁；心脏偏左放大；加叶间裂淡线；
               噪声 ±22 → ±8 HU；HU 场分辨率 190 → 260；角注字号收敛。
+   V4.2 变更：影像层回归「临床级纯净」（参考临床阅片截图）——画布上不再绘四角信息/方位字母/
+              比例尺（层号、窗宽窗位、序列名已在界面 chrome 显示，信息不丢失）；保留白色体表轮廓
+              （真实 CT 自带皮肤线）与绿色十字定位；病灶框线宽收敛为 1~1.6px。cv._ann 仍记录供自动化校验。
    · 弹窗 1340×980（居中卡片、遮罩不模糊），标题栏「配准」+ 维度标签 + ✕
    · 单页左右结构：左「融合预览·三视图联动」+「配准前/配准后」，右「选择 → 配准参数 → 应用范围 → 结果评估」
    · V4.0 影像渲染专业化（参考 PET/CT 工作站）：HU 参数化胸腔体数据 + 真窗宽窗位灰度映射 +
@@ -1129,7 +1132,7 @@ function drawLesMarks(g,box,plane,marks,selFid){
   marks.forEach((m,idx)=>{
     const isSel=m.fid===selFid;
     const bx=(ox+side*(m.u+1)/2)*dpr, by=(oy+side*(m.v+1)/2)*dpr, r=m.r*dpr;
-    g.lineWidth=(isSel?2:1.3)*dpr;
+    g.lineWidth=(isSel?1.6:1)*dpr;
     g.strokeStyle=isSel?'#FFD700':'rgba(255,214,0,.85)';
     g.strokeRect(bx-r, by-r, r*2, r*2);
     /* 右上角上标编号 */
@@ -1236,7 +1239,7 @@ function drawCT(cv,eid,win,opt){
     ww:ww, wl:wl, cur:sl, total:total, plane:plName, zoom:(opt.zoom||1).toFixed(1),
     orient:orient.l+orient.r+orient.t+orient.b, lesions:marks.map(m=>m.fid)
   };
-  if(opt.ann!==false) drawAnn(g,box,{
+  if(opt.ann===true) drawAnn(g,box,{   /* 默认不画：临床阅片为「零干扰」纯净影像，层号/窗位在界面 chrome 上 */
     pname:pt.name||'—', pid:pid||'—', sex:pt.sex||'', age:pt.age||'',
     exam:(cur?cur.label+' '+cur.date:'—'), series:(s?((s.mod||'CT')+' · '+s.cls):'—'),
     ww:ww, wl:wl, thick:(s?s.thick:1.25), kv:(s&&s.kv?s.kv:'120kV 100mAs'),
@@ -3183,7 +3186,7 @@ renderForms();
 $('#qItem').innerHTML='<option value="">全部</option>'+items().map(x=>x.it.name)
   .filter((v,i,a)=>a.indexOf(v)===i).map(n=>'<option>'+n+'</option>').join('');
 renderList();
-console.log('临床阅片器原型 V4.1 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
+console.log('临床阅片器原型 V4.2 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
 </script>
 </body>
 </html>
