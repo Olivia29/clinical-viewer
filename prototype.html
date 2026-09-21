@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V3.4（按《医学影像图像布局-配准功能说明》重构：检查→模态→SID 序列层级 / 多格布局 1×1–4×4 / 自动·手动关联同步翻页缩放调窗 / 配准工作界面：参考图像↔浮动图像 + 自动·手动 + 三视图 Alpha 融合 + 刚性变换 + 序列·检查应用范围）</title>
+<title>临床阅片器 · 交互原型 V3.5（配准改为分步弹窗向导：检查→模态→SID 序列层级 / 多格布局 1×1–4×4 / 自动·手动关联同步翻页缩放调窗 / 配准工作界面：参考图像↔浮动图像 + 自动·手动 + 三视图 Alpha 融合 + 刚性变换 + 序列·检查应用范围）</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
@@ -382,90 +382,125 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
 .gcell canvas{transition:transform .12s ease-out;transform-origin:50% 50%}
 .gq{pointer-events:none}
 
-/* ---------- 配准工作界面 ---------- */
-.regwork{position:fixed;inset:0;z-index:70;display:none;flex-direction:column;
-  background:linear-gradient(180deg,#0A1729,#0C1B30 40%,#0A1526);color:#C7D6E8}
+/* ==================== V3.5 配准弹窗（分步向导） ==================== */
+.regwork{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+  background:rgba(4,9,18,.68);padding:22px}
 .regwork.show{display:flex}
-.rw-hd{height:46px;display:flex;align-items:center;gap:11px;padding:0 16px;flex:0 0 auto;
-  border-bottom:1px solid rgba(58,86,128,.55);background:rgba(12,26,44,.94)}
-.rw-t{font-size:14px;font-weight:700;color:#EAF2FF}
-.rw-sub{font-size:11px;color:#8FA3BF}
-.rw-dim{display:flex;gap:6px}
-.regwork .chip{font-size:11px;padding:3px 9px;border-radius:13px;cursor:pointer;
-  border:1px solid rgba(58,86,128,.7);color:#AFC2DA;white-space:nowrap}
-.regwork .chip.on{background:rgba(255,215,0,.14);border-color:rgba(255,215,0,.5);color:#FFD700}
-.regwork .tag.p1{background:#123528;color:#00D9A3;border:1px solid rgba(0,200,150,.4);font-size:9.5px}
-.regwork .tag.p2{background:rgba(120,140,170,.16);color:#8FA3BF;border:1px solid rgba(120,140,170,.32);font-size:9.5px}
-.rw-body{flex:1;overflow:auto;padding:14px 16px 24px}
-.rstep{background:rgba(18,33,55,.86);border:1px solid rgba(58,86,128,.55);border-radius:11px;margin-bottom:12px}
-.rstep-h{display:flex;align-items:center;gap:9px;padding:9px 13px;border-bottom:1px solid rgba(58,86,128,.45)}
-.rstep-h .rno{width:17px;height:17px;border-radius:50%;background:#2A7FFF;color:#fff;font-size:10.5px;
-  display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 auto}
-.rstep-h .rt{font-size:13px;font-weight:700;color:#EAF2FF}
-.rstep-h .rb{margin-left:auto;font-size:10.5px;color:#FFD700;background:rgba(255,215,0,.12);
-  border:1px solid rgba(255,215,0,.34);border-radius:11px;padding:1px 9px}
-.rstep-b{padding:11px 13px}
-.rwcols{display:grid;grid-template-columns:236px minmax(0,1fr);gap:13px}
-.rwc{background:rgba(11,22,38,.75);border:1px solid rgba(58,86,128,.55);border-radius:9px;padding:10px 11px;margin-bottom:9px}
-.rwc.base{border-color:rgba(255,215,0,.55)}
-.rwc.float{border-color:rgba(42,127,255,.55)}
-.rwc-h{display:flex;align-items:center;gap:7px;margin-bottom:5px}
-.rwc-t{font-size:12.5px;font-weight:700;color:#EAF2FF}
-.rwc-d{font-size:10.5px;color:#8FA3BF;margin-bottom:7px;line-height:1.6}
-.rwl{display:block;font-size:10px;color:#8FA3BF;margin-bottom:3px}
-.rwsel{width:100%;background:#0A1526;color:#C7D6E8;border:1px solid rgba(58,86,128,.7);
-  border-radius:6px;padding:5px 7px;font-size:11.5px;font-family:inherit}
-.rwmeta{font-size:10.5px;color:#8FA3BF;margin-top:6px;line-height:1.7}
+.regmodal{width:min(1180px,96vw);max-height:88vh;display:flex;flex-direction:column;
+  background:#0E1C31;border:1px solid rgba(70,102,148,.75);border-radius:13px;overflow:hidden;
+  box-shadow:0 26px 70px rgba(0,0,0,.6)}
+.rwhd{display:flex;align-items:center;gap:11px;padding:10px 14px;flex:0 0 auto;
+  background:#132441;border-bottom:1px solid rgba(70,102,148,.6)}
+.rwt{font-size:15px;font-weight:700;color:#F1F6FF;letter-spacing:.5px}
+.rwsub{font-size:11.5px;color:#93A9C6}
+.rwdims{display:flex;gap:6px}
+.dchip{font-size:11px;padding:3px 9px;border-radius:13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  border:1px solid rgba(70,102,148,.7);color:#B7C8DE;background:rgba(16,32,54,.7);white-space:nowrap}
+.dchip.on{background:rgba(255,215,0,.15);border-color:rgba(255,215,0,.55);color:#FFD700}
+.dchip .tag{font-size:9px;padding:0 4px;border-radius:3px}
+.tag.p1{background:#123528;color:#22E0A8;border:1px solid rgba(0,200,150,.45)}
+.tag.p2{background:rgba(120,140,170,.18);color:#93A9C6;border:1px solid rgba(120,140,170,.34)}
+.rwx{width:26px;height:26px;border-radius:7px;border:1px solid rgba(70,102,148,.7);background:rgba(16,32,54,.8);
+  color:#C6D6EA;cursor:pointer;font-size:13px;line-height:1}
+.rwx:hover{background:rgba(255,92,92,.18);border-color:rgba(255,92,92,.55);color:#FF8A8A}
+.rsteps{display:flex;align-items:center;gap:6px;padding:11px 16px;flex:0 0 auto;background:#0C1830;
+  border-bottom:1px solid rgba(70,102,148,.45)}
+.rstp{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#8FA3BF;cursor:pointer;
+  padding:4px 10px;border-radius:16px;border:1px solid transparent;white-space:nowrap}
+.rstp b{width:18px;height:18px;border-radius:50%;background:rgba(70,102,148,.5);color:#C6D6EA;
+  display:flex;align-items:center;justify-content:center;font-size:10.5px;flex:0 0 auto}
+.rstp.on{color:#EAF2FF;background:rgba(42,127,255,.16);border-color:rgba(42,127,255,.55)}
+.rstp.on b{background:#2A7FFF;color:#fff}
+.rstp.done{color:#22E0A8}
+.rstp.done b{background:rgba(0,200,150,.28);color:#22E0A8}
+.rline{flex:1;height:1px;background:rgba(70,102,148,.5);max-width:70px}
+.rwbody{flex:1;overflow:auto;padding:14px 16px}
+.rwft{display:flex;align-items:center;gap:9px;padding:9px 14px;flex:0 0 auto;
+  background:#132441;border-top:1px solid rgba(70,102,148,.6)}
+.rwmouse{display:flex;gap:12px;font-size:11px;color:#93A9C6;white-space:nowrap}
+.rwmouse b{color:#C6D6EA;font-weight:600}
+.rwmouse .it{font-style:italic;color:#7E93B0}
+.rwacts{display:flex;gap:6px;margin-left:6px}
+.rwc2{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;cursor:pointer;font-size:12px;
+  border:1px solid rgba(70,102,148,.7);background:rgba(16,32,54,.85);color:#C6D6EA}
+.rwc2:not(:disabled):hover{background:rgba(42,127,255,.22);border-color:rgba(42,127,255,.6)}
+.rwc2:disabled{opacity:.42;cursor:not-allowed}
+#rwScopeSel{background:#0C1830;color:#C6D6EA;border:1px solid rgba(70,102,148,.75);border-radius:7px;
+  padding:5px 8px;font-size:12px;font-family:inherit}
+.rwprev,.rwnext{padding:6px 13px;border-radius:7px;cursor:pointer;font-size:12.5px;
+  border:1px solid rgba(70,102,148,.75);background:rgba(16,32,54,.85);color:#C6D6EA}
+.rwprev:disabled{opacity:.4;cursor:not-allowed}
+.rwnext{border-color:rgba(42,127,255,.6);background:rgba(42,127,255,.18);color:#DCEAFF}
+.rwapply{padding:7px 22px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;border:none;
+  background:#1E88E5;color:#fff;box-shadow:0 3px 12px rgba(30,136,229,.4)}
+.rwapply:disabled{background:#3A4A63;color:#8FA3BF;box-shadow:none;cursor:not-allowed}
+.rstepbox{background:rgba(16,32,54,.55);border:1px solid rgba(70,102,148,.45);border-radius:10px;padding:13px 15px}
+.rboxh{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:#EAF2FF;margin-bottom:11px}
+.rboxh .sp{flex:1}
+.rselgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.rsel{background:rgba(11,22,38,.8);border:1px solid rgba(70,102,148,.55);border-radius:9px;padding:11px 12px}
+.rsel.base{border-color:rgba(255,215,0,.5)}
+.rsel.float{border-color:rgba(42,127,255,.5)}
+.rselh{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#EAF2FF;margin-bottom:8px}
+.rselh .tag{font-size:9.5px;padding:1px 6px;border-radius:4px;font-weight:400}
+.rwl{display:block;font-size:10.5px;color:#93A9C6;margin-bottom:3px}
+.rwsel{width:100%;background:#0C1830;color:#D6E4F5;border:1px solid rgba(70,102,148,.75);border-radius:6px;
+  padding:6px 8px;font-size:12px;font-family:inherit}
+.rwmeta{font-size:10.5px;color:#93A9C6;margin-top:7px;line-height:1.7}
 .rwmeta b{color:#7FB4FF}
-.rwswap{display:flex;justify-content:center;margin:-2px 0 7px}
-.rwbtns{display:flex;align-items:center;gap:9px;margin-bottom:10px}
-.rwst{font-size:11px;color:#FFD700}
-.rwparams{background:rgba(11,22,38,.6);border:1px solid rgba(58,86,128,.45);border-radius:8px;padding:9px 10px}
-.rwph{font-size:10.5px;color:#8FA3BF;margin-bottom:5px}
-.rwparams .stepRow{display:flex;align-items:center;gap:7px;margin-bottom:5px}
-.rwparams .stepRow .lb{width:14px;font-size:10.5px;color:#8FA3BF}
-.rwparams .stepBox{display:flex;align-items:center;gap:4px}
-.rwparams .stepBox button{width:20px;height:20px;border-radius:5px;border:1px solid rgba(58,86,128,.7);
-  background:rgba(20,38,62,.9);color:#C7D6E8;cursor:pointer;font-size:12px;line-height:1}
-.rwparams .stepBox button:hover{background:rgba(42,127,255,.28)}
-.rwparams .nudv{min-width:62px;text-align:center;font-size:11px;color:#EAF2FF;
-  background:rgba(8,16,28,.8);border:1px solid rgba(58,86,128,.6);border-radius:5px;padding:2px 5px}
-.rwview{background:rgba(11,22,38,.6);border:1px solid rgba(58,86,128,.45);border-radius:8px;padding:9px 10px}
-.rwv-h{display:flex;align-items:center;gap:8px;font-size:11.5px;color:#C7D6E8;margin-bottom:7px}
-.rwv-tip{font-size:10px;color:#8FA3BF}
-.rwv-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.rwvp{position:relative;background:#05080D;border:1px solid rgba(58,86,128,.5);border-radius:7px;overflow:hidden}
-.rwvp canvas{display:block;width:100%;height:158px;cursor:crosshair}
-.rwvp-t{position:absolute;left:6px;top:5px;font-size:10px;color:#8FA3BF;
-  background:rgba(6,12,22,.72);padding:0 5px;border-radius:4px}
-.rwalpha{display:flex;align-items:center;gap:9px;margin-top:9px;font-size:11px;color:#C7D6E8}
-.rwalpha input[type=range]{flex:1;accent-color:#2A7FFF}
-.rwalpha b{color:#FFD700;min-width:38px;text-align:right}
-.rwrow{display:flex;gap:12px;font-size:11.5px;padding:5px 0;
-  border-bottom:1px dashed rgba(36,52,77,.7);line-height:1.7}
-.rwrow .k{min-width:92px;color:#8FA3BF;flex:0 0 auto}
-.rwscope{display:flex;gap:10px;flex-wrap:wrap}
-.rwradio{display:flex;flex-direction:column;gap:1px;background:rgba(11,22,38,.6);
-  border:1px solid rgba(58,86,128,.5);border-radius:8px;padding:7px 10px;cursor:pointer}
-.rwradio input{accent-color:#2A7FFF}
-.rwradio .t{font-size:11.5px;color:#EAF2FF}
-.rwradio .d{font-size:10px;color:#8FA3BF}
-.rwmetrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:10px}
-.rwm{background:rgba(11,22,38,.7);border:1px solid rgba(58,86,128,.5);border-radius:8px;padding:7px 9px}
-.rwm.wide{grid-column:1/-1;display:flex;align-items:center;gap:10px}
-.rwm .k{font-size:10px;color:#8FA3BF;display:block}
-.rwm .v{font-size:14px;font-weight:700;color:#EAF2FF}
-.rwm .v.good{color:#00D9A3}.rwm .v.warn{color:#FFA53C}.rwm .v.bad{color:#FF5C5C}
-.rwcmp{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
-.rwcp{position:relative;background:#05080D;border:1px solid rgba(58,86,128,.5);border-radius:7px;overflow:hidden}
-.rwcp canvas{display:block;width:100%;height:150px}
-.rwcp-t{position:absolute;left:6px;top:5px;font-size:10px;color:#FFD700;
-  background:rgba(6,12,22,.72);padding:0 6px;border-radius:4px}
-.rwnote{font-size:10.5px;color:#8FA3BF;line-height:1.75}
-.rwnote.warn{color:#FFA53C;margin-top:5px}
-.rwapplied{margin-top:9px;font-size:11px;color:#00D9A3;background:rgba(0,200,150,.1);
-  border:1px solid rgba(0,200,150,.36);border-radius:8px;padding:7px 10px;line-height:1.7}
-
+.rswaprow{display:flex;align-items:center;gap:12px;margin-top:12px}
+.rwcols2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);gap:13px}
+.rviews{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.rvp{position:relative;background:#04070D;border:1px solid rgba(70,102,148,.5);border-radius:8px;overflow:hidden}
+.rvp:first-child{grid-column:1/-1}
+.rvp canvas{display:block;width:100%;height:210px;cursor:crosshair;transition:transform .12s ease-out}
+.rvp:not(:first-child) canvas{height:150px}
+.rvpt{position:absolute;left:7px;top:6px;font-size:10.5px;color:#B7C8DE;background:rgba(6,12,22,.75);
+  padding:0 6px;border-radius:4px}
+.rvps{position:absolute;right:7px;top:6px;font-size:10.5px;color:#7E93B0;background:rgba(6,12,22,.75);
+  padding:0 6px;border-radius:4px}
+.rparams{background:rgba(11,22,38,.8);border:1px solid rgba(70,102,148,.5);border-radius:9px;padding:11px 12px}
+.rph{font-size:12.5px;font-weight:700;color:#EAF2FF;margin-bottom:9px}
+.rpg{font-size:11px;color:#93A9C6;margin-bottom:5px}
+.rpr{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.rpr .rl{width:12px;font-size:11.5px;color:#C6D6EA}
+.rpr .ru{font-size:10.5px;color:#7E93B0}
+.rstep2{display:flex;align-items:center;gap:4px}
+.rstep2 button{width:22px;height:22px;border-radius:6px;border:1px solid rgba(70,102,148,.75);
+  background:rgba(20,38,62,.95);color:#C6D6EA;cursor:pointer;font-size:13px;line-height:1}
+.rstep2 button:hover{background:rgba(42,127,255,.3)}
+.rstep2 .nudv{min-width:78px;text-align:center;font-size:11.5px;color:#EAF2FF;font-family:Consolas,monospace;
+  background:rgba(8,16,28,.9);border:1px solid rgba(70,102,148,.6);border-radius:5px;padding:3px 6px}
+.rpslider{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:11px;color:#C6D6EA}
+.rpslider input[type=range]{flex:1;accent-color:#2A7FFF}
+.rpslider b{color:#FFD700;min-width:38px;text-align:right}
+.rscope2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.rsc{background:rgba(11,22,38,.8);border:1px solid rgba(70,102,148,.5);border-radius:9px;padding:11px 12px;cursor:pointer}
+.rsc.on{border-color:rgba(30,136,229,.75);background:rgba(30,136,229,.13)}
+.rsct{font-size:13px;font-weight:700;color:#EAF2FF;margin-bottom:4px}
+.rscd{font-size:11px;color:#93A9C6;line-height:1.7}
+.rsum{margin-top:12px;background:rgba(11,22,38,.7);border:1px solid rgba(70,102,148,.45);border-radius:9px;padding:10px 12px}
+.rsr{display:flex;gap:12px;font-size:12px;padding:4px 0;border-bottom:1px dashed rgba(45,66,98,.8);line-height:1.7}
+.rsr:last-child{border-bottom:none}
+.rsr .k{min-width:100px;color:#93A9C6}
+.rsr .good{color:#22E0A8}.rsr .warn{color:#FFA53C}
+.rwmetrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:11px}
+.rwm{background:rgba(11,22,38,.8);border:1px solid rgba(70,102,148,.5);border-radius:8px;padding:8px 10px}
+.rwm.wide{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+.rwm .k{font-size:10.5px;color:#93A9C6;display:block}
+.rwm .v{font-size:15px;font-weight:700;color:#EAF2FF}
+.rwm .v.good{color:#22E0A8}.rwm .v.warn{color:#FFA53C}.rwm .v.bad{color:#FF5C5C}
+.rwcmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.rcp{position:relative;background:#04070D;border:1px solid rgba(70,102,148,.5);border-radius:8px;overflow:hidden}
+.rcp canvas{display:block;width:100%;height:168px}
+.rcpt{position:absolute;left:7px;top:6px;font-size:10.5px;color:#FFD700;background:rgba(6,12,22,.78);
+  padding:0 7px;border-radius:4px}
+.rplan{display:flex;gap:12px;font-size:12px;padding:7px 0;border-bottom:1px dashed rgba(45,66,98,.8);line-height:1.75}
+.rplan .k{min-width:90px;color:#93A9C6}
+.rwnote{font-size:11px;color:#93A9C6;line-height:1.8}
+.rwnote.warn{color:#FFA53C;margin-top:6px}
+.rwapplied{margin-top:10px;font-size:11.5px;color:#22E0A8;background:rgba(0,200,150,.1);
+  border:1px solid rgba(0,200,150,.38);border-radius:8px;padding:8px 11px;line-height:1.7}
 </style>
 </head>
 <body>
@@ -644,16 +679,40 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
     </div>
   </div>
 
-  <!-- ==================== 配准工作界面（依据《医学影像图像布局-配准功能说明》） ==================== -->
+  <!-- ============ 配准弹窗（分步向导 · 样式参照影像工作站配准面板） ============ -->
   <div class="regwork" id="regWork">
-    <div class="rw-hd">
-      <span class="rw-t">🧭 配准工作界面</span>
-      <span class="rw-sub" id="rwSub"></span>
-      <span style="flex:1"></span>
-      <span class="rw-dim" id="rwDims"></span>
-      <button class="btn sm" id="rwClose">✕ 关闭</button>
+    <div class="regmodal">
+      <div class="rwhd">
+        <span class="rwt">配准</span>
+        <span class="rwsub" id="rwSub"></span>
+        <span style="flex:1"></span>
+        <span class="rwdims" id="rwDims"></span>
+        <button class="rwx" id="rwClose" title="关闭">✕</button>
+      </div>
+      <div id="rwSteps"></div>
+      <div class="rwbody" id="rwBody"></div>
+      <div class="rwft">
+        <span class="rwmouse">
+          <span class="m">左键：<b>移动</b></span>
+          <span class="m">右键：<b>缩放</b></span>
+          <span class="m it">*滚动翻页</span>
+        </span>
+        <span class="rwacts">
+          <button class="rwc2" id="rwAuto" title="自动配准">⚡ 自动</button>
+          <button class="rwc2" id="rwLoad" title="读取上一次该组合的配准参数">📄 读档</button>
+          <button class="rwc2" id="rwClear" title="清除手动调整">🧹 清除</button>
+          <span class="rwnote" id="rwAutoSt2"></span>
+        </span>
+        <span style="flex:1"></span>
+        <select id="rwScopeSel" title="应用范围（序列之间 / 检查之间）">
+          <option value="series">序列之间</option>
+          <option value="exam">检查之间</option>
+        </select>
+        <button class="rwprev" id="rwPrev">‹ 上一步</button>
+        <button class="rwnext" id="rwNext">下一步 ›</button>
+        <button class="rwapply" id="rwApply">应 用</button>
+      </div>
     </div>
-    <div class="rw-body" id="rwBody"></div>
   </div>
 
   <!-- 自定义布局（需求 2.3.2：行 Row / 列 Column，最大 4×4） -->
@@ -708,7 +767,12 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V3.4
+   临床阅片器 · 交互原型 V3.5
+   ------------------------------------------------------------
+   V3.5 变更：配准工作界面 → 【弹窗 + 分步向导】（样式参照影像工作站配准面板）
+   · 弹窗 1180px 居中卡片（遮罩不模糊），标题栏「配准」+ 维度 chip + ✕
+   · 顶部步骤条，一次只显示一步：① 选择影像数据 ② 设置配准参数 ③ 执行配准 ④ 结果评估
+   · 底栏：左键移动 / 右键缩放 / *滚动翻页（三个提示都真的生效）+ ⚡自动 📄读档 🧹清除 + 应用范围下拉 + 应 用
    ------------------------------------------------------------
    V3.4 依据《医学影像图像布局-配准功能说明》重新梳理：
    · 布局 —— 序列显示层级：检查 → 模态（CT/MR/PET）→ SID 从小到大
@@ -2336,7 +2400,7 @@ state.zoom = 1; state.ww = 1500; state.wl = -600;
 state.slc = {};                 /* 自动关联：按序列分类共享层号 */
 state.cellOv = {};              /* 手动关联：按窗口单独覆盖 {slice,zoom,ww,wl} */
 state.reg = {
-  open:false, dim:'anat',
+  open:false, dim:'anat', step:1, zoom:1, slice:null,
   baseSid:null, floatSid:null,
   alpha:0.55, scope:'exam',
   pos:{x:0,y:0,z:0}, rot:{x:0,y:0,z:0},
@@ -2439,7 +2503,7 @@ function drawRegFusion(cv, plane, o){
   const fl   = state.reg.floatSid ? findSeries(state.reg.floatSid) : null;
   if(!base || !base.eid) return cv;
   const v = o.before ? {slice:defSlice(base), zoom:1, ww:state.ww, wl:state.wl}
-                     : cellView(base, 0);
+                     : {slice:(state.reg.slice!=null?state.reg.slice:defSlice(base)), zoom:1, ww:state.ww, wl:state.wl};
   drawCT(cv, base.eid, base.win, {plane:plane, slice:v.slice, ww:v.ww, wl:v.wl, mark:o.mark!==false});
   if(!fl) return cv;
   const dpr = window.devicePixelRatio || 1;
@@ -2499,133 +2563,237 @@ function regSeriesCard(role, sid){
         s.cls+' · '+s.thick+'mm · '+s.slices+' 层 · 窗 '+(s.win==='LUNG'?'肺窗':'纵隔窗')+'</div>' : '')+
     '</div>';
 }
+/* ---------- V3.5 配准弹窗：分步向导（参考影像工作站的配准面板样式） ---------- */
+const REG_STEPS = [
+  {n:1, t:'选择影像数据', d:'参考图像（参照层）与浮动图像（浮动层）'},
+  {n:2, t:'设置配准参数', d:'自动 / 手动平移·旋转，三视图融合预览'},
+  {n:3, t:'执行配准',     d:'选择应用范围（序列之间 / 检查之间）'},
+  {n:4, t:'结果评估与确认', d:'互信息 / Dice / 质量分级 + 前后对比'}
+];
+function regStepBar(){
+  return '<div class="rsteps">' + REG_STEPS.map((s,i)=>
+    '<span class="rstp'+(state.reg.step===s.n?' on':'')+(state.reg.step>s.n?' done':'')+'" data-stp="'+s.n+'">'+
+      '<b>'+(state.reg.step>s.n?'✓':s.n)+'</b><span class="tx">'+s.t+'</span></span>' +
+    (i<REG_STEPS.length-1?'<span class="rline"></span>':'')).join('') + '</div>';
+}
+function regHead(){
+  const dim = REG_MODES.find(m=>m.id===state.reg.dim) || REG_MODES[1];
+  const b = state.reg.baseSid? findSeries(state.reg.baseSid):null;
+  const f = state.reg.floatSid? findSeries(state.reg.floatSid):null;
+  $('#rwSub').textContent = (b? labelOfSid(b.sid)+' · '+(b.mod||'CT')+' '+b.cls : '未选参照层') +
+    '   ←   ' + (f? labelOfSid(f.sid)+' · '+(f.mod||'CT')+' '+f.cls : '未选浮动层');
+  $('#rwDims').innerHTML = REG_MODES.map(m=>
+    '<span class="dchip'+(state.reg.dim===m.id?' on':'')+'" data-dimb="'+m.id+'">'+m.ic+' '+m.name+
+    '<span class="tag '+(m.phase===1?'p1':'p2')+'">'+(m.phase===1?'第一期':'第二期')+'</span></span>').join('');
+}
+/* 选择区：参照层 / 浮动层，各带「检查」与「序列」两级下拉（样式参照工作站面板） */
+function regLayerBox(role){
+  const sid = role==='base'? state.reg.baseSid : state.reg.floatSid;
+  const s = sid? findSeries(sid):null;
+  const e = s? examOf(s.eid):null;
+  const exs = state.curItem? state.curItem.exams.slice().sort((a,b)=>b.date.localeCompare(a.date)) : [];
+  const isBase = role==='base';
+  return '<div class="rsel '+(isBase?'base':'float')+'">'+
+    '<div class="rselh">'+ (isBase?'参照层':'浮动层') +
+      '<span class="tag '+(isBase?'p1':'p2')+'">'+(isBase?'参考图像 Fixed · 基准固定':'浮动图像 Moving · 待变换')+'</span></div>'+
+    '<label class="rwl">检查</label>'+
+    '<select class="rwsel" data-exsel="'+role+'">'+
+      exs.map(x=>'<option value="'+x.eid+'"'+((e&&e.eid===x.eid)?' selected':'')+'>'+
+        x.label+' '+x.date+'（'+x.series.length+' 序列）</option>').join('')+'</select>'+
+    '<label class="rwl" style="margin-top:7px">序列（模态 · 分类 · 层厚）</label>'+
+    '<select class="rwsel" data-sersel="'+role+'">'+
+      (e? e.series.slice().sort((a,b)=>clsIdx(a)-clsIdx(b)).map(x=>
+        '<option value="'+x.sid+'"'+(x.sid===sid?' selected':'')+'>'+(x.mod||'CT')+' · '+x.cls+' · '+x.thick+'mm</option>').join('')
+        : '<option value="">（请先选检查）</option>')+'</select>'+
+    (s? '<div class="rwmeta">'+(e?e.label+' '+e.date:'')+' · 模态 <b>'+(s.mod||'CT')+'</b> · '+s.cls+
+        ' · '+s.thick+'mm · '+s.slices+' 层 · 窗 '+(s.win==='LUNG'?'肺窗':'纵隔窗')+'</div>' : '')+
+    '</div>';
+}
+/* 配准参数行：移动 mm / 旋转 °，带 ± 步进器 */
+function regParamRow(kind, axis){
+  const o = kind==='pos'? state.reg.pos : state.reg.rot;
+  const step = kind==='pos'? 1 : 0.5;
+  const unit = kind==='pos'? 'mm':'°';
+  return '<div class="rpr"><span class="rl">'+axis+'</span>'+
+    '<span class="rstep2">'+
+      '<button data-nud="'+kind+'" data-nax="'+axis+'" data-ndl="'+(-step)+'">−</button>'+
+      '<span class="nudv" id="nud-'+kind+'-'+axis+'">'+o[axis].toFixed(kind==='pos'?3:1)+'</span>'+
+      '<button data-nud="'+kind+'" data-nax="'+axis+'" data-ndl="'+step+'">+</button>'+
+    '</span><span class="ru">'+unit+'</span></div>';
+}
+function regViews(){
+  return '<div class="rviews">'+
+    [['axial','横断面'],['coronal','冠状面'],['sagittal','矢状面']].map(p=>
+      '<div class="rvp"><canvas id="rwF_'+p[0]+'" data-rwf="'+p[0]+'"></canvas>'+
+      '<span class="rvpt">'+p[1]+'</span><span class="rvps" id="rwS_'+p[0]+'"></span></div>').join('')+
+    '</div>';
+}
+/* 逐步渲染（一次只显示一步） */
 function renderRegWork(){
-  if(!state.reg.baseSid){ state.reg.baseSid = state.baseSid || (allSeriesOrdered()[0]||{}).sid || null; }
-  if(!state.reg.floatSid) state.reg.floatSid = state.floatSid || null;   /* 沿用「查看」入口算出的浮动层 */
+  if(!state.reg.baseSid) state.reg.baseSid = state.baseSid || (allSeriesOrdered()[0]||{}).sid || null;
+  if(!state.reg.floatSid) state.reg.floatSid = state.floatSid || null;
   if(!state.reg.floatSid){
     const base = state.reg.baseSid? findSeries(state.reg.baseSid) : null;
     const prev = base? (examOf(state.tgtEid)||{}).series : null;
     const cand = prev && prev.length ? prev.find(x=>x.cls===(base||{}).cls) || prev[0] : null;
     state.reg.floatSid = cand? cand.sid : null;
   }
-  const dim = REG_MODES.find(m=>m.id===state.reg.dim) || REG_MODES[0];
-  $('#rwDims').innerHTML = REG_MODES.map(m=>
-    '<span class="chip'+(state.reg.dim===m.id?' on':'')+'" data-dimb="'+m.id+'">'+
-    m.ic+' '+m.name+' <span class="tag '+(m.phase===1?'p1':'p2')+'">'+(m.phase===1?'第一期':'第二期')+'</span></span>').join('');
-  $('#rwSub').textContent = '配准维度：'+dim.name+'（'+(dim.phase===1?'第一期':'第二期')+'）· '+
-    '变换模型：刚性（平移 + 旋转）· 融合模式：Alpha 透明叠加';
+  if(state.reg.slice==null){ const bs=state.reg.baseSid? findSeries(state.reg.baseSid):null;
+    state.reg.slice = bs? defSlice(bs) : 45; }
+  const dim = REG_MODES.find(m=>m.id===state.reg.dim) || REG_MODES[1];
+  regHead();
+  $('#rwSteps').innerHTML = regStepBar();
+  $('#rwScopeSel').value = state.reg.scope;
 
-  const bSid = state.reg.baseSid, fSid = state.reg.floatSid;
-  const mets = regMetrics(bSid, fSid, 'axial');
-  const aligned = mets.resid <= 2;
-  /* 第二期维度：只给规划内容，不给假数字 */
+  /* 第二期维度：只给规划内容，不给任何计算结果 */
   if(dim.phase !== 1){
-    $('#rwBody').innerHTML = regStepCard('一','选择影像数据','', regSeriesCard('base',bSid)+regSeriesCard('float',fSid)) +
-      '<div class="rstep"><div class="rstep-h"><span class="rno">二</span><span class="rt">'+dim.name+' · 第二期规划能力</span>'+
-      '<span class="rb">本版仅预留入口与说明</span></div><div class="rstep-b">'+
-      (dim.plan||[]).map(r=>'<div class="rwrow"><span class="k">'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')+
-      '<div class="rwnote">本版界面仅预留入口与说明，暂不提供该维度的计算结果。第一期为「解剖结构配准」。</div>'+
-      '</div></div>';
-    bindRegWork(); return;
+    $('#rwBody').innerHTML = '<div class="rstepbox"><div class="rboxh">'+dim.ic+' '+dim.name+
+      '<span class="tag p2">第二期 · 规划中</span></div>'+
+      (dim.plan||[]).map(r=>'<div class="rplan"><span class="k">'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')+
+      '<div class="rwnote" style="margin-top:9px">本版界面仅预留入口与说明，暂不提供该维度的计算结果。第一期为「解剖结构配准」。</div></div>';
+    $('#rwNext').style.display='none'; $('#rwPrev').style.display='none';
+    $('#rwApply').disabled = true;
+    return;
   }
-
-  /* ---- 第一期：解剖结构配准 · 四步 ---- */
-  const step2 =
-    '<div class="rwbtns">'+
-      '<button class="btn sm ai" id="rwAuto">⚡ 自动</button>'+
-      '<button class="btn sm" id="rwReset">↺ 清除</button>'+
-      '<span class="rwst" id="rwAutoSt">'+(state.reg.auto.phase==='run'?'自动分析中…':'未执行自动配准')+'</span>'+
-    '</div>'+
-    '<div class="rwcols">'+
-      '<div class="rwparams">'+
-        '<div class="rwph">平移 mm（空间坐标系 X / Y / Z）</div>'+
-        ['x','y','z'].map(ax=>regStepRow('pos',ax)).join('')+
-        '<div class="rwph" style="margin-top:10px">旋转 °（X / Y / Z）</div>'+
-        ['x','y','z'].map(ax=>regStepRow('rot',ax)).join('')+
-        '<div class="rwnote" style="margin-top:9px">变换模型：'+REG_TRANSFORM_NAME+'</div>'+
+  $('#rwNext').style.display=''; $('#rwPrev').style.display='';
+  const st = state.reg.step;
+  const mets = regMetrics(state.reg.baseSid, state.reg.floatSid, 'axial');
+  let h = '';
+  if(st===1){
+    h = '<div class="rstepbox"><div class="rboxh">选择影像数据<span class="sp"></span>'+
+        '<span class="rwnote">在参照层与浮动层选择区分别加载序列</span></div>'+
+      '<div class="rselgrid">'+regLayerBox('base')+regLayerBox('float')+'</div>'+
+      '<div class="rswaprow"><button class="btn sm" id="rwSwap">⇄ 交换参照层 / 浮动层</button>'+
+      '<span class="rwnote">参照图像保持空间位置不变；浮动图像进行空间变换以与其对齐。</span></div></div>';
+  }else if(st===2){
+    h = '<div class="rstepbox"><div class="rboxh">设置配准参数<span class="sp"></span>'+
+        '<span class="rwnote">在预览图内按住左键拖动平移 · 右键拖动缩放 · 滚轮翻页</span></div>'+
+      '<div class="rwcols2">'+ regViews() +
+        '<div class="rparams"><div class="rph">配准参数</div>'+
+          '<div class="rpg">移动 (mm)</div>'+ ['x','y','z'].map(a=>regParamRow('pos',a)).join('')+
+          '<div class="rpg" style="margin-top:9px">旋转 (°)</div>'+ ['x','y','z'].map(a=>regParamRow('rot',a)).join('')+
+          '<div class="rpslider"><span>融合比例（Alpha 叠加）</span>'+
+            '<input type="range" id="rwAlpha" min="0" max="100" value="'+Math.round(state.reg.alpha*100)+'">'+
+            '<b id="rwAlphaV">'+Math.round(state.reg.alpha*100)+'%</b></div>'+
+          '<div class="rwnote" style="margin-top:7px">变换模型：'+REG_TRANSFORM_NAME+'</div>'+
+        '</div></div></div>';
+  }else if(st===3){
+    h = '<div class="rstepbox"><div class="rboxh">执行配准<span class="sp"></span>'+
+        '<span class="rwnote">选择应用范围后，点右下角【应用】</span></div>'+
+      '<div class="rscope2">'+ REG_SCOPE.map(s=>
+        '<div class="rsc'+(state.reg.scope===s.k?' on':'')+'" data-scope="'+s.k+'">'+
+        '<div class="rsct">'+s.t+'</div><div class="rscd">'+s.d+'</div></div>').join('')+'</div>'+
+      '<div class="rsum">'+
+        '<div class="rsr"><span class="k">参照层</span><span>'+(state.reg.baseSid? labelOfSid(state.reg.baseSid)+' · '+findSeries(state.reg.baseSid).cls:'—')+'</span></div>'+
+        '<div class="rsr"><span class="k">浮动层</span><span>'+(state.reg.floatSid? labelOfSid(state.reg.floatSid)+' · '+findSeries(state.reg.floatSid).cls:'—')+'</span></div>'+
+        '<div class="rsr"><span class="k">变换模型</span><span>刚性（平移 + 旋转）</span></div>'+
+        '<div class="rsr"><span class="k">当前残余失配</span><span class="'+(mets.resid<=2?'good':'warn')+'">'+mets.resid.toFixed(1)+' mm</span></div>'+
+        '<div class="rsr"><span class="k">应用范围</span><span>'+((REG_SCOPE.find(x=>x.k===state.reg.scope)||{}).t||'')+'（可在右下角下拉切换）</span></div>'+
       '</div>'+
-      '<div class="rwview">'+
-        '<div class="rwv-h"><span>配准预览视窗 · 三视图融合（轴位 / 冠状位 / 矢状位）</span>'+
-          '<span class="sp"></span><span class="rwv-tip">在预览图内按住左键拖动平移浮动层 · Shift + 拖动旋转</span></div>'+
-        '<div class="rwv-g">'+
-          [['axial','轴位'],['coronal','冠状位'],['sagittal','矢状位']].map(p=>
-            '<div class="rwvp"><canvas id="rwF_'+p[0]+'" data-rwf="'+p[0]+'"></canvas>'+
-            '<span class="rwvp-t">'+p[1]+'</span></div>').join('')+
-        '</div>'+
-        '<div class="rwalpha"><span>融合比例（Alpha 透明叠加）</span>'+
-          '<input type="range" id="rwAlpha" min="0" max="100" value="'+Math.round(state.reg.alpha*100)+'">'+
-          '<b id="rwAlphaV">'+Math.round(state.reg.alpha*100)+'%</b></div>'+
-        '<div class="rwnote">融合比例实时调节，可直观对比配准前后的对齐效果。</div>'+
+      '<div class="rwnote" style="margin-top:9px">应用后自动关闭配准界面，返回主窗口查看配准后的影像。</div></div>';
+  }else{
+    h = '<div class="rstepbox"><div class="rboxh">结果评估与确认<span class="sp"></span>'+
+        '<span class="rwnote">查看三视图融合显示，直观检查解剖结构对齐情况</span></div>'+
+      '<div class="rwmetrics">'+
+        [['互信息 MI', mets.mi],['结构 Dice', mets.dice],['相似度', mets.corr],
+         ['残余失配', mets.resid.toFixed(1)+' mm'],['耗时', mets.secs+' s']].map(x=>
+          '<div class="rwm"><span class="k">'+x[0]+'</span><span class="v">'+x[1]+'</span></div>').join('')+
+        '<div class="rwm wide"><span class="k">质量分级</span><span class="v '+mets.grade.c+'">'+mets.grade.t+'</span></div>'+
       '</div>'+
-    '</div>';
-  const step3 =
-    '<div class="rwrow"><span class="k">应用范围</span><span class="rwscope">'+
-      REG_SCOPE.map(s=>'<label class="rwradio"><input type="radio" name="rwScope" value="'+s.k+'"'+
-        (state.reg.scope===s.k?' checked':'')+'><span class="t">'+s.t+'</span>'+
-        '<span class="d">'+s.d+'</span></label>').join('')+
-    '</span></div>'+
-    '<div style="margin-top:9px;display:flex;gap:8px;align-items:center">'+
-      '<button class="btn sm ai" id="rwApply"'+(state.reg.auto.phase==='idle'&&mets.resid>6?' disabled':'')+'>✓ 应用</button>'+
-      '<span class="rwnote">应用后自动关闭配准界面，返回主窗口查看配准后的影像。</span>'+
-    '</div>';
-  const step4 =
-    '<div class="rwmetrics">'+
-      [['互信息 MI', mets.mi],['结构 Dice', mets.dice],['相似度', mets.corr],
-       ['残余失配', mets.resid.toFixed(1)+' mm'],['耗时', mets.secs+' s']].map(x=>
-        '<div class="rwm"><span class="k">'+x[0]+'</span><span class="v">'+x[1]+'</span></div>').join('')+
-      '<div class="rwm wide"><span class="k">质量分级</span><span class="v '+mets.grade.c+'">'+mets.grade.t+'</span></div>'+
-    '</div>'+
-    '<div class="rwcmp"><div class="rwcp"><canvas id="rwBefore"></canvas><span class="rwcp-t">配准前</span></div>'+
-      '<div class="rwcp"><canvas id="rwAfter"></canvas><span class="rwcp-t">配准后</span></div></div>'+
-    '<div class="rwnote">查看三视图融合显示，直观检查解剖结构对齐情况；如对结果不满意，可调整参数后重新配准。</div>'+
-    '<div class="rwnote warn">⚠ 操作注意事项：参考图像与浮动图像的扫描范围应尽量一致，重叠区域过小可能影响配准精度。</div>'+
-    (state.reg.applied ? '<div class="rwapplied">✅ 已应用：'+
-      (REG_SCOPE.find(s=>s.k===state.reg.applied.scope)||{}).t+' · '+
-      '平移 X '+state.reg.applied.pos.x.toFixed(1)+' / Y '+state.reg.applied.pos.y.toFixed(1)+' mm · '+
-      '旋转 Z '+state.reg.applied.rot.z.toFixed(1)+'° · 残余 '+state.reg.applied.mets.resid.toFixed(1)+' mm</div>' : '');
-
-  $('#rwBody').innerHTML =
-    regStepCard('一','选择影像数据', '参考图像 + 浮动图像', regSeriesCard('base',bSid)+
-      '<div class="rwswap"><button class="btn sm" id="rwSwap">⇄ 交换参考 / 浮动</button></div>'+regSeriesCard('float',fSid)) +
-    regStepCard('二','设置配准参数', aligned?'已对齐':'待配准', step2) +
-    regStepCard('三','执行配准', '', step3) +
-    regStepCard('四','结果评估与确认', '', step4);
+      '<div class="rwcmp"><div class="rcp"><canvas id="rwBefore"></canvas><span class="rcpt">配准前</span></div>'+
+        '<div class="rcp"><canvas id="rwAfter"></canvas><span class="rcpt">配准后</span></div></div>'+
+      '<div class="rwnote">如对结果不满意，可回到上一步调整参数后重新配准。</div>'+
+      '<div class="rwnote warn">⚠ 操作注意事项：参考图像与浮动图像的扫描范围应尽量一致，重叠区域过小可能影响配准精度。</div>'+
+      (state.reg.applied? '<div class="rwapplied">✅ 已应用：'+((REG_SCOPE.find(x=>x.k===state.reg.applied.scope)||{}).t||'')+
+        ' · 平移 X '+state.reg.applied.pos.x.toFixed(1)+' / Y '+state.reg.applied.pos.y.toFixed(1)+' mm · 旋转 Z '+
+        state.reg.applied.rot.z.toFixed(1)+'° · 残余 '+state.reg.applied.mets.resid.toFixed(1)+' mm</div>' : '')+
+      '</div>';
+  }
+  $('#rwBody').innerHTML = h;
+  $('#rwPrev').disabled = state.reg.step<=1;
+  $('#rwNext').style.display = state.reg.step>=4 ? 'none' : '';
+  /* 自动/读档/清除 只在参数步可用 */
+  ['rwAuto','rwLoad','rwClear'].forEach(id=>{ const e=$('#'+id); if(e) e.disabled = (state.reg.step!==2); });
+  $('#rwApply').disabled = false;                 /* 实现维度（第一期）下「应用」始终可点 */
+  $('#rwAutoSt2').textContent = state.reg.auto.phase==='run' ? '自动分析中…'
+    : state.reg.auto.phase==='done' ? '自动配准已完成' : '';
   bindRegWork();
 }
+function regGoto(n){ state.reg.step = Math.max(1, Math.min(4, n)); renderRegWork(); }
 function bindRegWork(){
-  $$('#rwDims [data-dimb]').forEach(el=>el.addEventListener('click',()=>{ state.reg.dim=el.dataset.dimb; renderRegWork(); }));
-  $$('[data-role]').forEach(sel=>sel.addEventListener('change',()=>{
-    if(sel.dataset.role==='base') state.reg.baseSid=sel.value; else state.reg.floatSid=sel.value;
+  $$('#rwSteps [data-stp]').forEach(e=>e.addEventListener('click',()=>regGoto(+e.dataset.stp)));
+  $$('#rwDims [data-dimb]').forEach(e=>e.addEventListener('click',()=>{ state.reg.dim=e.dataset.dimb; renderRegWork(); }));
+  $$('[data-exsel]').forEach(sel=>sel.addEventListener('change',()=>{
+    const role=sel.dataset.exsel, ex=examOf(sel.value); if(!ex) return;
+    const pick = ex.series.find(s=>s.type==='肺窗') || ex.series[0];
+    if(role==='base') state.reg.baseSid=pick.sid; else state.reg.floatSid=pick.sid;
+    state.reg.auto.phase='idle'; state.reg.pos={x:0,y:0,z:0}; state.reg.rot={x:0,y:0,z:0};
+    state.reg.slice = defSlice(pick);
+    renderRegWork();
+    toast('已加载'+(role==='base'?'参照层':'浮动层')+'：'+ex.label+' '+ex.date+' · '+pick.cls,'gold');
+  }));
+  $$('[data-sersel]').forEach(sel=>sel.addEventListener('change',()=>{
+    const role=sel.dataset.sersel;
+    if(role==='base') state.reg.baseSid=sel.value; else state.reg.floatSid=sel.value;
     state.reg.auto.phase='idle'; state.reg.pos={x:0,y:0,z:0}; state.reg.rot={x:0,y:0,z:0};
     renderRegWork();
-    toast('已加载'+(sel.dataset.role==='base'?'参考图像':'浮动图像')+'：'+labelOfSid(sel.value)+' · '+findSeries(sel.value).cls,'gold');
+    toast('已加载'+(role==='base'?'参照层':'浮动层')+'：'+labelOfSid(sel.value)+' · '+findSeries(sel.value).cls,'gold');
   }));
   const sw=$('#rwSwap'); if(sw) sw.addEventListener('click',()=>{
     const t=state.reg.baseSid; state.reg.baseSid=state.reg.floatSid; state.reg.floatSid=t;
     state.reg.pos={x:0,y:0,z:0}; state.reg.rot={x:0,y:0,z:0}; state.reg.auto.phase='idle';
-    renderRegWork(); toast('已交换参考 / 浮动图像','gold');
+    renderRegWork(); toast('已交换参照层 / 浮动层','gold');
   });
-  const au=$('#rwAuto'); if(au) au.addEventListener('click',regAuto);
-  const rs=$('#rwReset'); if(rs) rs.addEventListener('click',regResetParams);
-  const ap=$('#rwApply'); if(ap) ap.addEventListener('click',regApply);
+  $$('[data-nud]').forEach(b=>b.addEventListener('click',()=>regNudge(b.dataset.nud, b.dataset.nax, +b.dataset.ndl)));
   const al=$('#rwAlpha'); if(al) al.addEventListener('input',()=>{
-    state.reg.alpha=(+al.value)/100; $('#rwAlphaV').textContent=al.value+'%'; drawRegPreviews(); });
-  $$('[data-nud]').forEach(b=>b.addEventListener('click',()=>{
-    regNudge(b.dataset.nud, b.dataset.nax, +b.dataset.ndl); }));
-  $$('input[name="rwScope"]').forEach(r=>r.addEventListener('change',()=>{
-    state.reg.scope=r.value; toast('应用范围：'+(REG_SCOPE.find(s=>s.k===r.value)||{}).t,'gold'); }));
-  /* 预览视窗内拖动：平移浮动层；Shift + 拖动 = 旋转 */
+    state.reg.alpha=(+al.value)/100; const v=$('#rwAlphaV'); if(v) v.textContent=al.value+'%'; drawRegPreviews(); });
+  $$('[data-scope]').forEach(e=>e.addEventListener('click',()=>{
+    state.reg.scope=e.dataset.scope;
+    const s=$('#rwScopeSel'); if(s) s.value=state.reg.scope;
+    renderRegWork(); toast('应用范围：'+((REG_SCOPE.find(x=>x.k===state.reg.scope)||{}).t||''),'gold'); }));
+  /* 预览视窗：左键拖动=移动 · 右键拖动=缩放 · 滚轮=翻页（与底部提示一致） */
   $$('[data-rwf]').forEach(cv=>{
-    cv.addEventListener('mousedown',ev=>{
-      state.reg.drag={x:ev.clientX, y:ev.clientY, rot:ev.shiftKey};
-      ev.preventDefault();
-    });
+    cv.addEventListener('contextmenu',ev=>ev.preventDefault());
+    cv.addEventListener('mousedown',ev=>{ ev.preventDefault();
+      state.reg.drag={x:ev.clientX, y:ev.clientY, mode: ev.button===2 ? 'zoom' : 'move'}; });
+    cv.addEventListener('wheel',ev=>{ ev.preventDefault();
+      const d=ev.deltaY>0?1:-1;
+      const bs=state.reg.baseSid? findSeries(state.reg.baseSid):null;
+      const tot=bs? bs.slices:64;
+      state.reg.slice=Math.max(1, Math.min(tot, (state.reg.slice||defSlice(bs||{slices:64}))+d));
+      drawRegPreviews(); }, {passive:false});
   });
+  $('#rwPrev').disabled = state.reg.step<=1;
   drawRegPreviews();
 }
+function regZoom(f){
+  state.reg.zoom=Math.max(0.5, Math.min(3, Math.round((state.reg.zoom||1)*f*100)/100));
+  drawRegPreviews();
+  toast('预览缩放：'+Math.round(state.reg.zoom*100)+'%');
+}
+function regLoad(){
+  const a=state.reg.applied;
+  if(!a || (a.baseSid!==state.reg.baseSid||a.floatSid!==state.reg.floatSid)){
+    toast('无该「参照层 ← 浮动层」组合的历史配准记录，请先执行【自动】或手动调整','red'); return; }
+  state.reg.pos=Object.assign({},a.pos); state.reg.rot=Object.assign({},a.rot);
+  state.reg.auto.phase='done'; renderRegWork();
+  toast('已读档：载入上一次配准参数（平移 X '+a.pos.x.toFixed(1)+' / Y '+a.pos.y.toFixed(1)+' mm · 旋转 Z '+a.rot.z.toFixed(1)+'°）','gold');
+}
+function regRenderNumsOnly(){
+  ['pos','rot'].forEach(k=>['x','y','z'].forEach(a=>{
+    const el=$('#nud-'+k+'-'+a); if(!el) return;
+    const v=(k==='pos'?state.reg.pos:state.reg.rot)[a];
+    el.textContent = v.toFixed(k==='pos'?3:1);
+  }));
+}
 function drawRegPreviews(){
+  const z=state.reg.zoom||1;
+  const bs=state.reg.baseSid? findSeries(state.reg.baseSid):null;
   ['axial','coronal','sagittal'].forEach(p=>{
-    const cv=$('#rwF_'+p); if(cv) requestAnimationFrame(()=>drawRegFusion(cv, p, {}));
+    const cv=$('#rwF_'+p);
+    if(cv){ cv.style.transform = z!==1 ? 'scale('+z+')' : '';
+      const lab=$('#rwS_'+p); if(lab) lab.textContent = state.reg.slice+'/'+(bs?bs.slices:64);
+      requestAnimationFrame(()=>drawRegFusion(cv, p, {})); }
   });
   const b=$('#rwBefore'), a=$('#rwAfter');
   if(b) requestAnimationFrame(()=>drawRegFusion(b, 'axial', {before:true}));
@@ -2638,24 +2806,24 @@ function regAuto(){
   const target = {x:-it.dx, y:-it.dy, z:-it.rot};
   const steps = 6; let k = 0;
   state.reg.auto.phase='run'; state.reg.auto.step=0;
-  const st=$('#rwAutoSt'); if(st) st.textContent='自动分析中… 分析影像模态 / 解剖部位 / 图像特征';
+  const st=$('#rwAutoSt2'); if(st) st.textContent='自动分析中… 分析影像模态 / 解剖部位 / 图像特征';
   const tick=()=>{
     k++;
     const p=k/steps;
     state.reg.pos = {x:target.x*p, y:target.y*p, z:0};
     state.reg.rot = {x:0, y:0, z:target.z*p};
     state.reg.auto.step=k;
-    if(st){
-      st.textContent = k<=2 ? '自动分析中… 分析影像模态 / 解剖部位 / 图像特征'
+    const st2=$('#rwAutoSt2');
+    if(st2){
+      st2.textContent = k<=2 ? '自动分析中… 分析影像模态 / 解剖部位 / 图像特征'
         : k<=4 ? '自动分析中… 智能推荐最优参数组合（刚性变换）'
         : '自动分析中… 迭代优化相似性测度并收敛';
     }
-    renderRegNums();
+    regRenderNumsOnly();
     drawRegPreviews();
     if(k<steps){ state.reg.auto.timer=setTimeout(tick, 260); }
     else{
       state.reg.auto.phase='done'; state.reg.auto.timer=null;
-      const st2=$('#rwAutoSt'); if(st2) st2.textContent='自动配准已完成 · 可继续微调或直接应用';
       renderRegWork();
       toast('【自动】配准完成：系统已按影像模态与解剖特征推荐参数并一键完成配准 · 请查看三视图确认后点【应用】','gold');
     }
@@ -2669,8 +2837,10 @@ function regResetParams(){
 }
 function regNudge(kind, axis, delta){
   const o = kind==='pos' ? state.reg.pos : state.reg.rot;
-  o[axis] = Math.round((o[axis] + delta)*10)/10;
-  state.reg.auto.phase='done'; renderRegNums(); drawRegPreviews(); regRefreshApply();
+  o[axis] = Math.round((o[axis] + delta)*1000)/1000;
+  state.reg.auto.phase='done';
+  regRenderNumsOnly(); drawRegPreviews(); regRefreshApply();
+  if(state.reg.step>=3) renderRegWork();     /* 执行/评估步需要同步残余失配与指标 */
 }
 function renderRegNums(){
   ['pos','rot'].forEach(k=>['x','y','z'].forEach(a=>{
@@ -2688,7 +2858,7 @@ function renderRegNums(){
   const hd=$$('#rwBody .rstep-h .rb'); /* 第二步角标：待配准 / 已对齐 */
   if(hd[1]) hd[1].textContent = mets.resid<=2 ? '已对齐' : '待配准';
 }
-function regRefreshApply(){ const ap=$('#rwApply'); if(ap) ap.disabled = regMetrics(state.reg.baseSid,state.reg.floatSid,'axial').resid>16; }
+function regRefreshApply(){ const ap=$('#rwApply'); if(ap) ap.disabled = false;   /* 应用＝主操作，不做残余门控（医生可在任意对齐度下应用） */ }
 function regSetAlpha(v){ state.reg.alpha=v; drawRegPreviews(); }
 /* 应用：写入结果 → 自动关闭界面 → 回主窗口 */
 function regApply(){
@@ -2717,7 +2887,7 @@ function regApply(){
 }
 function openRegWork(){
   if(state.noCompare){ toast('单期浏览态：无前序检查，未启动配准','red'); return; }
-  state.reg.open = true; state.regMode = true;
+  state.reg.open = true; state.regMode = true; state.reg.step = 1;
   $('#regMenu').classList.remove('show');
   $('#regWork').classList.add('show');
   if(!state.reg.baseSid) state.reg.baseSid = state.baseSid || (allSeriesOrdered()[0]||{}).sid || null;
@@ -2737,11 +2907,11 @@ document.addEventListener('mousemove',ev=>{
   const d=state.reg.drag; if(!d || !state.reg.open) return;
   const dx=ev.clientX-d.x, dy=ev.clientY-d.y;
   d.x=ev.clientX; d.y=ev.clientY;
-  if(d.rot){ state.reg.rot.z = Math.round((state.reg.rot.z + dx*0.3)*10)/10; }
-  else { state.reg.pos.x = Math.round((state.reg.pos.x + dx*0.5)*10)/10;
-         state.reg.pos.y = Math.round((state.reg.pos.y + dy*0.5)*10)/10; }
+  if(d.mode==='zoom'){ state.reg.zoom=Math.max(0.5,Math.min(3,Math.round(((state.reg.zoom||1)+(dy>0?-0.03:0.03))*100)/100)); }
+  else { state.reg.pos.x = Math.round((state.reg.pos.x + dx*0.5)*1000)/1000;
+         state.reg.pos.y = Math.round((state.reg.pos.y + dy*0.5)*1000)/1000; }
   state.reg.auto.phase='done';
-  renderRegNums(); drawRegPreviews();
+  regRenderNumsOnly(); drawRegPreviews();
 });
 document.addEventListener('mouseup',()=>{ if(state.reg.drag){ state.reg.drag=null; regRefreshApply(); } });
 
@@ -2756,6 +2926,15 @@ document.addEventListener('mouseup',()=>{ if(state.reg.drag){ state.reg.drag=nul
   const lt=$('#linkTag');
   if(lt) lt.innerHTML='🔗 <b>自动关联</b>：多序列同步翻页 / 缩放 / 窗宽窗位';   /* 初始状态条 */
   const rc=$('#rwClose'); if(rc) rc.addEventListener('click',()=>{ closeRegWork(); toast('已关闭配准界面 · 返回主窗口'); });
+  const bind2=(id,fn)=>{ const e=$('#'+id); if(e) e.addEventListener('click',fn); };
+  bind2('rwAuto', ()=>regAuto());
+  bind2('rwLoad', ()=>regLoad());
+  bind2('rwClear', ()=>regResetParams());
+  bind2('rwPrev', ()=>regGoto((state.reg.step||1)-1));
+  bind2('rwNext', ()=>regGoto((state.reg.step||1)+1));
+  bind2('rwApply', ()=>regApply());
+  const sc=$('#rwScopeSel'); if(sc) sc.addEventListener('change',()=>{ state.reg.scope=sc.value;
+    toast('应用范围：'+((REG_SCOPE.find(x=>x.k===sc.value)||{}).t||''),'gold'); if(state.reg.step===3) renderRegWork(); });
   /* 右栏「打开配准工作界面」按钮是动态渲染的 → 用事件委托，避免改动 bindRight */
   document.addEventListener('click', ev=>{
     const t = ev.target && ev.target.closest && ev.target.closest('#btnOpenReg');
@@ -2860,7 +3039,7 @@ renderForms();
 $('#qItem').innerHTML='<option value="">全部</option>'+items().map(x=>x.it.name)
   .filter((v,i,a)=>a.indexOf(v)===i).map(n=>'<option>'+n+'</option>').join('');
 renderList();
-console.log('临床阅片器原型 V3.4 已加载（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
+console.log('临床阅片器原型 V3.5 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
 </script>
 </body>
 </html>
