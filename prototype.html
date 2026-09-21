@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V3.7（检索条件「检查日期」改为深色自定义日期选择器；配准为分步弹窗向导：参考图像↔浮动图像 + 自动·手动 + 三视图 Alpha 融合 + 序列·检查应用范围；布局 检查→模态→SID + 自动/手动关联）</title>
+<title>临床阅片器 · 交互原型 V3.8（配准只保留「解剖结构配准」：参考图像↔浮动图像 + 自动·手动 + 三视图 Alpha 融合 + 序列·检查应用范围；检索条件日期为深色自定义选择器；布局 检查→模态→SID + 自动/手动关联）</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
@@ -783,16 +783,6 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
     </div>
   </div>
 
-  <!-- 配准模式菜单 -->
-  <div class="pop" id="regMenu">
-    <div class="ph"><span>⭐ 配准模式选择</span><span class="sp"></span><button class="btn sm" id="btnCloseReg">✕</button></div>
-    <div class="pbody" id="regMenuBody"></div>
-    <div class="pf">
-      <span class="hint" id="regMenuFoot"></span>
-      <span style="flex:1"></span>
-      <button class="btn sm" id="btnExitReg">退出配准</button>
-    </div>
-  </div>
 </section>
 
 <!-- 自动推理遮罩 -->
@@ -808,7 +798,7 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V3.7
+   临床阅片器 · 交互原型 V3.8
    ------------------------------------------------------------
    V3.5 变更：配准工作界面 → 【弹窗 + 分步向导】（样式参照影像工作站配准面板）
    V3.6 变更：修「切到第二期维度后无法切回解剖结构配准」——维度/步骤 chip 改事件委托
@@ -817,7 +807,12 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
    V3.7 变更：检索条件「检查日期 · 起/止」由原生 type=date 改为深色自定义日期选择器
               （原生弹的是系统浅色日历，与深色主题不符）；值仍写回 #qD1/#qD2（ISO），
               筛选逻辑与「重置」按钮零改动。
-   · 弹窗 1180px 居中卡片（遮罩不模糊），标题栏「配准」+ 维度 chip + ✕
+   V3.8 变更：移除「层面配准」「病灶配准」两个配准维度（功能 + 数据 + 描述一并去掉）——
+              REG_MODES 只留解剖结构配准；删除 V3.3 遗留的「配准模式选择」弹层（#regMenu，
+              含「另两个维度已预留入口」文案与「退出配准」按钮，退出配准改由关闭配准弹窗承担）；
+              手动配准面板的标点方式由 3 种减为 1 种并删除层号对应输入；质量分级文案
+              「可用于病灶配准与量化」→「可用于解剖结构对齐与量化」。
+   · 弹窗 1180px 居中卡片（遮罩不模糊），标题栏「配准」+ 维度标签 + ✕
    · 顶部步骤条，一次只显示一步：① 选择影像数据 ② 设置配准参数 ③ 执行配准 ④ 结果评估
    · 底栏：左键移动 / 右键缩放 / *滚动翻页（三个提示都真的生效）+ ⚡自动 📄读档 🧹清除 + 应用范围下拉 + 应 用
    ------------------------------------------------------------
@@ -936,21 +931,12 @@ const AREG_METRICS=[
   {k:'标志点残差 RMSE',     v:'2.0 mm', cls:''},
   {k:'有效配准范围',        v:'96 %',  cls:''},
   {k:'单例端到端时延',      v:'78 秒', cls:'good'},
-  {k:'质量分级',            v:'优 · 可用于病灶配准与量化', cls:'good'}
+  {k:'质量分级',            v:'优 · 可用于解剖结构对齐与量化', cls:'good'}
 ];
 /* ---------- 配准模式（FR-REG-01/02） ---------- */
+/* 配准维度只保留「解剖结构配准」（层面配准 / 病灶配准已按要求移除） */
 const REG_MODES=[
-  {id:'slice', ic:'▤', name:'层面配准',     phase:2,
-   plan:[['对齐对象','同一解剖层面的逐层对应（呼吸相位 / 体位差异）'],
-         ['关键指标','层面位移误差 (mm) · 层间距一致性'],
-         ['解决什么','呼吸不齐导致「看起来不是同一层」的读片困扰'],
-         ['交付计划','第二期 · 与 MPR 多平面重建联动']]},
-  {id:'anat',  ic:'🫀', name:'解剖结构配准', phase:1},
-  {id:'lesion',ic:'⭐', name:'病灶配准',     phase:2,
-   plan:[['对齐对象','病灶家族（跨时点同一病灶）'],
-         ['关键指标','病灶体积 / 径线变化量 · 病灶级关联准确率'],
-         ['解决什么','在解剖结构对齐基础上做病灶级精细配准与量化'],
-         ['交付计划','第二期 · 依赖解剖结构配准（第一期）先行']]}
+  {id:'anat', ic:'🫀', name:'解剖结构配准', phase:1}
 ];
 
 /* ============ 运行时状态 ============ */
@@ -965,7 +951,7 @@ const state={ form:'C',
   baseLesion:'F-001', secondary:['F-002'],
   /* 手动配准（需求 2.3.4 + FR-REG-22~25）：浮动层/参照层 + 移动mm + 旋转 + 序列策略 */
   mreg:{on:false, mode:'anat', picks:[], landmarks:[], step:1, strat:'rigid',
-        pos:{x:0,y:0,z:0}, rot:{x:0,y:0,z:0}, n:0, lvlBase:1, lvlCmp:1, applied:false},
+        pos:{x:0,y:0,z:0}, rot:{x:0,y:0,z:0}, n:0, applied:false},
   floatSid:null, planes:[], slotRow:[], lesionFlash:null,
   curPid:null, curItem:null, seed:1 };
 
@@ -1413,7 +1399,7 @@ function baseReason(){
 /* ============ 阅片工作站 ============ */
 function initViewer(){
   $('#cfgBadge').textContent='2D · 轴位';
-  renderSeries(); renderGrid(); renderRegMenu(); renderRight();
+  renderSeries(); renderGrid(); renderRight();
   if(!state.regMode) applyRegOff();
 }
 function applyRegOff(){
@@ -1729,55 +1715,31 @@ function onCellClick(i){
     if(m.picks.length===2){
       const a=findSeries(m.picks[0].sid), b=findSeries(m.picks[1].sid);
       const res=(0.6+Math.random()*1.3);
-      const pfx = m.mode==='lesion'?'病灶关联 ': m.mode==='slice'?'层面对应 ':'标志点 ';
+      const pfx = '标志点 ';
       m.landmarks.push({no:m.landmarks.length+1, a:a.sid, b:b.sid,
         nm:pfx+(m.landmarks.length+1), res:res.toFixed(2)});
       m.picks=[]; m.n++;
-      toast((m.mode==='lesion'?'已建立病灶关联：':m.mode==='slice'?'已指定对应层面：':'已建立一对标志点：')+
+      toast('已建立一对标志点：'+
         labelOfSid(a.sid)+' ↔ '+labelOfSid(b.sid)+' · 残差 '+res.toFixed(2)+' mm · 已重算并留痕（FR-REG-22/25）','gold');
     }else{
       toast('已选取第 1 个位置（'+labelOfSid(s.sid)+' · '+s.cls+'）· 请在另一个窗口点击同一'+
-        (m.mode==='lesion'?'病灶':m.mode==='slice'?'层面':'解剖标志'));
+        '解剖标志');
     }
   }
   renderGrid(); renderRight();
 }
-/* -------- 配准模式菜单 -------- */
-function renderRegMenu(){
-  $('#regMenuBody').innerHTML=REG_MODES.map(m=>
-    '<div class="regitem'+(state.regDim===m.id?' on':'')+'" data-mode="'+m.id+'">'+
-      '<span class="ic">'+m.ic+'</span>'+
-      '<span class="tx">'+m.name+' <span class="tag '+(m.phase===1?'p1':'p2')+'">'+(m.phase===1?'第一期':'第二期')+'</span></span>'+
-    '</div>').join('');
-  $('#regMenuFoot').innerHTML='第一期仅实现<b style="color:#FFD700">解剖结构配准</b>；另两个维度已预留入口';
-  $$('[data-mode]').forEach(el=>el.addEventListener('click',()=>pickRegMode(el.dataset.mode)));
-}
+/* -------- 配准模式（只有一个维度：解剖结构配准） -------- */
 function pickRegMode(id){
-  const m=REG_MODES.find(x=>x.id===id);
-  state.regDim=id; $('#regMenu').classList.remove('show');
-  renderRegMenu(); renderRight();
-  if(id==='anat'){
-    state.regMode=true;
-    $('#regModeTag').innerHTML='🫀 <b>解剖结构配准（第一期）</b> · 本次 '+examOf(state.baseEid).label+' '+examOf(state.baseEid).date+'（基准固定）'+
-      ' ← 上次 '+examOf(state.tgtEid).label+' '+examOf(state.tgtEid).date+'（待配准）';
-    $('#regModeTag').classList.add('show');
-    $('#noCompareTag').classList.remove('show');
-    toast('已进入「解剖结构配准」（第一期）：以肺 · 气管 · 脊柱 · 胸壁为参照，先分割后配准 + 逆向校验，金色窗口为基准序列','gold');
-  }else{
-    state.regMode=false;
-    $('#regModeTag').innerHTML=m.ic+' <b>'+m.name+' · 第二期规划能力（本版预留入口）</b>';
-    $('#regModeTag').classList.add('show');
-    toast(m.name+'为第二期规划能力，界面已预留入口与规划说明 · 本版仅实现解剖结构配准','gold');
-  }
+  if(id!=='anat') return;
+  state.regDim='anat';
+  renderRight();
+  state.regMode=true;
+  $('#regModeTag').innerHTML='🫀 <b>解剖结构配准</b> · 本次 '+examOf(state.baseEid).label+' '+examOf(state.baseEid).date+'（基准固定）'+
+    ' ← 上次 '+examOf(state.tgtEid).label+' '+examOf(state.tgtEid).date+'（待配准）';
+  $('#regModeTag').classList.add('show');
+  $('#noCompareTag').classList.remove('show');
+  toast('已进入「解剖结构配准」：以肺 · 气管 · 脊柱 · 胸壁为参照，先分割后配准 + 逆向校验，金色窗口为基准序列','gold');
   renderGrid();
-}
-function exitReg(){
-  state.regMode=false; state.regDim=null;
-  $('#regMenu').classList.remove('show');
-  $$('#grpLayout .tbtn').forEach(b=>b.classList.remove('active'));
-  renderRegMenu(); renderGrid(); renderRight(); applyRegOff();
-  $('#caliberTag').textContent='';
-  toast('已退出配准 · 回到普通浏览');
 }
 /* -------- 右侧面板 -------- */
 function renderRight(){
@@ -1928,29 +1890,18 @@ function paneMreg(){
      '</div>'+
      '<div class="hint" style="margin-top:8px">参数留痕（FR-REG-25）：'+paramTrace()+'</div></div>';
 
-  /* ===== 4. 手动标点方式（三种配准方式） ===== */
+  /* ===== 4. 手动标点方式（解剖结构配准） ===== */
   const MODES=[
     {id:'anat',  nm:'解剖结构配准 · 手动标点',
-     hint:'在两个窗口中分别点击同一解剖标志（气管隆突 / 脊柱中心 / 胸壁等），系统按标志点对重新求解变换。第一期主用方式。'},
-    {id:'slice', nm:'层面配准 · 手动指定对应层面',
-     hint:'分别指定参照层号与浮动层号，逐层建立对应关系（对应第二期的层面配准）。'},
-    {id:'lesion',nm:'病灶配准 · 手动标记病灶关联',
-     hint:'在两个窗口中分别点击同一病灶，建立病灶级关联 —— 即评审所述「无法自动配准的序列，可手动标记病灶进行病灶关联」（FR-REG-24 兜底）。'}
+     hint:'在两个窗口中分别点击同一解剖标志（气管隆突 / 脊柱中心 / 胸壁等），系统按标志点对重新求解变换。'}
   ];
   h+='<div class="card"><div class="chead"><span class="t">手动标点方式</span><span class="sp"></span>'+
-     '<span class="badge">3 种</span></div>';
+     '<span class="badge">1 种</span></div>';
   h+=MODES.map(x=>'<div class="lesion'+(m.mode===x.id?' on':'')+'" data-mmode="'+x.id+'" style="flex-direction:column;align-items:stretch">'+
       '<div style="display:flex;gap:8px;align-items:center"><span class="fid" style="min-width:0;color:'+(m.mode===x.id?'#FFD700':'#8FA3BF')+'">'+(m.mode===x.id?'●':'○')+'</span>'+
       '<span style="font-size:11.5px;font-weight:600;color:#C7D6E8">'+x.nm+'</span></div>'+
       (m.mode===x.id?'<div class="hint" style="margin-top:4px;padding-left:20px">'+x.hint+'</div>':'')+
     '</div>').join('');
-  if(m.mode==='slice'){
-    h+='<div class="stepRow" style="margin-top:9px"><span class="lb">参照层号</span>'+
-       '<input id="inLvlBase" type="number" min="1" value="'+m.lvlBase+'" style="width:66px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:11px;padding:4px 6px">'+
-       '<span class="lb" style="width:auto">浮动层号</span>'+
-       '<input id="inLvlCmp" type="number" min="1" value="'+m.lvlCmp+'" style="width:66px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;color:var(--txt);font-size:11px;padding:4px 6px">'+
-       '<button class="btn sm" id="btnLvlApply">应用</button></div>';
-  }
   h+='</div>';
 
   /* ===== 5. 已建立的对应关系 ===== */
@@ -1986,8 +1937,7 @@ function caliberLine(){
   return '配准模式 '+mode+' ｜ 基准 '+b.label+'·'+bs+' ｜ 对比 '+(t?t.label:'—')+
          ' ｜ 对比序列 '+state.cmpSids.length+' 条 ｜ 基准病灶 '+state.baseLesion;
 }
-const MREG_NM=id=>({anat:'解剖结构配准 · 手动标点', slice:'层面配准 · 手动指定对应层面',
-  lesion:'病灶配准 · 手动标记病灶关联'}[id]||id);
+const MREG_NM=id=>({anat:'解剖结构配准 · 手动标点'}[id]||id);
 /* --- 配准 pane --- */
 function paneReg(){
   const b=state.baseEid?examOf(state.baseEid):null, t=examOf(state.tgtEid);
@@ -2015,15 +1965,13 @@ function paneReg(){
        '</div></div></div>';
     return h;
   }
-  const m=REG_MODES.find(x=>x.id===state.regDim);
-  if(state.regDim==='anat'){
-    const rows=aregRows().map(r=>'<div class="kv"><span class="k">'+r.k+'</span><span class="v '+(r.cls||'')+'">'+r.v+'</span></div>').join('');
+  const rows=aregRows().map(r=>'<div class="kv"><span class="k">'+r.k+'</span><span class="v '+(r.cls||'')+'">'+r.v+'</span></div>').join('');
     h+='<div class="card gold"><div class="chead"><span class="t">🫀 解剖结构配准</span><span class="sp"></span>'+
        '<span class="tag p1">第一期</span></div>'+
        '<div class="kv"><span class="k">配准基准</span><span class="v">'+b.label+' · '+b.date+'</span></div>'+
        '<div class="kv"><span class="k">上次（待配准）</span><span class="v">'+t.label+' · '+t.date+'</span></div>'+
        rows+
-       '<div class="hint" style="margin-top:9px">输出：形变场/变换矩阵（NIfTI 或平台约定）· 结构分割掩膜（NIfTI/DICOM-SEG）· 结构对应关系（JSON）· 配准残差/不确定度（JSON）· 可视化（融合/棋盘格）· 交互状态（JSON）· 病灶配准映射（NIfTI/DICOM-SEG）</div>'+
+       '<div class="hint" style="margin-top:9px">输出：形变场/变换矩阵（NIfTI 或平台约定）· 结构分割掩膜（NIfTI/DICOM-SEG）· 结构对应关系（JSON）· 配准残差/不确定度（JSON）· 可视化（融合/棋盘格）· 交互状态（JSON）</div>'+
     '</div>';
     h+='<div class="card"><div class="chead"><span class="t">结果核查与手动调整</span><span class="sp"></span><span class="badge">FR-REG-22 / 23</span></div>'+
        '<div class="kv"><span class="k">分割 → 配准顺序</span><span class="v good">先分割后配准</span></div>'+
@@ -2031,18 +1979,10 @@ function paneReg(){
        '<div class="kv"><span class="k">坐标系</span><span class="v">全程一致</span></div>'+
        '<div style="margin-top:9px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
          '<button class="btn sm gold" id="btnGoMreg">前往「手动配准」面板</button>'+
-         '<span class="hint">三种配准方式均支持手动调整（FR-REG-22）</span>'+
+         '<span class="hint">支持手动标点调整（FR-REG-22）</span>'+
        '</div>'+
        '<div class="hint" style="margin-top:8px">手动调整记录（FR-REG-25）：'+(state.mreg.n?('已手动调整 '+state.mreg.n+' 次 · 来源「人工」'):'暂无 · 当前来源「AI」')+' ｜ 完整参数见「手动配准」面板</div>'+
     '</div>';
-  }else{
-    h+='<div class="card"><div class="chead"><span class="t">'+m.ic+' '+m.name+'</span><span class="sp"></span><span class="tag p2">第二期 · 规划中</span></div>'+
-       '<div class="hint">「'+m.name+'」为第二期规划能力，本版界面仅预留入口与规划说明，<b>暂不提供计算结果</b>（FR-REG-02）。</div>'+
-       m.plan.map(r=>'<div style="padding:7px 0;border-bottom:1px dashed rgba(36,52,77,.75)">'+
-         '<div style="color:#8FA3BF;font-size:10px;margin-bottom:2px">'+r[0]+'</div>'+
-         '<div style="color:#C7D6E8;font-size:11.5px;line-height:1.6">'+r[1]+'</div></div>').join('')+
-    '</div>';
-  }
   /* 拖拽更换序列 */
   h+='<div class="card"><div class="chead"><span class="t">参与配准的序列</span><span class="sp"></span><span class="badge">FR-REG-14</span></div>'+
      '<div class="hint">从左侧序列栏<b>拖拽</b>任意可比序列至阅片区即可替换并自动重跑配准。基准序列'+(state.baseLocked?'<b style="color:#FFD700">默认锁定</b>（保持参照系统一）；如需更换请点击解锁':'<b style="color:#00C896">已解锁，可直接替换</b>')+'。</div>'+
@@ -2245,18 +2185,7 @@ function bindRight(){
   $$('[data-mmode]').forEach(el=>el.addEventListener('click',()=>{
     state.mreg.mode=el.dataset.mmode; state.mreg.picks=[];
     renderRight(); renderGrid();
-    toast('手动配准方式：'+MREG_NM(state.mreg.mode)+'（三种配准方式均支持手动调整，FR-REG-22）','gold'); }));
-  const la=$('#btnLvlApply'); if(la) la.addEventListener('click',()=>{
-    const bi=$('#inLvlBase'), ci=$('#inLvlCmp');
-    const b=bi? (+bi.value||1):1, c=ci? (+ci.value||1):1;
-    state.mreg.lvlBase=b; state.mreg.lvlCmp=c;
-    state.mreg.landmarks.push({no:state.mreg.landmarks.length+1,
-      a:state.baseSid||'—', b:(state.floatSid||state.baseSid||'—'),
-      nm:'层面对应 '+(state.mreg.landmarks.length+1), res:(0.5+Math.random()*0.8).toFixed(2),
-      lv:('层 '+b+' ↔ 层 '+c)});
-    state.mreg.n++;
-    renderRight(); renderGrid();
-    toast('已应用层号对应：参照层第 '+b+' 层 ↔ 浮动层第 '+c+' 层 · 已重算并留痕（FR-REG-22/25）','gold'); });
+    toast('手动配准方式：'+MREG_NM(state.mreg.mode)+'（FR-REG-22）','gold'); }));
   const mc=$('#btnMregConfirm'); if(mc) mc.addEventListener('click',()=>{
     state.mreg.on=false; state.mreg.applied=true; renderRight(); renderGrid();
     toast('手动调整已确认应用 · 结果与留痕一并持久化，二次打开可复现（FR-REG-23/25/29）','gold'); });
@@ -2414,13 +2343,11 @@ $('#btnAutoFill').addEventListener('click',()=>{ autoFill(); renderGrid(); rende
 $('#btnClearSlots').addEventListener('click',()=>{ state.slots=state.slots.map(()=>null); state.cmpSids=[];
   renderGrid(); renderRight(); toast('窗口已清空 · 可从左侧拖拽序列，或在右侧「基准 / 对比序列」面板逐窗指定','gold'); });
 $('#tReg').addEventListener('click',()=>{ openRegWork(); });
-$('#btnCloseReg').addEventListener('click',()=>$('#regMenu').classList.remove('show'));
-$('#btnExitReg').addEventListener('click',exitReg);
 /* ---- 手动配准（需求 2.3.4：三种配准方式均支持手动调整） ---- */
 $('#tManual').addEventListener('click',()=>{
   $$('.rtab').forEach(t=>t.classList.remove('on')); const rt=$('[data-rt="mreg"]'); if(rt) rt.classList.add('on');
   $$('.rpane').forEach(p=>p.classList.remove('on')); const el=$('#pane-mreg'); if(el) el.classList.add('on');
-  toast('手动配准：三种配准方式均支持手动调整 —— 解剖结构配准可手动标点、层面配准可手动指定对应层面、病灶配准可手动标记病灶关联（FR-REG-22/24）','gold'); });
+  toast('手动配准：解剖结构配准可手动标点调整 —— 在两个窗口点击同一解剖标志即可建立对应关系（FR-REG-22/24）','gold'); });
 $('#tTrend').addEventListener('click',toggleTrend);
 $('#tSave').addEventListener('click',()=>toast('已保存：配准结果、参数、手动调整与指标一并持久化，二次打开可复现（FR-REG-29）','gold'));
 $('#tExport').addEventListener('click',()=>toast('已导出：影像 + 标注 + 指标 + 配准参数（脱敏后）· 原始影像只读'));
@@ -2535,7 +2462,7 @@ function regMetrics(baseSid, floatSid, plane){
   const mi = Math.max(0, Math.min(0.97, 1 - r/34));
   const dice = r<=2 ? 0.95 : r<=4 ? 0.93 : r<=8 ? 0.90 : r<=16 ? 0.82 : 0.71;
   const corr = Math.max(0, Math.min(0.99, 1 - r/40));
-  const grade = r<=2 ? {t:'优 · 可用于病灶配准与量化', c:'good'}
+  const grade = r<=2 ? {t:'优 · 可用于解剖结构对齐与量化', c:'good'}
              : r<=6 ? {t:'良 · 建议人工微调', c:'warn'}
              : r<=14? {t:'可接受 · 建议复核', c:'warn'}
              : {t:'不足 · 请重新配准', c:'bad'};
@@ -2624,14 +2551,12 @@ function regStepBar(){
     (i<REG_STEPS.length-1?'<span class="rline"></span>':'')).join('') + '</div>';
 }
 function regHead(){
-  const dim = REG_MODES.find(m=>m.id===state.reg.dim) || REG_MODES[1];
   const b = state.reg.baseSid? findSeries(state.reg.baseSid):null;
   const f = state.reg.floatSid? findSeries(state.reg.floatSid):null;
   $('#rwSub').textContent = (b? labelOfSid(b.sid)+' · '+(b.mod||'CT')+' '+b.cls : '未选参照层') +
     '   ←   ' + (f? labelOfSid(f.sid)+' · '+(f.mod||'CT')+' '+f.cls : '未选浮动层');
-  $('#rwDims').innerHTML = REG_MODES.map(m=>
-    '<span class="dchip'+(state.reg.dim===m.id?' on':'')+'" data-dimb="'+m.id+'">'+m.ic+' '+m.name+
-    '<span class="tag '+(m.phase===1?'p1':'p2')+'">'+(m.phase===1?'第一期':'第二期')+'</span></span>').join('');
+  /* 只剩一个配准维度 → 静态标签，不再是可切换的选择器 */
+  $('#rwDims').innerHTML = '<span class="dchip on" style="cursor:default">🫀 解剖结构配准</span>';
 }
 /* 选择区：参照层 / 浮动层，各带「检查」与「序列」两级下拉（样式参照工作站面板） */
 function regLayerBox(role){
@@ -2687,24 +2612,9 @@ function renderRegWork(){
   }
   if(state.reg.slice==null){ const bs=state.reg.baseSid? findSeries(state.reg.baseSid):null;
     state.reg.slice = bs? defSlice(bs) : 45; }
-  const dim = REG_MODES.find(m=>m.id===state.reg.dim) || REG_MODES[1];
   regHead();
   $('#rwSteps').innerHTML = regStepBar();
   $('#rwScopeSel').value = state.reg.scope;
-
-  /* 第二期维度：只给规划内容，不给任何计算结果 */
-  if(dim.phase !== 1){
-    $('#rwBody').innerHTML = '<div class="rstepbox"><div class="rboxh">'+dim.ic+' '+dim.name+
-      '<span class="tag p2">第二期 · 规划中</span></div>'+
-      (dim.plan||[]).map(r=>'<div class="rplan"><span class="k">'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')+
-      '<div class="rwnote" style="margin-top:9px">本版界面仅预留入口与说明，暂不提供该维度的计算结果。第一期为「解剖结构配准」。</div></div>';
-    $('#rwNext').style.display='none'; $('#rwPrev').style.display='none';
-    /* 未实现的维度：不提供任何计算入口，底栏按钮状态显式归位（不要指望上一次渲染留下的值） */
-    ['rwAuto','rwLoad','rwClear'].forEach(id=>{ const e=$('#'+id); if(e) e.disabled=true; });
-    $('#rwApply').disabled = true;
-    const stt=$('#rwAutoSt2'); if(stt) stt.textContent='';
-    return;
-  }
   $('#rwNext').style.display=''; $('#rwPrev').style.display='';
   const st = state.reg.step;
   const mets = regMetrics(state.reg.baseSid, state.reg.floatSid, 'axial');
@@ -2938,7 +2848,6 @@ function regApply(){
 function openRegWork(){
   if(state.noCompare){ toast('单期浏览态：无前序检查，未启动配准','red'); return; }
   state.reg.open = true; state.regMode = true; state.reg.step = 1;
-  $('#regMenu').classList.remove('show');
   $('#regWork').classList.add('show');
   if(!state.reg.baseSid) state.reg.baseSid = state.baseSid || (allSeriesOrdered()[0]||{}).sid || null;
   renderRegWork();
@@ -2977,11 +2886,9 @@ document.addEventListener('mouseup',()=>{ if(state.reg.drag){ state.reg.drag=nul
   if(lt) lt.innerHTML='🔗 <b>自动关联</b>：多序列同步翻页 / 缩放 / 窗宽窗位';   /* 初始状态条 */
   const rc=$('#rwClose'); if(rc) rc.addEventListener('click',()=>{ closeRegWork(); toast('已关闭配准界面 · 返回主窗口'); });
 
-  /* ★ 事件委托：维度切换 / 步骤跳转 —— 必须在 document 上，不能绑到 chip 元素本身 */
+  /* ★ 事件委托：步骤跳转 —— 必须在 document 上，不能绑到 chip 元素本身 */
   document.addEventListener('click', ev=>{
     if(!ev.target || !ev.target.closest) return;
-    const c = ev.target.closest('#rwDims [data-dimb]');
-    if(c){ state.reg.dim = c.dataset.dimb; state.reg.step = 1; renderRegWork(); return; }
     const t = ev.target.closest('#rwSteps [data-stp]');
     if(t){ regGoto(+t.dataset.stp); }
   });
@@ -3049,13 +2956,12 @@ function bindGridIO(){
 function regPaneCard(){
   const b = state.reg.baseSid? findSeries(state.reg.baseSid) : (state.baseSid? findSeries(state.baseSid):null);
   const f = state.reg.floatSid? findSeries(state.reg.floatSid) : null;
-  const dim = REG_MODES.find(m=>m.id===(state.reg.dim||'anat')) || REG_MODES[1];
   const a = state.reg.applied;
   let h = '<div class="card gold"><div class="chead"><span class="t">⭐ 配准</span><span class="sp"></span>'+
     '<span class="tag p1">第一期</span></div>'+
     '<button class="btn sm ai" id="btnOpenReg" style="width:100%;margin-bottom:9px">⭐ 打开配准工作界面</button>'+
     '<div class="hint" style="margin-bottom:8px">按《医学影像图像布局-配准功能说明》：选择<b>参考图像</b>与<b>浮动图像</b> → 【自动】或交互式手动（平移 / 旋转）→ 三视图融合与融合比例实时调节 → 选择应用范围【序列之间 / 检查之间】→ 【应用】后自动关闭界面返回主窗口。</div>'+
-    '<div class="kv"><span class="k">配准维度</span><span class="v">'+dim.ic+' '+dim.name+' · '+(dim.phase===1?'第一期':'第二期')+'</span></div>'+
+    '<div class="kv"><span class="k">配准维度</span><span class="v">🫀 解剖结构配准</span></div>'+
     '<div class="kv"><span class="k">参考图像 Fixed</span><span class="v">'+(b? labelOfSid(b.sid)+' · '+(b.mod||'CT')+' · '+b.cls : '未选择')+'</span></div>'+
     '<div class="kv"><span class="k">浮动图像 Moving</span><span class="v">'+(f? labelOfSid(f.sid)+' · '+(f.mod||'CT')+' · '+f.cls : '未选择')+'</span></div>'+
     '<div class="kv"><span class="k">变换模型</span><span class="v">刚性（平移 + 旋转）</span></div>';
@@ -3188,7 +3094,7 @@ renderForms();
 $('#qItem').innerHTML='<option value="">全部</option>'+items().map(x=>x.it.name)
   .filter((v,i,a)=>a.indexOf(v)===i).map(n=>'<option>'+n+'</option>').join('');
 renderList();
-console.log('临床阅片器原型 V3.7 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
+console.log('临床阅片器原型 V3.8 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
 </script>
 </body>
 </html>
