@@ -1041,7 +1041,7 @@ Object.keys(REALCT2).forEach(function(k){RCIMG['s'+k]=REALCT2[k].map(function(x)
 function rcImg(sl,total,plane){var a=RCIMG[plane]||RCIMG.axial;if(!a||!a.length)return null;var f=(sl-1)/Math.max(1,(total-1));return a[Math.max(0,Math.min(a.length-1,Math.round(f*(a.length-1))))];}
 function rcReady(){return Object.keys(RCIMG).every(function(k){return RCIMG[k].every(function(i){return i.complete&&i.naturalWidth>0;});});}
 /* 病灶锚点 = 真实影像上自动检出（find_lesion），三平面同一解剖点 */
-const LES_REAL={"F-001": {"u": -0.641, "v": -0.984, "zn": 0.162}, "F-002": {"u": -0.641, "v": -0.984, "zn": 0.301}, "F-003": {"u": -0.641, "v": -0.984, "zn": 0.0}};
+const LES_REAL={"F-001": {"u": -0.391, "v": 0.188, "zn": 0.162}, "F-002": {"u": 0.188, "v": 0.263, "zn": 0.301}, "F-003": {"u": 0.266, "v": 0.328, "zn": 0.0}};
 /* ---------- 平面取样 → 低分辨率 HU 场 → 双线性放大（方 FOV，四周留黑，如真实重建） ---------- */
 function plotField(cv, plane, sIdx, sTotal, ww, wl, tint){
   const dpr=window.devicePixelRatio||1;
