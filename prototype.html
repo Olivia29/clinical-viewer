@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>临床阅片器 · 交互原型 V3.5（配准改为分步弹窗向导：检查→模态→SID 序列层级 / 多格布局 1×1–4×4 / 自动·手动关联同步翻页缩放调窗 / 配准工作界面：参考图像↔浮动图像 + 自动·手动 + 三视图 Alpha 融合 + 刚性变换 + 序列·检查应用范围）</title>
+<title>临床阅片器 · 交互原型 V3.6（配准改为分步弹窗向导：检查→模态→SID 序列层级 / 多格布局 1×1–4×4 / 自动·手动关联同步翻页缩放调窗 / 配准工作界面：参考图像↔浮动图像 + 自动·手动 + 三视图 Alpha 融合 + 刚性变换 + 序列·检查应用范围）</title>
 <style>
 :root{
   --bg:#0A192F; --bg2:#0D1B2A; --panel:#112233; --panel2:#1B263B; --line:#24344D;
@@ -767,9 +767,12 @@ h2.sec{font-size:11px; color:var(--muted); letter-spacing:1.5px; font-weight:600
 
 <script>
 /* ============================================================
-   临床阅片器 · 交互原型 V3.5
+   临床阅片器 · 交互原型 V3.6
    ------------------------------------------------------------
    V3.5 变更：配准工作界面 → 【弹窗 + 分步向导】（样式参照影像工作站配准面板）
+   V3.6 变更：修「切到第二期维度后无法切回解剖结构配准」——维度/步骤 chip 改事件委托
+              （regHead() 重建 #rwDims.innerHTML 会清掉直接绑定的监听器）；
+              第二期分支底栏按钮状态显式归位、清掉遗留的自动配准状态文案。
    · 弹窗 1180px 居中卡片（遮罩不模糊），标题栏「配准」+ 维度 chip + ✕
    · 顶部步骤条，一次只显示一步：① 选择影像数据 ② 设置配准参数 ③ 执行配准 ④ 结果评估
    · 底栏：左键移动 / 右键缩放 / *滚动翻页（三个提示都真的生效）+ ⚡自动 📄读档 🧹清除 + 应用范围下拉 + 应 用
@@ -2652,7 +2655,10 @@ function renderRegWork(){
       (dim.plan||[]).map(r=>'<div class="rplan"><span class="k">'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')+
       '<div class="rwnote" style="margin-top:9px">本版界面仅预留入口与说明，暂不提供该维度的计算结果。第一期为「解剖结构配准」。</div></div>';
     $('#rwNext').style.display='none'; $('#rwPrev').style.display='none';
+    /* 未实现的维度：不提供任何计算入口，底栏按钮状态显式归位（不要指望上一次渲染留下的值） */
+    ['rwAuto','rwLoad','rwClear'].forEach(id=>{ const e=$('#'+id); if(e) e.disabled=true; });
     $('#rwApply').disabled = true;
+    const stt=$('#rwAutoSt2'); if(stt) stt.textContent='';
     return;
   }
   $('#rwNext').style.display=''; $('#rwPrev').style.display='';
@@ -2721,8 +2727,8 @@ function renderRegWork(){
 }
 function regGoto(n){ state.reg.step = Math.max(1, Math.min(4, n)); renderRegWork(); }
 function bindRegWork(){
-  $$('#rwSteps [data-stp]').forEach(e=>e.addEventListener('click',()=>regGoto(+e.dataset.stp)));
-  $$('#rwDims [data-dimb]').forEach(e=>e.addEventListener('click',()=>{ state.reg.dim=e.dataset.dimb; renderRegWork(); }));
+  /* 维度 / 步骤 chip 的点击统一由 document 上的委托处理（见初始化段），
+     因为 regHead() 每次渲染都会重建 #rwDims.innerHTML，直接绑定的监听器会被清掉。 */
   $$('[data-exsel]').forEach(sel=>sel.addEventListener('change',()=>{
     const role=sel.dataset.exsel, ex=examOf(sel.value); if(!ex) return;
     const pick = ex.series.find(s=>s.type==='肺窗') || ex.series[0];
@@ -2926,6 +2932,15 @@ document.addEventListener('mouseup',()=>{ if(state.reg.drag){ state.reg.drag=nul
   const lt=$('#linkTag');
   if(lt) lt.innerHTML='🔗 <b>自动关联</b>：多序列同步翻页 / 缩放 / 窗宽窗位';   /* 初始状态条 */
   const rc=$('#rwClose'); if(rc) rc.addEventListener('click',()=>{ closeRegWork(); toast('已关闭配准界面 · 返回主窗口'); });
+
+  /* ★ 事件委托：维度切换 / 步骤跳转 —— 必须在 document 上，不能绑到 chip 元素本身 */
+  document.addEventListener('click', ev=>{
+    if(!ev.target || !ev.target.closest) return;
+    const c = ev.target.closest('#rwDims [data-dimb]');
+    if(c){ state.reg.dim = c.dataset.dimb; state.reg.step = 1; renderRegWork(); return; }
+    const t = ev.target.closest('#rwSteps [data-stp]');
+    if(t){ regGoto(+t.dataset.stp); }
+  });
   const bind2=(id,fn)=>{ const e=$('#'+id); if(e) e.addEventListener('click',fn); };
   bind2('rwAuto', ()=>regAuto());
   bind2('rwLoad', ()=>regLoad());
@@ -3039,7 +3054,7 @@ renderForms();
 $('#qItem').innerHTML='<option value="">全部</option>'+items().map(x=>x.it.name)
   .filter((v,i,a)=>a.indexOf(v)===i).map(n=>'<option>'+n+'</option>').join('');
 renderList();
-console.log('临床阅片器原型 V3.5 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
+console.log('临床阅片器原型 V3.6 已加载（配准=分步弹窗向导）（布局：检查→模态→SID + 自动/手动关联；配准：参考/浮动图像 + 自动/手动 + 三视图 Alpha 融合 + 刚性变换 + 序列/检查应用范围）');
 </script>
 </body>
 </html>
