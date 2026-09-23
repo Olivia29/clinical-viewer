@@ -112,6 +112,14 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .seg{display:flex;gap:4px}
 .sg{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:5px;cursor:pointer;background:#fff}
 .sg.on{border-color:var(--brand);background:#E8F7F5;font-weight:700}
+.iw{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.iv{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding-bottom:7px}
+.ivt{display:flex;align-items:center;gap:6px;background:#F5F7FA;border-bottom:1px solid var(--line);padding:5px 9px;font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:7px}
+.iv .pane{margin:0 9px;height:170px}
+.iv .lvlbar{margin:8px 9px 0}
+.iv .panelbox{margin:0 9px;border-style:solid}
+.m3{font-size:10px;padding:1px 6px;border:1px solid var(--line);border-radius:3px;background:#fff;font-weight:400;color:var(--gray)}
+.m3.on{border-color:var(--brand);background:#E8F7F5;font-weight:700;color:var(--brand-d)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 10px;align-items:start}
 .mtx{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px}
 .mrow{display:flex;justify-content:space-between;font-size:11px;border-bottom:1px dashed var(--line);padding:3px 0}
@@ -166,14 +174,27 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
     <div class="panel">
       <h3><span class="n">3</span>影像工作区 · 联动显示</h3>
       <div class="bd">
-        <div class="imgwrap">
-          <div class="pane" id="paneA"><div class="ph">本次影像占位</div><div class="lab" id="labA">本次 26.09 · —</div></div>
-          <div class="pane" id="paneB"><div class="ph">对比影像占位</div><div class="lab" id="labB">对比 26.05 · —</div></div>
-        </div>
-        <div class="lvlbar" id="lvlbar"></div>
-        <div class="panelbox" id="cfg">
-          <h4 id="cfgTitle">三级对齐：请选择一级</h4>
-          <div style="font-size:11px;color:var(--gray)">① 整体图像对齐（全局刚性：平移+旋转）→ ② 解剖结构对齐（肺叶/气管/膈肌，可分区）→ ③ 病灶对齐（病灶边界与中心）</div>
+        <div class="iw">
+          <div class="iv">
+            <div class="ivt">主视图（核心对齐序列）<span class="spacer"></span><span class="m3 on">■ 2D</span><span class="m3">MPR</span><span class="m3">3D</span></div>
+            <div class="pane" id="paneA"><div class="ph">自动配准后的主视图占位</div><div class="lab" id="labA">本次 26.09 · —</div></div>
+            <div class="lvlbar" id="lvlbar"></div>
+          </div>
+          <div class="iv">
+            <div class="ivt">时序对齐视图<span class="tag">跨时点自动配准</span></div>
+            <div class="pane" id="paneT"><div class="ph">时序配准视图占位</div><div class="lab" id="labT">—</div></div>
+          </div>
+          <div class="iv">
+            <div class="ivt">序列对比视图<span class="tag">序列间自动配准</span></div>
+            <div class="pane" id="paneS"><div class="ph">序列自动配准视图占位</div><div class="lab" id="labS">—</div></div>
+          </div>
+          <div class="iv">
+            <div class="ivt">调整联动（三级对齐参数）</div>
+            <div class="panelbox" id="cfg">
+              <h4 id="cfgTitle">三级对齐：请选择一级</h4>
+              <div style="font-size:11px;color:var(--gray)">① 整体图像对齐（全局刚性：平移+旋转）→ ② 解剖结构对齐（肺叶/气管/膈肌，可分区）→ ③ 病灶对齐（病灶边界与中心）</div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="hint">三级为<b>递进</b>关系：默认逐级收敛，也可任选一级进入（以上一级结果为初值）；每级结果独立记录、不覆盖上级。</div>
@@ -362,7 +383,7 @@ function renderTools(){
     };
     h.appendChild(b);
   });
-  var a=$('#paneA'), b2=$('#paneB');
+  var a=$('#paneA'), b2=$('#paneT');
   a.className='pane'; b2.className='pane';
   if(st.tool==='叠加'||st.tool==='差值图'){ a.className='pane'+(st.tool==='叠加'?' mode-fuse':' mode-diff'); b2.style.display='none'; }
   else if(st.tool==='闪烁'){ a.className='pane blink'; b2.style.display='none'; }
@@ -392,8 +413,8 @@ function renderImg(){
   var e=EX[st.t], p=EX[cmpIdx()];   /* 倒序：对比期在上一次（下标更大） */
   var sname=e.s[Math.min(st.ser,e.s.length-1)];
   $('#labA').textContent='本次 '+e.d+' · '+sname+(st.lvl?(' · '+st.lvl):'');
-  $('#labB').textContent='对比 '+p.d+'（上一次） · '+(p.s[0]||'—')+(st.kpi?(' · 看板：'+st.kpi):'')+
-    ' · 病灶 '+st.lesion;
+  $('#labT').textContent='时序对齐：'+e.d+' ↔ '+p.d+'（上一次）'+(st.lvl?(' · '+st.lvl+' 已调整'):' · 自动配准')+(st.kpi?(' · 看板：'+st.kpi):'');
+  $('#labS').textContent='序列对比：'+sname+' ↔ '+(p.s[0]||'—')+' · 序列间自动配准 · HU 归一化';
 }
 /* ===== 病灶列表与量化 ===== */
 var LES=[{id:'F-001',loc:'右肺上叶后段',vol:'4.05',d:'-15.6%',dia:'19.8',hu:'38',base:true},
