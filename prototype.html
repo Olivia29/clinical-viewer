@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V7.3</title>
+<title>临床阅片器 · 时间轴导航原型 V7.5</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -105,7 +105,12 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .kpi .it:hover{background:#16273D}
 .kpi .it.on{background:#1B3350;box-shadow:inset 0 0 0 1px var(--brand)}
 .kpi .it em{font-style:normal;color:var(--gray);font-size:10px}
-.curve{width:100%;height:56px;margin:5px 0 2px}
+.curve{width:100%;height:64px;margin:6px 0 2px;cursor:crosshair}
+.spark{width:60px;height:18px;flex:none}
+.it{gap:6px}
+.it em{min-width:44px;text-align:right}
+.curve tspan{font-size:8px;fill:var(--gray)}
+.pt{cursor:pointer}
 /* 日志 */
 .log{position:fixed;right:14px;bottom:12px;width:396px;max-height:236px;overflow:auto;background:#12212B;color:#CFE6E3;border-radius:9px;padding:9px 11px;font:11px/1.5 Consolas,Monaco,monospace;box-shadow:0 8px 24px rgba(0,0,0,.28);z-index:50}
 .log h5{margin:0 0 5px;color:#7FE3D8;font-size:11px;display:flex;justify-content:space-between;align-items:center}
@@ -150,8 +155,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V7.3</h1>
-    <span class="tag">V7.3 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V7.5</h1>
+    <span class="tag">V7.5 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -219,10 +224,10 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
       <div class="bd">
         <div class="tools" id="tools"></div>
         <div class="kpi">
-          <div class="it" data-kpi="体积"><span>病灶体积（cm³）</span><em id="v1">4.05</em></div>
-          <div class="it" data-kpi="径线"><span>最大径（mm）</span><em id="v2">19.8</em></div>
-          <div class="it" data-kpi="密度"><span>平均密度（HU）</span><em id="v3">38</em></div>
-          <div class="it" data-kpi="倍增时间"><span>倍增时间（天）</span><em id="v4">—</em></div>
+          <div class="it" data-kpi="体积"><span>病灶体积（cm³）</span><em id="v1">4.05</em><svg class="spark" data-spark="体积" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
+          <div class="it" data-kpi="面积"><span>病灶面积（mm²）</span><em id="v2">312</em><svg class="spark" data-spark="面积" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
+          <div class="it" data-kpi="密度"><span>平均密度（HU）</span><em id="v3">38</em><svg class="spark" data-spark="密度" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
+          <div class="it" data-kpi="一致性"><span>测量一致性（%）</span><em id="v4">96</em><svg class="spark" data-spark="一致性" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
           <svg class="curve" id="curve" viewBox="0 0 240 56" preserveAspectRatio="none"></svg>
         </div>
       </div>
@@ -429,25 +434,51 @@ function renderTools(){
   if(st.tool!=='时间电影') a.querySelector('.ph').textContent='本次影像占位';
   applyCompare();
 }
+function sparkPath(vals, w, h, idx){
+  var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), d = 'M';
+  vals.forEach(function(v, i){
+    var x = i * (w/(vals.length-1)), y = h - 2 - (mx===mn ? .5 : (v-mn)/(mx-mn)) * (h-5);
+    d += (i ? ' L' : '') + x.toFixed(1) + ' ' + y.toFixed(1);
+  });
+  return d;
+}
 function renderKpi(){
+  var vals = {};
   document.querySelectorAll('.it').forEach(function(it){
-    it.classList.toggle('on', st.kpi===it.dataset.kpi);
-    it.onclick=function(){
-      st.kpi=it.dataset.kpi;
-      var same = it.dataset.kpi==='倍增时间';
-      log('点击看板 '+st.kpi, same ? '倍增时间依赖至少 2 个有效体积点，当前样本不足（占位）'
-        : '影像区已在 '+st.lesion+' 处叠加【'+st.kpi+'】指标标注块（三视图同步）+ 曲线对应点高亮｜对比模式不变');
-      drawOverlays();
+    var k = it.dataset.kpi; vals[k] = MDATA[k].v;
+    it.classList.toggle('on', st.kpi === k);
+    var sp = it.querySelector('[data-spark]');
+    if (sp){ sp.innerHTML = '<path d="' + sparkPath(vals[k], 60, 18) + '" fill="none" stroke="'
+      + (st.kpi===k ? '#2A7FFF' : '#3A5A80') + '" stroke-width="1.4"/>'; }
+    var em = it.querySelector('em'); if (em) em.textContent = mVal(k, st.t);   /* 数值随当前时点变化 */
+    it.onclick = function(){
+      st.kpi = k; st2.rot = st2.rot;   /* 保持已有调整 */
+      log('点击看板 ' + k, '主趋势图切到【' + k + '】并在图上叠加该指标标注（' + mTxt(k, st.t) + '）｜四个数据点对应 5 个随访时点，点任一点可跳回该期影像');
       renderAll();
     };
   });
-  // 体积曲线（占位）
-  var pts=[[0,46],[60,40],[120,32],[180,24],[240,17]], d='M';
-  pts.forEach(function(p,i){ d += (i?' L':'')+p[0]+' '+p[1]; });
-  $('#curve').innerHTML='<path d="'+d+'" fill="none" stroke="#00A398" stroke-width="2"/>'+
-    '<path d="'+d+' L240 56 L0 56 Z" fill="rgba(0,163,152,.10)" stroke="none"/>'+
-    pts.map(function(p){return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2.6" fill="#0070C0"/>';}).join('');
-  $('#v1').textContent='4.05'; $('#v2').textContent='19.8'; $('#v3').textContent='38'; $('#v4').textContent='—';
+  /* 主趋势图：选中指标在 5 个时点上的曲线，数据点可点 → 跳时点 + 影像联动 */
+  var k = st.kpi || '体积', v = MDATA[k].v, W = 240, H = 64;
+  var mn = Math.min.apply(null, v), mx = Math.max.apply(null, v);
+  var d = sparkPath(v, W, H - 12);
+  var h = '<path d="' + d + '" fill="none" stroke="#2A7FFF" stroke-width="2"/>'
+        + '<path d="' + d + ' L' + W + ' ' + (H-12) + ' L0 ' + (H-12) + ' Z" fill="rgba(42,127,255,.10)" stroke="none"/>';
+  v.forEach(function(val, i){
+    var x = i * (W/(v.length-1)), y = (H-12) - 2 - (mx===mn ? .5 : (val-mn)/(mx-mn)) * (H-17);
+    var on = (i === st.t);
+    h += '<circle class="pt" data-ti="' + i + '" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (on ? 4.4 : 3)
+      + '" fill="' + (on ? '#FFD700' : '#2A7FFF') + '"/>';
+    h += '<text x="' + x.toFixed(1) + '" y="' + (H-1) + '" text-anchor="middle">' + EX[i].d + '</text>';
+  });
+  var cv = $('#curve'); cv.innerHTML = h;
+  cv.querySelectorAll('circle.pt').forEach(function(c){
+    c.onclick = function(){
+      var ti = +c.dataset.ti; st.t = ti;
+      log('点击趋势图数据点（' + k + ' · ' + EX[ti].d + '）',
+        '时间轴与影像已跳到 ' + EX[ti].d + '｜该指标值为 ' + mTxt(k, ti) + '｜图上标注同步更新（反向联动）');
+      renderAll();
+    };
+  });
 }
 function renderImg(){
   var e=EX[st.t], p=EX[cmpIdx()];   /* 倒序：对比期在上一次（下标更大） */
@@ -596,7 +627,16 @@ function toast2(t){ log('提示', t); }
 /* ===== 联动引擎：让三种交互都作用到图像上 ===== */
 var LES_ANCHOR = { 'F-001':{u:-0.39,v:0.19}, 'F-002':{u:0.19,v:0.26}, 'F-003':{u:0.27,v:0.33} };
 var LES_VAL = { 'F-001':{vol:'4.05',dia:'19.8',hu:'38'}, 'F-002':{vol:'1.12',dia:'11.4',hu:'-42'}, 'F-003':{vol:'—',dia:'—',hu:'—'} };
-var st2 = { tx:0, ty:0, rot:0, sc:0 };                 /* 人工微调（mm / 度） */
+var st2 = { tx:0, ty:0, rot:0, sc:0 };
+/* 四指标 × 5 个时点（索引与 EX 对齐：0=26.09 最新 → 4=24.08 最早）；演示数据 */
+var MDATA = {
+  '体积':   { u:'cm³',  v:[4.05, 4.80, 5.10, 5.05, 4.62] },
+  '面积':   { u:'mm²',  v:[312, 356, 371, 368, 340] },
+  '密度':   { u:'HU',   v:[38, 34, 30, 27, 25] },
+  '一致性': { u:'%',    v:[96, 94, 95, 93, 92] }
+};
+function mVal(k, ti){ var d = MDATA[k]; return d ? d.v[ti] : null; }
+function mTxt(k, ti){ var d = MDATA[k]; if(!d) return '—'; return d.v[ti] + ' ' + d.u; }                 /* 人工微调（mm / 度） */
 var PXMM = 1.35;                                 /* 1mm ≈ 1.35px（影像格 300px 对应约 220mm 视野） */
 /* ① 三级对齐调整 → 图像变换：主视图按人工微调平移/旋转；时序视图按算法位移平移 */
 function applyTransforms(){
@@ -626,8 +666,7 @@ function drawOverlays(){
     }
     if (st.kpi){
       var c = document.createElement('div'); c.className = 'callout';
-      var v = LES_VAL[st.lesion] || {};
-      var txt = { '体积': v.vol + ' cm³', '径线': v.dia + ' mm', '密度': v.hu + ' HU', '倍增时间': '—' }[st.kpi] || '—';
+      var txt = mTxt(st.kpi, st.t);
       c.innerHTML = '<i>' + st.kpi + '</i> ' + txt + ' · ' + st.lesion;
       c.style.left = '4%'; c.style.top = '6%';
       c.setAttribute('data-callout', st.kpi);
