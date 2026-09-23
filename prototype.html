@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V8.0</title>
+<title>临床阅片器 · 时间轴导航原型 V8.1</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -162,8 +162,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V8.0</h1>
-    <span class="tag">V8.0 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V8.1</h1>
+    <span class="tag">V8.1 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -206,7 +206,7 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
             <div class="lvlbar" id="lvlbar"></div>
           </div>
           <div class="iv">
-            <div class="ivt">时序对齐视图<span class="tag btn-tag" id="tagT" title="点击执行跨时点自动配准">▶ 跨时点自动配准</span></div>
+            <div class="ivt">时序对齐视图（全部期数）<span class="tag btn-tag" id="tagT" title="点击重新执行跨时点自动配准">▶ 跨时点自动配准</span></div>
             <div class="pane" id="paneT"><div class="pimg" id="imgT"></div><div class="ovl" id="ovlT"></div><div class="ph">时序配准视图占位</div><div class="lab" id="labT">—</div></div>
           </div>
           <div class="iv">
@@ -329,8 +329,8 @@ function pickT(i){
 $('#btnRange').onclick=function(){
   st.range = (st.range===2) ? EX.length : 2;
   $('#btnRange').textContent='区间：'+(st.range===2?'最近 2 期':('全部 '+EX.length+' 期'));
-  if (st.range!==2){ runAllReg(); } else { REG.all=null;
-    log('切换对比区间','对比跨度改为【最近 2 期】：仅 本期 ↔ 上一次 配准｜多期结果条已移除'); }
+  if (st.range!==2){ runAllReg(); }
+  else { log('切换对比区间','对比基准改为【最近 2 期】：本轮仅 本期 ↔ 上一次；时序视图仍展示全部期数对齐结果'); }
   renderAll();
 };
 function runAllReg(){
@@ -352,15 +352,15 @@ function renderAllStrip(){
   if(!REG.all) return;
   var d=document.createElement('div'); d.id='allStrip';
   d.style.cssText='position:absolute;inset:0;background:rgba(10,25,47,.92);padding:6px;display:flex;flex-direction:column;gap:4px';
-  d.innerHTML='<div style="font-size:10.5px;color:#8FA3BF">全部时间范围配准 · 基准 '+REG.all.base+' · 平均 NCC '+REG.all.avg.toFixed(3)+'</div>';
+  d.innerHTML='<div style="font-size:10.5px;color:#8FA3BF">全部时间范围配准 · 基准 '+REG.all.base+' · 平均 NCC '+Number(REG.all.avg||0).toFixed(3)+'</div>';
   var row=document.createElement('div'); row.style.cssText='display:flex;gap:4px;flex:1';
   REG.all.rows.forEach(function(r,ix){
     var col=r.ncc>=0.9?'#00C896':(r.ncc>=0.75?'#2A7FFF':'#FFA53C');
     var cell=document.createElement('div');
     var img=REALCT[(stS.T+st.t+ix)%REALCT.length];
     cell.style.cssText='flex:1;border:1px solid '+col+';border-radius:3px;background:url(data:image/jpeg;base64,'+img+') center/cover;position:relative;min-width:0';
-    cell.innerHTML='<div style="position:absolute;left:0;right:0;bottom:0;background:rgba(13,27,42,.85);font-size:9px;padding:1px 2px;text-align:center">'+r.d+'<br><span style="color:'+col+'">'+r.ncc.toFixed(2)+'</span></div>';
-    cell.setAttribute('data-ncc', r.ncc.toFixed(3)); cell.setAttribute('data-d', r.d);
+    cell.innerHTML='<div style="position:absolute;left:0;right:0;bottom:0;background:rgba(13,27,42,.85);font-size:9px;padding:1px 2px;text-align:center">'+r.d+'<br><span style="color:'+col+'">'+Number(r.ncc||0).toFixed(2)+'</span></div>';
+    cell.setAttribute('data-ncc', Number(r.ncc||0).toFixed(3)); cell.setAttribute('data-d', r.d);
     row.appendChild(cell);
   });
   d.appendChild(row); box.appendChild(d);
@@ -772,8 +772,8 @@ function renderSeriesResult(){
   var d=document.createElement('div'); d.id='sres'; d.className='sres';
   var col=REG.series.ncc>=0.9?'#00C896':(REG.series.ncc>=0.75?'#2A7FFF':'#FFA53C');
   d.innerHTML='<i>序列间自动配准</i> NCC <span style="color:'+col+'">'+REG.series.ncc.toFixed(3)
-    +'</span> ｜ 位移 '+REG.series.dxmm.toFixed(1)+'/'+REG.series.dymm.toFixed(1)+' mm ｜ HU 归一化 ✓';
-  d.setAttribute('data-ncc', REG.series.ncc.toFixed(3));
+    +'</span> ｜ 位移 '+Number(REG.series.dxmm||0).toFixed(1)+'/'+Number(REG.series.dymm||0).toFixed(1)+' mm ｜ HU 归一化 ✓';
+  d.setAttribute('data-ncc', Number(REG.series.ncc||0).toFixed(3));
   box.appendChild(d);
 }
 function bindWheel(){
@@ -794,6 +794,9 @@ function renderAll(){ applyImages(); renderTL(); renderSer(); renderLv(); render
 loadGray();
 bindWheel();
 bindRegEntry();
+/* 时序对齐视图：默认展示【全部时间范围】的对齐结果（全部期数各一格）*/
+setTimeout(function(){ try{ runAllReg(); renderAll(); }catch(e){} }, 2600);
+setTimeout(function(){ try{ runAllReg(); renderAll(); }catch(e){} }, 4200);
 renderAll();
 setTimeout(function(){ log('页面初始化','线框图已就绪：请依次点击 时间轴 → 序列 → 三级对齐 → 对比工具 → 看板，观察右下角联动日志'); }, 260);
 </script>
