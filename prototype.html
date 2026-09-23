@@ -296,9 +296,8 @@ function renderTL(){
   var h=$('#tl'); h.innerHTML='';
   EX.forEach(function(e,i){
     var n=el('div','tlnode'+(i===st.t?' cur':'')+(i===st.t||i===cmpIdx()?' inrange':''));
-    var strip='<div class="strip">'+e.s.map(function(){return '<i></i>';}).join('')+'</div>';
     n.innerHTML='<div class="dot"></div><div class="d">'+e.d+'</div><div class="m">'+e.m+'</div>'+
-      '<div class="badge">'+e.tag+'</div>'+strip+'<div class="m" style="margin-top:2px">'+e.s.length+' 序列</div>';
+      '<div class="badge">'+e.tag+'</div>';
     n.title='点击切换时点';
     n.onclick=function(){ pickT(i); };
     h.appendChild(n);
@@ -321,7 +320,7 @@ $('#btnRange').onclick=function(){
 /* ===== ② 序列 ===== */
 function renderSer(){
   var e=EX[st.t], h=$('#serList'); h.innerHTML='';
-  $('#serHost').textContent=e.d+' · '+e.s.length+' 序列';
+  $('#serHost').textContent=e.d;
   e.s.forEach(function(sname,ix){
     var row=el('div','ser'+(ix===st.ser?' on':''));
     var pe=EX[cmpIdx()];
