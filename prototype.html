@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V7.8</title>
+<title>临床阅片器 · 时间轴导航原型 V7.9</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -158,8 +158,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V7.8</h1>
-    <span class="tag">V7.8 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V7.9</h1>
+    <span class="tag">V7.9 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -323,11 +323,45 @@ function pickT(i){
   renderAll();
 }
 $('#btnRange').onclick=function(){
-  st.range = st.range===2 ? 5 : 2;
-  log('切换对比区间', '对比跨度改为 '+(st.range===2?'最近 2 期':('全部 '+EX.length+' 期'))+'｜看板同步收缩｜当前影像窗口不变');
-  $('#btnRange').textContent='区间：'+(st.range===2?'最近 2 期':'全部 '+EX.length+' 期');
+  st.range = (st.range===2) ? EX.length : 2;
+  $('#btnRange').textContent='区间：'+(st.range===2?'最近 2 期':('全部 '+EX.length+' 期'));
+  if (st.range!==2){ runAllReg(); } else { REG.all=null;
+    log('切换对比区间','对比跨度改为【最近 2 期】：仅 本期 ↔ 上一次 配准｜多期结果条已移除'); }
   renderAll();
 };
+function runAllReg(){
+  if (!REG.ready){ toast2('真实影像尚未加载完成，请稍候再试'); return; }
+  var base=EX.length-1, A=GC[gcIndex(base+1)], mask=bodyMask(A), out=[];
+  for (var k=0;k<EX.length;k++){
+    var B2=GC[gcIndex(k+1)]; if(!B2) continue;
+    var c=search(A,B2,mask,10,2), f=search(A,B2,mask,2,1), best=(f.ncc>c.ncc)?f:c;
+    out.push({ d:EX[k].d, ncc:best.ncc, dxmm:best.dx*(400/128), dymm:best.dy*(400/128) });
+  }
+  var avg=out.reduce(function(a,b){return a+b.ncc;},0)/out.length;
+  REG.all={ base:EX[base].d, rows:out, avg:avg };
+  log('全部时间范围配准','基准 = '+EX[base].d+'（最早一期）｜其余 '+out.length+' 期逐一与基准配准｜平均 NCC '
+    +avg.toFixed(3)+'（逐期：'+out.map(function(r){return r.d+' '+r.ncc.toFixed(2);}).join(' / ')+'）｜时序视图已切换为多期对齐结果条');
+}
+function renderAllStrip(){
+  var box=document.getElementById('paneT'); if(!box) return;
+  var old=document.getElementById('allStrip'); if(old) old.remove();
+  if(!REG.all) return;
+  var d=document.createElement('div'); d.id='allStrip';
+  d.style.cssText='position:absolute;inset:0;background:rgba(10,25,47,.92);padding:6px;display:flex;flex-direction:column;gap:4px';
+  d.innerHTML='<div style="font-size:10.5px;color:#8FA3BF">全部时间范围配准 · 基准 '+REG.all.base+' · 平均 NCC '+REG.all.avg.toFixed(3)+'</div>';
+  var row=document.createElement('div'); row.style.cssText='display:flex;gap:4px;flex:1';
+  REG.all.rows.forEach(function(r,ix){
+    var col=r.ncc>=0.9?'#00C896':(r.ncc>=0.75?'#2A7FFF':'#FFA53C');
+    var cell=document.createElement('div');
+    var img=REALCT[(stS.T+st.t+ix)%REALCT.length];
+    cell.style.cssText='flex:1;border:1px solid '+col+';border-radius:3px;background:url(data:image/jpeg;base64,'+img+') center/cover;position:relative;min-width:0';
+    cell.innerHTML='<div style="position:absolute;left:0;right:0;bottom:0;background:rgba(13,27,42,.85);font-size:9px;padding:1px 2px;text-align:center">'+r.d+'<br><span style="color:'+col+'">'+r.ncc.toFixed(2)+'</span></div>';
+    cell.setAttribute('data-ncc', r.ncc.toFixed(3)); cell.setAttribute('data-d', r.d);
+    row.appendChild(cell);
+  });
+  d.appendChild(row); box.appendChild(d);
+}
+
 
 /* ===== ② 序列 ===== */
 function renderSer(){
@@ -544,7 +578,7 @@ function applyImages(){
     var ph=p.querySelector('.ph'); if(ph){ ph.style.display='none'; }
     var lb=document.querySelector('#'+id+' .lab');
     if(lb){ var bs=(lb.textContent+'').split(' · 层')[0]; lb.textContent=bs+' · 层 '+((((stS[key]+st.t)%REALCT.length))+1)+'/'+REALCT.length; }
-    applyTransforms(); drawOverlays();
+    applyTransforms(); drawOverlays(); renderAllStrip();
   });
 }
 
