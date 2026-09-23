@@ -3,38 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V7.0</title>
+<title>临床阅片器 · 时间轴导航原型 V7.1</title>
 <style>
 :root{
-  --brand:#00A398; --brand-d:#0B8377; --blue:#0070C0; --ink:#22303C; --gray:#7A8B99;
-  --line:#C8D4DC; --dash:#A9BAC6; --bg:#F5FBFB; --card:#FFFFFF; --warn:#C97B18;
+  --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
+  --line:#24344D; --dash:#3A4E6B; --bg:#0A192F; --card:#112233; --warn:#FFA53C;
+  --gold:#FFD700; --deep:#0D1B2A;
 }
 *{box-sizing:border-box}
-body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:var(--ink);background:#EDF3F5}
+body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:var(--ink);background:#0A192F}
 .wrap{min-width:1180px}
 /* 顶栏 */
-.top{display:flex;align-items:center;gap:14px;padding:9px 16px;background:#fff;border-bottom:2px solid var(--brand)}
+.top{display:flex;align-items:center;gap:14px;padding:9px 16px;background:#112233;border-bottom:2px solid var(--brand)}
 .top h1{font-size:15px;margin:0;color:var(--brand-d);letter-spacing:.3px}
 .tag{font-size:11px;padding:2px 8px;border:1px dashed var(--dash);border-radius:10px;color:var(--gray)}
 .spacer{flex:1}
 /* 时间轴 */
-.tl-band{background:#fff;border-bottom:1px solid var(--line);padding:12px 16px 6px}
+.tl-band{background:#0D1B2A;border-bottom:1px solid var(--line);padding:12px 16px 6px}
 .tl-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .tl-head b{color:var(--brand-d);font-size:12.5px}
 .tl{position:relative;display:flex;align-items:flex-start;gap:0;padding:6px 4px 2px}
 .tl::before{content:"";position:absolute;left:6px;right:6px;top:22px;height:2px;background:var(--line)}
 .tlnode{position:relative;flex:1;text-align:center;cursor:pointer;padding:0 2px}
-.tlnode .dot{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--dash);margin:9px auto 8px;position:relative;z-index:1;transition:.15s}
+.tlnode .dot{width:14px;height:14px;border-radius:50%;background:#0A192F;border:2px solid var(--dash);margin:9px auto 8px;position:relative;z-index:1;transition:.15s}
 .tlnode.cur .dot{border-color:var(--brand);background:var(--brand);box-shadow:0 0 0 4px rgba(0,163,152,.18)}
-.tlnode.inrange .dot{border-color:var(--blue);background:#CFE3F5}
+.tlnode.inrange .dot{border-color:var(--blue);background:#1B3350}
 .tlnode .d{font-size:12px;font-weight:700}
 .tlnode .m{font-size:10.5px;color:var(--gray)}
 .tlnode .badge{display:inline-block;font-size:9.5px;padding:0 5px;border:1px solid var(--dash);border-radius:8px;color:var(--gray);margin-top:3px}
 .tlnode.cur .badge{border-color:var(--brand);color:var(--brand-d)}
 .tlnode:hover .dot{border-color:var(--brand-d)}
 /* 四区 */
-.grid{display:grid;grid-template-columns:236px 1fr 268px;gap:10px;padding:10px 16px 14px;align-items:start}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:8px}
+.grid{display:grid;grid-template-columns:212px 1fr 246px;gap:10px;padding:10px 16px 14px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:6px}
 .panel>h3{margin:0;padding:8px 11px;font-size:12.5px;color:var(--brand-d);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px}
 .panel>h3 .n{width:17px;height:17px;border-radius:50%;background:var(--brand);color:#fff;font-size:10.5px;display:grid;place-items:center;font-weight:700}
 .panel .bd{padding:9px 11px}
@@ -42,10 +43,10 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 /* 序列 */
 .grp{font-size:11px;color:var(--gray);margin:7px 0 4px;border-bottom:1px dashed var(--line);padding-bottom:2px}
 .ser{display:flex;gap:8px;align-items:center;padding:5px 6px;border:1px solid transparent;border-radius:6px;cursor:pointer}
-.ser:hover{background:var(--bg)}
-.ser.on{border-color:var(--brand);background:#E8F7F5}
+.ser:hover{background:#16273D}
+.ser.on{border-color:var(--brand);background:#1B3350}
 .thumb{width:44px;height:34px;border:1px solid var(--dash);border-radius:4px;background:
-  repeating-linear-gradient(135deg,#DDE6EA 0 6px,#EAF1F3 6px 12px);flex:none;position:relative}
+  repeating-linear-gradient(135deg,#1B3350 0 6px,#16273D 6px 12px);flex:none;position:relative}
 .thumb::after{content:"影像";position:absolute;inset:0;display:grid;place-items:center;font-size:8.5px;color:var(--gray)}
 .ser .nm{font-size:11.5px;line-height:1.3}
 .ser .nm i{font-style:normal;color:var(--gray);font-size:10px;display:block}
@@ -58,39 +59,39 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .tlnode .d{font-size:13px}
 /* 影像区 */
 .imgwrap{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.pane{background-size:cover;background-position:center;background-repeat:no-repeat;border:1px solid var(--line);border-radius:6px;background:#fff;overflow:hidden;position:relative;height:214px}
+.pane{background-size:contain;background-position:center;background-repeat:no-repeat;background-color:#000;border:1px solid var(--line);border-radius:4px;background:#000;overflow:hidden;position:relative;height:214px}
 .pane .ph{position:absolute;inset:0;background:
-  radial-gradient(circle at 50% 45%,#F2F7F8 0 22%,#E4EDEF 22% 42%,#D6E2E6 42% 58%,#C9D8DD 58% 100%);
+  radial-gradient(circle at 50% 45%,#16273D 0 22%,#132234 22% 42%,#101D2D 42% 58%,#0D1826 58% 100%);
   display:grid;place-items:center;color:#5B7280;font-size:11.5px}
-.pane .lab{position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);border-top:1px solid var(--line);font-size:10.5px;padding:3px 7px;color:var(--gray)}
+.pane .lab{position:absolute;left:0;right:0;bottom:0;background:rgba(13,27,42,.88);border-top:1px solid var(--line);font-size:10.5px;padding:3px 7px;color:var(--gray)}
 .pane.mode-fuse .ph{opacity:.55}
 .pane.mode-diff .ph{background:linear-gradient(90deg,#DCE6EA,#F0DFD0 45%,#D8E6DC 100%)}
 .pane.blink .ph{animation:bl 1s steps(2,end) infinite}
 @keyframes bl{50%{opacity:.35}}
 .lvlbar{display:flex;gap:7px;margin-top:9px}
-.lvl{flex:1;border:1px solid var(--line);border-radius:7px;padding:7px 9px;cursor:pointer;background:#fff;text-align:center}
+.lvl{flex:1;border:1px solid var(--line);border-radius:6px;padding:7px 9px;cursor:pointer;background:#16273D;text-align:center}
 .lvl:hover{border-color:var(--brand)}
-.lvl.on{border-color:var(--brand);background:#E8F7F5;box-shadow:inset 0 0 0 1px var(--brand)}
+.lvl.on{border-color:var(--brand);background:#1B3350;box-shadow:inset 0 0 0 1px var(--brand)}
 .lvl b{display:block;font-size:11.5px}
 .lvl span{font-size:9.5px;color:var(--gray)}
 .lvl.deg{opacity:.5;cursor:not-allowed}
-.panelbox{margin-top:9px;border:1px dashed var(--dash);border-radius:7px;padding:9px 11px;background:#FBFEFE}
+.panelbox{margin-top:9px;border:1px dashed var(--dash);border-radius:6px;padding:9px 11px;background:#0E2137}
 .panelbox h4{margin:0 0 6px;font-size:11.5px;color:var(--brand-d)}
 .prow{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:11px}
 .prow label{width:74px;color:var(--gray)}
 .prow input[type=range]{flex:1}
 .prow .v{width:62px;text-align:right;font-variant-numeric:tabular-nums}
-.btn{font:inherit;font-size:11px;padding:4px 10px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.btn{font:inherit;font-size:11px;padding:4px 10px;border:1px solid var(--line);background:#16273D;border-radius:6px;cursor:pointer}
 .btn:hover{border-color:var(--brand)}
 .btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
 /* 分析区 */
 .tools{display:flex;flex-wrap:wrap;gap:6px}
-.tool{font-size:11px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:#fff}
-.tool.on{border-color:var(--brand);background:#E8F7F5;font-weight:700}
+.tool{font-size:11px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:#16273D}
+.tool.on{border-color:var(--brand);background:#1B3350;font-weight:700}
 .kpi{border-top:1px dashed var(--line);margin-top:9px;padding-top:7px}
 .kpi .it{display:flex;justify-content:space-between;font-size:11px;padding:4px 5px;border-radius:5px;cursor:pointer}
-.kpi .it:hover{background:var(--bg)}
-.kpi .it.on{background:#E8F7F5;box-shadow:inset 0 0 0 1px var(--brand)}
+.kpi .it:hover{background:#16273D}
+.kpi .it.on{background:#1B3350;box-shadow:inset 0 0 0 1px var(--brand)}
 .kpi .it em{font-style:normal;color:var(--gray);font-size:10px}
 .curve{width:100%;height:56px;margin:5px 0 2px}
 /* 日志 */
@@ -101,34 +102,34 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .log .k{color:#FFD98A}
 .log .a{color:#8FD8FF}
 .tl-flex{display:flex;align-items:flex-start}
-.ptinfo{width:292px;flex:none;padding:4px 18px 8px 0;border-right:1px solid #E0E0E0}
-.ptinfo h4{margin:0 0 9px;font-size:14.5px;font-weight:700;color:var(--ink)}
-.ptinfo .r{font-size:12.5px;line-height:1.75;color:#000}
-.ptinfo .r span{color:#666}
+.ptinfo{width:292px;flex:none;padding:4px 18px 8px 0;border-right:1px solid #24344D}
+.ptinfo h4{margin:0 0 9px;font-size:14.5px;font-weight:700;color:var(--brand-d)}
+.ptinfo .r{font-size:12.5px;line-height:1.75;color:#E6EEF8}
+.ptinfo .r span{color:#8FA3BF}
 .tl-right{flex:1;min-width:0;padding-left:18px}
-.chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:11px;color:var(--ink);background:#FBFEFE}
+.chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:11px;color:var(--ink);background:#16273D}
 .chip.ok{border-color:var(--brand);color:var(--brand-d)}
 .chip.warn{border-color:var(--warn);color:var(--warn)}
 .seg{display:flex;gap:4px}
-.sg{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:5px;cursor:pointer;background:#fff}
-.sg.on{border-color:var(--brand);background:#E8F7F5;font-weight:700}
+.sg{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:5px;cursor:pointer;background:#16273D}
+.sg.on{border-color:var(--brand);background:#1B3350;font-weight:700}
 .iw{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-left:1px solid var(--line)}
 .iv{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding-bottom:7px}
-.ivt{display:flex;align-items:center;gap:6px;background:#F5F7FA;border-bottom:1px solid var(--line);padding:5px 9px;font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:7px}
-.iv .pane{margin:0 9px;height:170px}
+.ivt{display:flex;align-items:center;gap:6px;background:#16273D;border-bottom:1px solid var(--line);padding:5px 9px;font-size:11.5px;font-weight:700;color:var(--ink);margin-bottom:7px}
+.iv .pane{margin:0 9px;height:300px}
 .iv .lvlbar{margin:8px 9px 0}
 .iv .panelbox{margin:0 9px;border-style:solid}
-.m3{font-size:10px;padding:1px 6px;border:1px solid var(--line);border-radius:3px;background:#fff;font-weight:400;color:var(--gray)}
-.m3.on{border-color:var(--brand);background:#E8F7F5;font-weight:700;color:var(--brand-d)}
+.m3{font-size:10px;padding:1px 6px;border:1px solid var(--line);border-radius:3px;background:#0E2137;font-weight:400;color:var(--gray)}
+.m3.on{border-color:var(--brand);background:#1B3350;font-weight:700;color:var(--brand-d)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 10px;align-items:start}
 .mtx{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px}
 .mrow{display:flex;justify-content:space-between;font-size:11px;border-bottom:1px dashed var(--line);padding:3px 0}
 .mrow b{color:var(--brand-d)}
-.les{display:flex;gap:7px;align-items:center;padding:5px 6px;border:1px solid var(--line);border-radius:6px;margin-bottom:5px;cursor:pointer;font-size:11px}
-.les.on{border-color:var(--brand);background:#E8F7F5}
+.les{display:flex;gap:7px;align-items:center;padding:5px 6px;border:1px solid var(--line);border-radius:6px;margin-bottom:5px;cursor:pointer;font-size:11px;background:#16273D}
+.les.on{border-color:var(--brand);background:#1B3350}
 .les .dot2{width:9px;height:9px;border-radius:50%;background:var(--gold,#00B0F0);flex:none}
-.rep{font-size:11px;line-height:1.6;color:var(--ink)}
-.rep mark{background:#FFF3C4;border-bottom:1px solid var(--warn);cursor:pointer;padding:0 2px}
+.rep{font-size:11px;line-height:1.7;color:var(--ink)}
+.rep mark{background:#3A2E00;border-bottom:1px solid var(--gold);color:var(--gold);cursor:pointer;padding:0 2px}
 .foot2{font-size:10.5px;color:var(--gray);padding:6px 11px 9px}
 .note{margin:2px 16px 74px;font-size:10.5px;color:var(--gray);border-left:3px solid var(--brand);padding-left:9px}
 </style>
@@ -137,8 +138,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V7.0</h1>
-    <span class="tag">V7.0 · 影像为真实 CT（DICOM 导出）· 对齐与量化数值为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V7.1</h1>
+    <span class="tag">V7.1 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -162,7 +163,7 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
     <div class="tl" id="tl"></div>
   </div></div></div>
 
-  <div class="grid">
+  <div class="grid" style="padding-top:8px">
     <!-- ② 序列 -->
     <div class="panel">
       <h3><span class="n">2</span>序列导航<span class="spacer"></span><span class="tag" id="serHost">26.09</span></h3>
@@ -337,8 +338,9 @@ function renderLv(){
     b.onclick=function(){
       if(deg){ log('点击 '+L.k,'⚠ 已降级：本次检查缺增强序列，密度类对比口径受限，需医生确认后使用'); return; }
       st.lvl=L.k;
-      log('点击 '+L.k, '打开配准面板并定位到该粒度（同一面板切粒度，非独立弹窗）｜展示该级当前结果与残差'+
-          '｜不覆盖上一级结果');
+      var r=regRun(L.k);
+      log('点击 '+L.k, r ? ('真实配准已计算：NCC='+r.ncc.toFixed(3)+' ｜ 最佳位移 dx='+r.dxmm.toFixed(1)+'mm dy='+r.dymm.toFixed(1)+'mm ｜ 残余 '+r.residual.toFixed(1)+' ｜ 不覆盖上一级结果')
+                       : '打开配准面板（算法未就绪）');
       renderAll();
     };
     bar.appendChild(b);
@@ -349,7 +351,11 @@ function renderLv(){
     c.innerHTML='<h4 id="cfgTitle">三级对齐：请选择一级</h4><div style="font-size:11px;color:var(--gray)">① 整体图像对齐（全局刚性：平移+旋转）→ ② 解剖结构对齐（肺叶/气管/膈肌，可分区）→ ③ 病灶对齐（病灶边界与中心）</div>';
     return;
   }
+  var R=REG.out[st.lvl];
   var cfg=LVCFG[st.lvl]||[], html='<h4>'+st.lvl+' · 手动微调（自动结果已给出，此处为微调）</h4>';
+  html+='<div style="font-size:10.5px;color:var(--gray);margin-bottom:6px">真实算法结果：'
+       + (R? ('NCC '+R.ncc.toFixed(3)+' ｜ 位移 '+R.dxmm.toFixed(1)+'/'+R.dymm.toFixed(1)+' mm ｜ 残余 '+R.residual.toFixed(1))
+           : '尚未计算（点击该级名称即可运行）') + '</div>';
   cfg.forEach(function(row,i){
     html+='<div class="prow"><label>'+row[0]+'</label><input type="range" min="'+row[1]+'" max="'+row[2]+
       '" step="0.1" value="'+row[3]+'" data-i="'+i+'"><span class="v" id="lv'+i+'">'+row[3].toFixed(1)+'</span></div>';
@@ -360,8 +366,18 @@ function renderLv(){
   c.innerHTML=html;
   c.querySelectorAll('input[type=range]').forEach(function(r){
     r.oninput=function(){ document.getElementById('lv'+r.dataset.i).textContent=(+r.value).toFixed(1); };
-    r.onchange=function(){ log(st.lvl+' 人工微调', '参数 '+cfg[r.dataset.i][0]+' = '+(+r.value).toFixed(1)+
-      '｜仅本级别结果变化，上一级结果保留｜确认前不影响对比结论'); };
+    r.onchange=function(){
+      var R2=REG.out[st.lvl];
+      var msg='参数 '+cfg[r.dataset.i][0]+' = '+(+r.value).toFixed(1);
+      if(R2){                                                            /* 人工位移叠加后重算残余（真算） */
+        var addDx=(cfg[r.dataset.i][0].indexOf('X')>=0)? Math.round(+r.value*(128/400)) : 0;
+        var addDy=(cfg[r.dataset.i][0].indexOf('Y')>=0)? Math.round(+r.value*(128/400)) : 0;
+        var mask=(st.lvl==='解剖结构对齐')?bodyMask(GC[R2.kA]):(st.lvl==='病灶对齐'?lesMask(GC[R2.kA],-0.39,0.19):null);
+        var v2=ncc(GC[R2.kA],GC[R2.kB],R2.dx+addDx,R2.dy+addDy,mask);
+        msg+=' ｜ 叠加人工位移后 NCC='+v2.toFixed(3)+'（自动结果 '+(R2.ncc).toFixed(3)+'）';
+      }
+      log(st.lvl+' 人工微调', msg+' ｜ 仅本级别结果变化，上一级结果保留');
+    };
   });
   $('#okBtn').onclick=function(){ log('确认 '+st.lvl,'该级结果写入本次会话记录｜联动：对比视图按新位置刷新｜可随时回到自动结果'); };
   $('#autoBtn').onclick=function(){ log('回到自动结果'+'（'+st.lvl+'）','清除本级人工微调，恢复算法初始值'); };
@@ -459,10 +475,99 @@ function applyImages(){
     var p=document.getElementById(id); if(!p) return;
     var img=rcPick(st.t*2+ix*2+2);
     p.style.backgroundImage='url(data:image/jpeg;base64,'+img+')';
+    p.style.backgroundSize='contain'; p.style.backgroundPosition='center'; p.style.backgroundRepeat='no-repeat';
     var ph=p.querySelector('.ph'); if(ph){ ph.style.display='none'; }
   });
 }
+
+/* ===== 真实配准算法（在真实 CT 像素上跑，非演示数值）=====
+   原理：把两张真实切片统一降采样到 128×128 灰度场 → 以归一化互相关(NCC)为目标函数
+         → 由粗到细搜索刚体平移(dx,dy) → 取 NCC 最大者为最优对齐；残余失配按最佳位移处
+         的灰度差均值估计（mm 由 400mm 视野折算）。三级对齐共用同一引擎，差别在搜索范围与
+         掩膜：① 整体=全图 ② 解剖=体内区域（剔除体外空气）③ 病灶=病灶锚点局部窗口。   */
+var GC = {}, REG = { ready:false, base:null, cur:null, out:{} };
+function gcIndex(k){ return ((k % REALCT.length) + REALCT.length) % REALCT.length; }
+function loadGray(){
+  REALCT.forEach(function(b64, i){
+    var im = new Image();
+    im.onload = function(){
+      var c = document.createElement('canvas'); c.width = 128; c.height = 128;
+      var g = c.getContext('2d'); g.drawImage(im, 0, 0, 128, 128);
+      var d = g.getImageData(0, 0, 128, 128).data, a = new Float32Array(128 * 128);
+      for (var k = 0; k < a.length; k++) a[k] = (d[k*4]*0.299 + d[k*4+1]*0.587 + d[k*4+2]*0.114) / 255;
+      GC[i] = a;
+      REG.ready = Object.keys(GC).length === REALCT.length;
+    };
+    im.src = 'data:image/jpeg;base64,' + b64;
+  });
+}
+function bodyMask(A){
+  var m = new Uint8Array(128 * 128), s = 0;
+  for (var i = 0; i < A.length; i++) s += A[i];
+  var mean = s / A.length;
+  for (var y = 6; y < 122; y++) for (var x = 6; x < 122; x++){
+    if (A[y*128+x] > mean * 0.55) m[y*128+x] = 1;      /* 剔除体外空气（低于均值 55%） */
+  }
+  return m;
+}
+function ncc(A, B, dx, dy, mask){
+  var n = 0, sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0;
+  for (var y = 6; y < 122; y++) for (var x = 6; x < 122; x++){
+    var i = y*128 + x;
+    if (mask && !mask[i]) continue;
+    var ax = x + dx, by = y + dy;
+    if (ax < 0 || ax > 127 || by < 0 || by > 127) continue;
+    var a = A[i], b = B[by*128 + ax];
+    n++; sa += a; sb += b; saa += a*a; sbb += b*b; sab += a*b;
+  }
+  if (n < 80) return -1;
+  var cov = sab/n - (sa/n)*(sb/n), va = saa/n - (sa/n)*(sa/n), vb = sbb/n - (sb/n)*(sb/n);
+  if (va <= 1e-9 || vb <= 1e-9) return -1;
+  return cov / Math.sqrt(va * vb);
+}
+function search(A, B, mask, rng, step){
+  var best = { dx:0, dy:0, ncc:ncc(A, B, 0, 0, mask) };
+  for (var dy = -rng; dy <= rng; dy += step) for (var dx = -rng; dx <= rng; dx += step){
+    var v = ncc(A, B, dx, dy, mask);
+    if (v > best.ncc){ best = { dx:dx, dy:dy, ncc:v }; }
+  }
+  return best;
+}
+function lesMask(A, lu, lv){
+  var m = new Uint8Array(128*128), cx = Math.round((lu+1)/2*127), cy = Math.round((lv+1)/2*127), r = 20;
+  for (var y = cy-r; y <= cy+r; y++) for (var x = cx-r; x <= cx+r; x++){
+    if (x>=0 && x<128 && y>=0 && y<128) m[y*128+x] = 1;
+  }
+  return m;
+}
+function regRun(level){
+  if (!REG.ready) { toast2('真实影像尚未加载完成，请稍候再试'); return null; }
+  var kA = gcIndex(st.t + 1), kB = gcIndex(st.t + 3);       /* 本期 vs 上一次（用不同真实切片代表两个时点） */
+  var A = GC[kA], B = GC[kB];
+  if (!A || !B) return null;
+  var mask = null;
+  if (level === '解剖结构对齐') mask = bodyMask(A);
+  if (level === '病灶对齐')  mask = lesMask(A, -0.39, 0.19);
+  var c = search(A, B, mask, 10, 2);
+  var f = search(A, B, mask, 2, 1);
+  var best = (f.ncc > c.ncc) ? f : c;
+  var mm = 400 / 128;                                        /* 400mm 视野折算 */
+  var res = 0, cnt = 0;
+  for (var y = 6; y < 122; y++) for (var x = 6; x < 122; x++){
+    var i = y*128+x; if (mask && !mask[i]) continue;
+    var ax = x + best.dx, by = y + best.dy; if (ax<0||ax>127||by<0||by>127) continue;
+    res += Math.abs(A[i] - B[by*128+ax]); cnt++;
+  }
+  var residual = cnt ? res/cnt*100 : 0;                      /* 平均绝对差 → 百分制残余 */
+  var out = { level:level, ncc:best.ncc, dx:best.dx, dy:best.dy,
+              dxmm:best.dx*mm, dymm:best.dy*mm, residual:residual, kA:kA, kB:kB };
+  REG.out[level] = out;
+  REG.cur = out;
+  return out;
+}
+function toast2(t){ log('提示', t); }
 function renderAll(){ applyImages(); renderTL(); renderSer(); renderLv(); renderTools(); renderKpi(); renderLes(); renderRep(); renderImg(); }
+loadGray();
 renderAll();
 setTimeout(function(){ log('页面初始化','线框图已就绪：请依次点击 时间轴 → 序列 → 三级对齐 → 对比工具 → 看板，观察右下角联动日志'); }, 260);
 </script>
