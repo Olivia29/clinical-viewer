@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V7.6</title>
+<title>临床阅片器 · 时间轴导航原型 V7.7</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -158,8 +158,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V7.6</h1>
-    <span class="tag">V7.6 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V7.7</h1>
+    <span class="tag">V7.7 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -225,10 +225,11 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
     <div class="panel">
       <h3><span class="n">4</span>对比分析工具 · 数据分析看板</h3>
       <div class="bd">
-        <div class="tools" id="tools"></div>
         <div style="font-size:10.5px;color:var(--gray);margin:9px 0 3px">显示模式（影像呈现方式）</div>
-        <div class="tools" id="tools2"></div>
-        <div style="font-size:12px;font-weight:700;color:var(--brand-d);margin:11px 0 1px">数据分析看板</div>
+        <div class="tools" id="tools"></div>
+      </div>
+      <div class="foot2"><div style="font-size:12px;font-weight:700;color:var(--brand-d);margin:11px 0 4px">数据分析看板</div>
+        <div class="tools" id="tools2" style="margin-bottom:6px"></div>
         <div class="kpi">
           <div class="it" data-kpi="体积"><span>病灶体积（cm³）</span><em id="v1">4.05</em><svg class="spark" data-spark="体积" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
           <div class="it" data-kpi="面积"><span>病灶面积（mm²）</span><em id="v2">312</em><svg class="spark" data-spark="面积" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
@@ -420,27 +421,20 @@ function hasEnhance(){ return EX[st.t].s.some(function(x){return /增强/.test(x
 
 /* ===== ④ 对比工具 + 看板 ===== */
 function renderTools(){
-  var h = $('#tools'); h.innerHTML = '';
-  var MCOL = { '体积':'#2A7FFF', '面积':'#00C896', '密度':'#9B6BFF', '一致性':'#FFA53C' };
-  ['体积','面积','密度','一致性'].forEach(function(k){
-    var prefs = (st.kpi === k) ? k : (st.kpi || '体积');
-    var b = el('div', 'tool' + (st.kpi === k ? ' on' : ''),
-      '<span class="dot3" style="background:' + MCOL[k] + '"></span>' + k);
-    b.onclick = function(){
-      st.kpi = k;
-      log('点击对比分析工具 ' + k,
-        '数据分析看板切到【' + k + '】趋势曲线（Y 轴单位 ' + MDATA[k].u + '）+ 影像图上叠加该指标标注（' + mTxt(k, st.t) + '）');
-      renderAll();
-    };
+  var h=$('#tools'); h.innerHTML='';
+  ['并排','叠加','差值图','闪烁','时间电影'].forEach(function(t){
+    var b=el('div','tool sm'+(st.tool===t?' on':''),t);
+    b.onclick=function(){ st.tool=t; applyCompare(); log('显示模式 '+t,'影像区图像已按该模式呈现'); renderTools(); };
     h.appendChild(b);
   });
-  var h2 = document.getElementById('tools2');
-  if (h2){
-    h2.innerHTML = '';
-    ['并排','叠加','差值图','闪烁','时间电影'].forEach(function(t){
-      var b = el('div', 'tool sm' + (st.tool === t ? ' on' : ''), t);
-      b.onclick = function(){ st.tool = t; applyCompare();
-        log('显示模式 ' + t, '影像区图像已按该模式呈现（并排/叠加/差值/闪烁/电影）'); renderTools(); };
+  var h2=document.getElementById('tools2');
+  if(h2){ h2.innerHTML='';
+    var MCOL={'体积':'#2A7FFF','面积':'#00C896','密度':'#9B6BFF','一致性':'#FFA53C'};
+    ['体积','面积','密度','一致性'].forEach(function(k){
+      var b=el('div','tool'+(st.kpi===k?' on':''),'<span class="dot3" style="background:'+MCOL[k]+'"></span>'+k);
+      b.onclick=function(){ st.kpi=k;
+        log('选择指标 '+k,'曲线图纵轴切换为 '+k+'（'+MDATA[k].u+'），横轴为随访时间正序 '+EX[EX.length-1].d+' → '+EX[0].d+'｜影像上叠加该指标标注（'+mTxt(k,st.t)+'）');
+        renderAll(); };
       h2.appendChild(b);
     });
   }
@@ -456,53 +450,32 @@ function sparkPath(vals, w, h){
 }
 function renderKpi(){
   document.querySelectorAll('.it').forEach(function(it){
-    var k = it.dataset.kpi;
-    it.classList.toggle('on', st.kpi === k);
-    var sp = it.querySelector('[data-spark]');
-    if (sp){ sp.innerHTML = '<path d="' + sparkPath(MDATA[k].v, 60, 18) + '" fill="none" stroke="'
-      + (st.kpi === k ? '#2A7FFF' : '#3A5A80') + '" stroke-width="1.4"/>'; }
-    var em = it.querySelector('em'); if (em) em.textContent = mVal(k, st.t);
-    it.onclick = function(){
-      st.kpi = k;
-      log('点击看板 ' + k, '主趋势图切到【' + k + '】并在图上叠加该指标标注（' + mTxt(k, st.t) + '）');
-      renderAll();
-    };
+    var k=it.dataset.kpi; it.classList.toggle('on',st.kpi===k);
+    var sp=it.querySelector('[data-spark]');
+    if(sp){ sp.innerHTML='<path d="'+sparkPath(MDATA[k].v.slice().reverse(),60,18)+'" fill="none" stroke="'+(st.kpi===k?'#2A7FFF':'#3A5A80')+'" stroke-width="1.4"/>'; }
+    var em=it.querySelector('em'); if(em) em.textContent=mVal(k,st.t);
+    it.onclick=function(){ st.kpi=k; log('点击指标行 '+k,'曲线图切到【'+k+'】（'+MDATA[k].u+'）+ 影像上叠加该指标标注（'+mTxt(k,st.t)+'）'); renderAll(); };
   });
-  /* 主趋势图：带 Y 轴名称/刻度 与 X 轴日期的折线图（参考流程图样式） */
-  var k = st.kpi || '体积', v = MDATA[k].v, W = 252, H = 98;
-  var mn = Math.min.apply(null, v), mx = Math.max.apply(null, v);
-  if (mn === mx){ mn -= 1; mx += 1; }
-  var padL = 36, padR = 8, padT = 12, padB = 20, iw = W - padL - padR, ih = H - padT - padB;
-  var X = function(i){ return padL + i * (iw / (v.length - 1)); };
-  var Y = function(val){ return padT + ih - (val - mn) / (mx - mn) * ih; };
-  var h = '<text class="ax" x="2" y="' + (padT + 5) + '">' + k + ' (' + MDATA[k].u + ')</text>';
-  for (var t = 0; t <= 4; t++){
-    var vv = mn + (mx - mn) * t / 4, yy = Y(vv);
-    h += '<line x1="' + padL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + yy.toFixed(1)
-       + '" stroke="#24344D" stroke-width="0.6"/>';
-    h += '<text class="ax" x="' + (padL - 3) + '" y="' + (yy + 3).toFixed(1) + '" text-anchor="end">'
-       + (vv < 10 ? vv.toFixed(1) : Math.round(vv)) + '</text>';
+  var k=st.kpi||'体积', v=MDATA[k].v, W=252, H=98, N=v.length, seq=[];
+  for(var j=0;j<N;j++) seq.push({ i:N-1-j, val:v[N-1-j], lab:EX[N-1-j].d });     /* 正序：早 → 新 */
+  var mn=Math.min.apply(null,v), mx=Math.max.apply(null,v); if(mn===mx){mn-=1;mx+=1;}
+  var padL=36,padR=8,padT=12,padB=20,iw=W-padL-padR,ih=H-padT-padB;
+  var X=function(j){return padL+j*(iw/(N-1));}, Y=function(val){return padT+ih-(val-mn)/(mx-mn)*ih;};
+  var h='<text class="ax" x="2" y="'+(padT+5)+'">'+k+' ('+MDATA[k].u+')</text>';
+  for(var t=0;t<=4;t++){ var vv=mn+(mx-mn)*t/4, yy=Y(vv);
+    h+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#24344D" stroke-width="0.6"/>';
+    h+='<text class="ax" x="'+(padL-3)+'" y="'+(yy+3).toFixed(1)+'" text-anchor="end">'+(vv<10?vv.toFixed(1):Math.round(vv))+'</text>';
   }
-  var d = 'M' + X(0).toFixed(1) + ' ' + Y(v[0]).toFixed(1);
-  for (var i = 1; i < v.length; i++) d += ' L' + X(i).toFixed(1) + ' ' + Y(v[i]).toFixed(1);
-  h += '<path d="' + d + '" fill="none" stroke="#2A7FFF" stroke-width="2"/>';
-  h += '<path d="' + d + ' L' + X(v.length - 1).toFixed(1) + ' ' + (padT + ih) + ' L' + X(0).toFixed(1) + ' '
-     + (padT + ih) + ' Z" fill="rgba(42,127,255,.10)" stroke="none"/>';
-  v.forEach(function(val, i){
-    var on = (i === st.t);
-    h += '<circle class="pt" data-ti="' + i + '" cx="' + X(i).toFixed(1) + '" cy="' + Y(val).toFixed(1)
-       + '" r="' + (on ? 4.4 : 3) + '" fill="' + (on ? '#FFD700' : '#2A7FFF') + '"/>';
-    h += '<text class="ax" x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + EX[i].d + '</text>';
+  var d=''; seq.forEach(function(p,j){ d+=(j?' L':'M')+X(j).toFixed(1)+' '+Y(p.val).toFixed(1); });
+  h+='<path d="'+d+'" fill="none" stroke="#2A7FFF" stroke-width="2"/>';
+  h+='<path d="'+d+' L'+X(N-1).toFixed(1)+' '+(padT+ih)+' L'+X(0).toFixed(1)+' '+(padT+ih)+' Z" fill="rgba(42,127,255,.10)" stroke="none"/>';
+  seq.forEach(function(p,j){ var on=(p.i===st.t);
+    h+='<circle class="pt" data-ti="'+p.i+'" cx="'+X(j).toFixed(1)+'" cy="'+Y(p.val).toFixed(1)+'" r="'+(on?4.4:3)+'" fill="'+(on?'#FFD700':'#2A7FFF')+'"/>';
+    h+='<text class="ax" x="'+X(j).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+p.lab+'</text>';
   });
-  var cv = $('#curve'); cv.innerHTML = h;
-  cv.querySelectorAll('circle.pt').forEach(function(c){
-    c.onclick = function(){
-      var ti = +c.dataset.ti; st.t = ti;
-      log('点击趋势图数据点（' + k + ' · ' + EX[ti].d + '）',
-        '时间轴与影像已跳到 ' + EX[ti].d + '｜该指标值 ' + mTxt(k, ti) + '｜图上标注同步（反向联动）');
-      renderAll();
-    };
-  });
+  var cv=$('#curve'); cv.innerHTML=h;
+  cv.querySelectorAll('circle.pt').forEach(function(c){ c.onclick=function(){ var ti=+c.dataset.ti; st.t=ti;
+    log('点击曲线数据点（'+k+' · '+EX[ti].d+'）','时间轴与影像已跳到 '+EX[ti].d+'｜该指标值 '+mTxt(k,ti)+'｜图上标注同步'); renderAll(); }; });
 }
 function renderImg(){
   var e=EX[st.t], p=EX[cmpIdx()];   /* 倒序：对比期在上一次（下标更大） */
@@ -554,10 +527,15 @@ function applyImages(){
   var a=['paneA','paneT','paneS'];
   a.forEach(function(id,ix){
     var p=document.getElementById(id); if(!p) return;
-    var img=rcPick(st.t*2+ix*2+2);
+    var key=['A','T','S'][ix];
+    var img=REALCT[(((stS[key]+st.t)%REALCT.length)+REALCT.length)%REALCT.length];
+    window.__k=key;
     var im=document.getElementById(['imgA','imgT','imgS'][ix]);
     if(im){ im.style.backgroundImage='url(data:image/jpeg;base64,'+img+')'; im.style.backgroundSize='contain'; }
-    var ph=p.querySelector('.ph'); if(ph){ ph.style.display='none'; } applyTransforms(); drawOverlays();
+    var ph=p.querySelector('.ph'); if(ph){ ph.style.display='none'; }
+    var lb=document.querySelector('#'+id+' .lab');
+    if(lb){ var bs=(lb.textContent+'').split(' · 层')[0]; lb.textContent=bs+' · 层 '+((((stS[key]+st.t)%REALCT.length))+1)+'/'+REALCT.length; }
+    applyTransforms(); drawOverlays();
   });
 }
 
@@ -652,6 +630,7 @@ function toast2(t){ log('提示', t); }
 var LES_ANCHOR = { 'F-001':{u:-0.39,v:0.19}, 'F-002':{u:0.19,v:0.26}, 'F-003':{u:0.27,v:0.33} };
 var LES_VAL = { 'F-001':{vol:'4.05',dia:'19.8',hu:'38'}, 'F-002':{vol:'1.12',dia:'11.4',hu:'-42'}, 'F-003':{vol:'—',dia:'—',hu:'—'} };
 var st2 = { tx:0, ty:0, rot:0, sc:0 };
+var stS = { A:3, T:2, S:1 };
 /* 四指标 × 5 个时点（索引与 EX 对齐：0=26.09 最新 → 4=24.08 最早）；演示数据 */
 var MDATA = {
   '体积':   { u:'cm³',  v:[4.05, 4.80, 5.10, 5.05, 4.62] },
@@ -720,8 +699,23 @@ function startMovie(){
   }, 1400);
 }
 function clearMovie(){ if (movieTimer){ clearInterval(movieTimer); movieTimer = null; } }
+function bindWheel(){
+  ['paneA','paneT','paneS'].forEach(function(id){
+    var p=document.getElementById(id); if(!p||p.__wh) return; p.__wh=1;
+    p.style.cursor='ns-resize';
+    p.addEventListener('wheel',function(ev){
+      ev.preventDefault();
+      var key=id.slice(-1), kk=['A','T','S'].indexOf(key)<0?'A':key;
+      var step=(ev.deltaY>0?1:-1);
+      stS[kk]=((stS[kk]+step)+REALCT.length)%REALCT.length;
+      applyImages();
+      log('滚动翻层（'+id+'）','切换至第 '+(((stS[kk]+st.t)%REALCT.length)+1)+'/'+REALCT.length+' 层真实切片');
+    },{passive:false});
+  });
+}
 function renderAll(){ applyImages(); renderTL(); renderSer(); renderLv(); renderTools(); renderKpi(); renderLes(); renderRep(); renderImg(); }
 loadGray();
+bindWheel();
 renderAll();
 setTimeout(function(){ log('页面初始化','线框图已就绪：请依次点击 时间轴 → 序列 → 三级对齐 → 对比工具 → 看板，观察右下角联动日志'); }, 260);
 </script>
