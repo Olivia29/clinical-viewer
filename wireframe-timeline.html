@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>临床阅片器 · 时间轴导航与联动 线框图 V1</title>
+<style>
+:root{
+  --brand:#00A398; --brand-d:#0B8377; --blue:#0070C0; --ink:#22303C; --gray:#7A8B99;
+  --line:#C8D4DC; --dash:#A9BAC6; --bg:#F5FBFB; --card:#FFFFFF; --warn:#C97B18;
+}
+*{box-sizing:border-box}
+body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:var(--ink);background:#EDF3F5}
+.wrap{min-width:1180px}
+/* 顶栏 */
+.top{display:flex;align-items:center;gap:14px;padding:9px 16px;background:#fff;border-bottom:2px solid var(--brand)}
+.top h1{font-size:15px;margin:0;color:var(--brand-d);letter-spacing:.3px}
+.tag{font-size:11px;padding:2px 8px;border:1px dashed var(--dash);border-radius:10px;color:var(--gray)}
+.spacer{flex:1}
+/* 时间轴 */
+.tl-band{background:#fff;border-bottom:1px solid var(--line);padding:12px 16px 6px}
+.tl-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.tl-head b{color:var(--brand-d);font-size:12.5px}
+.tl{position:relative;display:flex;align-items:flex-start;gap:0;padding:6px 4px 2px}
+.tl::before{content:"";position:absolute;left:6px;right:6px;top:22px;height:2px;background:var(--line)}
+.tlnode{position:relative;flex:1;text-align:center;cursor:pointer;padding:0 2px}
+.tlnode .dot{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--dash);margin:9px auto 8px;position:relative;z-index:1;transition:.15s}
+.tlnode.cur .dot{border-color:var(--brand);background:var(--brand);box-shadow:0 0 0 4px rgba(0,163,152,.18)}
+.tlnode.inrange .dot{border-color:var(--blue);background:#CFE3F5}
+.tlnode .d{font-size:12px;font-weight:700}
+.tlnode .m{font-size:10.5px;color:var(--gray)}
+.tlnode .badge{display:inline-block;font-size:9.5px;padding:0 5px;border:1px solid var(--dash);border-radius:8px;color:var(--gray);margin-top:3px}
+.tlnode.cur .badge{border-color:var(--brand);color:var(--brand-d)}
+.tlnode:hover .dot{border-color:var(--brand-d)}
+/* 四区 */
+.grid{display:grid;grid-template-columns:236px 1fr 268px;gap:10px;padding:10px 16px 14px;align-items:start}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px}
+.panel>h3{margin:0;padding:8px 11px;font-size:12.5px;color:var(--brand-d);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px}
+.panel>h3 .n{width:17px;height:17px;border-radius:50%;background:var(--brand);color:#fff;font-size:10.5px;display:grid;place-items:center;font-weight:700}
+.panel .bd{padding:9px 11px}
+.hint{font-size:10.5px;color:var(--gray);padding:0 11px 8px;line-height:1.45}
+/* 序列 */
+.grp{font-size:11px;color:var(--gray);margin:7px 0 4px;border-bottom:1px dashed var(--line);padding-bottom:2px}
+.ser{display:flex;gap:8px;align-items:center;padding:5px 6px;border:1px solid transparent;border-radius:6px;cursor:pointer}
+.ser:hover{background:var(--bg)}
+.ser.on{border-color:var(--brand);background:#E8F7F5}
+.thumb{width:44px;height:34px;border:1px solid var(--dash);border-radius:4px;background:
+  repeating-linear-gradient(135deg,#DDE6EA 0 6px,#EAF1F3 6px 12px);flex:none;position:relative}
+.thumb::after{content:"影像";position:absolute;inset:0;display:grid;place-items:center;font-size:8.5px;color:var(--gray)}
+.ser .nm{font-size:11.5px;line-height:1.3}
+.ser .nm i{font-style:normal;color:var(--gray);font-size:10px;display:block}
+/* 影像区 */
+.imgwrap{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pane{border:1px solid var(--line);border-radius:6px;background:#fff;overflow:hidden;position:relative;height:214px}
+.pane .ph{position:absolute;inset:0;background:
+  radial-gradient(circle at 50% 45%,#F2F7F8 0 22%,#E4EDEF 22% 42%,#D6E2E6 42% 58%,#C9D8DD 58% 100%);
+  display:grid;place-items:center;color:#5B7280;font-size:11.5px}
+.pane .lab{position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);border-top:1px solid var(--line);font-size:10.5px;padding:3px 7px;color:var(--gray)}
+.pane.mode-fuse .ph{opacity:.55}
+.pane.mode-diff .ph{background:linear-gradient(90deg,#DCE6EA,#F0DFD0 45%,#D8E6DC 100%)}
+.pane.blink .ph{animation:bl 1s steps(2,end) infinite}
+@keyframes bl{50%{opacity:.35}}
+.lvlbar{display:flex;gap:7px;margin-top:9px}
+.lvl{flex:1;border:1px solid var(--line);border-radius:7px;padding:7px 9px;cursor:pointer;background:#fff;text-align:center}
+.lvl:hover{border-color:var(--brand)}
+.lvl.on{border-color:var(--brand);background:#E8F7F5;box-shadow:inset 0 0 0 1px var(--brand)}
+.lvl b{display:block;font-size:11.5px}
+.lvl span{font-size:9.5px;color:var(--gray)}
+.lvl.deg{opacity:.5;cursor:not-allowed}
+.panelbox{margin-top:9px;border:1px dashed var(--dash);border-radius:7px;padding:9px 11px;background:#FBFEFE}
+.panelbox h4{margin:0 0 6px;font-size:11.5px;color:var(--brand-d)}
+.prow{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:11px}
+.prow label{width:74px;color:var(--gray)}
+.prow input[type=range]{flex:1}
+.prow .v{width:62px;text-align:right;font-variant-numeric:tabular-nums}
+.btn{font:inherit;font-size:11px;padding:4px 10px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--brand)}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+/* 分析区 */
+.tools{display:flex;flex-wrap:wrap;gap:6px}
+.tool{font-size:11px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:#fff}
+.tool.on{border-color:var(--brand);background:#E8F7F5;font-weight:700}
+.kpi{border-top:1px dashed var(--line);margin-top:9px;padding-top:7px}
+.kpi .it{display:flex;justify-content:space-between;font-size:11px;padding:4px 5px;border-radius:5px;cursor:pointer}
+.kpi .it:hover{background:var(--bg)}
+.kpi .it.on{background:#E8F7F5;box-shadow:inset 0 0 0 1px var(--brand)}
+.kpi .it em{font-style:normal;color:var(--gray);font-size:10px}
+.curve{width:100%;height:56px;margin:5px 0 2px}
+/* 日志 */
+.log{position:fixed;right:14px;bottom:12px;width:396px;max-height:236px;overflow:auto;background:#12212B;color:#CFE6E3;border-radius:9px;padding:9px 11px;font:11px/1.5 Consolas,Monaco,monospace;box-shadow:0 8px 24px rgba(0,0,0,.28);z-index:50}
+.log h5{margin:0 0 5px;color:#7FE3D8;font-size:11px;display:flex;justify-content:space-between;align-items:center}
+.log h5 button{font:inherit;font-size:10px;background:transparent;border:1px solid #375564;color:#9CC7C2;border-radius:5px;cursor:pointer;padding:1px 6px}
+.log .ln{padding:2px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
+.log .k{color:#FFD98A}
+.log .a{color:#8FD8FF}
+.note{margin:2px 16px 74px;font-size:10.5px;color:var(--gray);border-left:3px solid var(--brand);padding-left:9px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <h1>临床阅片器 · 时间轴导航与联动 线框图</h1>
+    <span class="tag">线框图 · 仅表达联动逻辑 · 不含真实影像与算法</span>
+    <span class="spacer"></span>
+    <span class="tag">点击任意元素 → 右下角显示本次联动</span>
+  </div>
+
+  <!-- ① 时间轴 -->
+  <div class="tl-band">
+    <div class="tl-head"><b>① 时间轴导航</b><span class="tag">点节点＝切时点 ｜ 点「区间」＝定对比跨度</span>
+      <span class="spacer"></span>
+      <button class="btn" id="btnRange">区间：最近 2 期</button>
+    </div>
+    <div class="tl" id="tl"></div>
+  </div>
+
+  <div class="grid">
+    <!-- ② 序列 -->
+    <div class="panel">
+      <h3><span class="n">2</span>序列导航<span class="spacer"></span><span class="tag" id="serHost">26.09</span></h3>
+      <div class="bd" id="serList"></div>
+      <div class="hint">仅显示<b>当前时点</b>的序列（随时间轴收缩）。点击序列＝送入影像区并刷新三级对齐可用性。</div>
+    </div>
+
+    <!-- ③ 影像区 -->
+    <div class="panel">
+      <h3><span class="n">3</span>影像工作区 · 联动显示</h3>
+      <div class="bd">
+        <div class="imgwrap">
+          <div class="pane" id="paneA"><div class="ph">本次影像占位</div><div class="lab" id="labA">本次 26.09 · —</div></div>
+          <div class="pane" id="paneB"><div class="ph">对比影像占位</div><div class="lab" id="labB">对比 26.05 · —</div></div>
+        </div>
+        <div class="lvlbar" id="lvlbar"></div>
+        <div class="panelbox" id="cfg">
+          <h4 id="cfgTitle">三级对齐：请选择一级</h4>
+          <div style="font-size:11px;color:var(--gray)">① 整体图像对齐（全局刚性：平移+旋转）→ ② 解剖结构对齐（肺叶/气管/膈肌，可分区）→ ③ 病灶对齐（病灶边界与中心）</div>
+        </div>
+      </div>
+      <div class="hint">三级为<b>递进</b>关系：默认逐级收敛，也可任选一级进入（以上一级结果为初值）；每级结果独立记录、不覆盖上级。</div>
+    </div>
+
+    <!-- ④ 分析区 -->
+    <div class="panel">
+      <h3><span class="n">4</span>对比分析 · 数据看板</h3>
+      <div class="bd">
+        <div class="tools" id="tools"></div>
+        <div class="kpi">
+          <div class="it" data-kpi="体积"><span>病灶体积（cm³）</span><em id="v1">4.05</em></div>
+          <div class="it" data-kpi="径线"><span>最大径（mm）</span><em id="v2">19.8</em></div>
+          <div class="it" data-kpi="密度"><span>平均密度（HU）</span><em id="v3">38</em></div>
+          <div class="it" data-kpi="倍增时间"><span>倍增时间（天）</span><em id="v4">—</em></div>
+          <svg class="curve" id="curve" viewBox="0 0 240 56" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
+      <div class="hint">点看板任一项＝影像区跳到<b>该病灶 + 该时点</b>并高亮（反向联动）。</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>本页目的</b>：确认「时间轴 → 序列 → 影像 → 三级对齐 → 对比分析 → 数据看板」的联动关系与信息层级，<b>不涉及真实影像、真实算法与视觉风格</b>。
+    确认后再按此逻辑改真原型。线框元素（灰底/虚线）为占位表达，非最终样式。
+  </div>
+</div>
+
+<div class="log" id="log">
+  <h5><span>联动日志（本次点击触发了什么）</span><button id="clr">清空</button></h5>
+  <div id="logBody"></div>
+</div>
+
+<script>
+/* ===== 数据（占位，仅用于表达逻辑） ===== */
+var EX = [
+  {d:'24.08', m:'外院 CT',  tag:'既往', s:['平扫·肺窗']},
+  {d:'25.03', m:'CT 平扫',  tag:'随访1', s:['平扫·肺窗','平扫·纵隔窗']},
+  {d:'25.11', m:'CT 增强',  tag:'随访2', s:['平扫·肺窗','增强·动脉期','增强·静脉期']},
+  {d:'26.05', m:'CT 平扫',  tag:'随访3', s:['平扫·肺窗','平扫·纵隔窗']},
+  {d:'26.09', m:'CT 平扫',  tag:'随访4', s:['平扫·肺窗','平扫·纵隔窗','骨窗']}
+];
+var TOOLS = ['并排','叠加','差值图','闪烁','时间电影'];
+var LV = [
+  {k:'整体图像对齐', d:'全局刚性 · 平移+旋转'},
+  {k:'解剖结构对齐', d:'肺叶 / 气管 / 膈肌'},
+  {k:'病灶对齐',     d:'病灶边界与中心'}
+];
+var LVCFG = {
+  '整体图像对齐':[['移动 X (mm)',-8,8,0.0],['移动 Y (mm)',-8,8,0.0],['移动 Z (mm)',-12,12,0.0],['旋转 X (°)',-10,10,0.0]],
+  '解剖结构对齐':[['膈肌位移 (mm)',-20,20,3.4],['肺叶分区权重',0,100,60],['气管校正 (mm)',-6,6,0.0]],
+  '病灶对齐':    [['病灶中心 X (mm)',-10,10,0.0],['病灶中心 Y (mm)',-10,10,0.0],['边界扩张 (mm)',-3,3,0.0]]
+};
+var st = {t:4, range:2, ser:0, lvl:null, tool:'并排', kpi:null, lesion:'F-001'};
+
+/* ===== 工具 ===== */
+function $(s){return document.querySelector(s);}
+function el(tag, cls, html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
+function log(k, a){
+  var b=$('#logBody'); var n=el('div','ln');
+  n.innerHTML='<span class="k">'+k+'</span> <span class="a">→</span> '+a;
+  b.insertBefore(n, b.firstChild);
+  while(b.children.length>26) b.removeChild(b.lastChild);
+}
+$('#clr').onclick=function(){$('#logBody').innerHTML='';};
+
+/* ===== ① 时间轴 ===== */
+function renderTL(){
+  var h=$('#tl'); h.innerHTML='';
+  EX.forEach(function(e,i){
+    var n=el('div','tlnode'+(i===st.t?' cur':'')+(i>st.t-st.range&&i<=st.t?' inrange':''));
+    n.innerHTML='<div class="dot"></div><div class="d">'+e.d+'</div><div class="m">'+e.m+'</div>'+
+      '<div class="badge">'+e.tag+'</div>';
+    n.title='点击切换时点';
+    n.onclick=function(){ pickT(i); };
+    h.appendChild(n);
+  });
+}
+function pickT(i){
+  st.t=i; st.ser=0;
+  var e=EX[i];
+  log('点击时间轴 '+e.d, '左侧序列栏刷新为该时点序列（'+e.s.length+' 条）｜影像区切到本次='+e.d+
+      '｜看板区间='+EX[Math.max(0,i-st.range)].d+' ~ '+e.d+'｜三级对齐可用性重算');
+  renderAll();
+}
+$('#btnRange').onclick=function(){
+  st.range = st.range===2 ? 5 : 2;
+  log('切换对比区间', '对比跨度改为 '+(st.range===2?'最近 2 期':('全部 '+EX.length+' 期'))+'｜看板同步收缩｜当前影像窗口不变');
+  $('#btnRange').textContent='区间：'+(st.range===2?'最近 2 期':'全部 '+EX.length+' 期');
+  renderAll();
+};
+
+/* ===== ② 序列 ===== */
+function renderSer(){
+  var e=EX[st.t], h=$('#serList'); h.innerHTML='';
+  $('#serHost').textContent=e.d+' · '+e.s.length+' 序列';
+  e.s.forEach(function(sname,ix){
+    var row=el('div','ser'+(ix===st.ser?' on':''));
+    row.innerHTML='<div class="thumb"></div><div class="nm">'+sname+'<i>'+e.m+' · 1.25mm</i></div>';
+    row.onclick=function(){
+      st.ser=ix;
+      var deg = /增强/.test(sname) ? '（本序列为增强相，可参与跨序列 HU 归一化）' : '';
+      log('点击序列缩略图 '+sname, '窗口加载该序列并高亮'+deg+'｜三级对齐可用性刷新：'+
+          (e.s.some(function(x){return /增强/.test(x);}) ? '整体/解剖/病灶 均可' : '整体/解剖 可用；病灶对齐降级（本次无增强，密度对比口径受限）'));
+      renderAll();
+    };
+    h.appendChild(row);
+  });
+}
+
+/* ===== ③ 三级对齐 ===== */
+function renderLv(){
+  var bar=$('#lvlbar'); bar.innerHTML='';
+  LV.forEach(function(L,i){
+    var hasEnh = hasEnhance();
+    var deg = (L.k==='病灶对齐' && !hasEnh);
+    var b=el('div','lvl'+(st.lvl===L.k?' on':'')+(deg?' deg':''));
+    b.innerHTML='<b>'+L.k+'</b><span>'+L.d+'</span>';
+    b.onclick=function(){
+      if(deg){ log('点击 '+L.k,'⚠ 已降级：本次检查缺增强序列，密度类对比口径受限，需医生确认后使用'); return; }
+      st.lvl=L.k;
+      log('点击 '+L.k, '打开配准面板并定位到该粒度（同一面板切粒度，非独立弹窗）｜展示该级当前结果与残差'+
+          '｜不覆盖上一级结果');
+      renderAll();
+    };
+    bar.appendChild(b);
+  });
+  var c=$('#cfg');
+  if(!st.lvl){
+    $('#cfgTitle').textContent='三级对齐：请选择一级';
+    c.innerHTML='<h4 id="cfgTitle">三级对齐：请选择一级</h4><div style="font-size:11px;color:var(--gray)">① 整体图像对齐（全局刚性：平移+旋转）→ ② 解剖结构对齐（肺叶/气管/膈肌，可分区）→ ③ 病灶对齐（病灶边界与中心）</div>';
+    return;
+  }
+  var cfg=LVCFG[st.lvl]||[], html='<h4>'+st.lvl+' · 手动微调（自动结果已给出，此处为微调）</h4>';
+  cfg.forEach(function(row,i){
+    html+='<div class="prow"><label>'+row[0]+'</label><input type="range" min="'+row[1]+'" max="'+row[2]+
+      '" step="0.1" value="'+row[3]+'" data-i="'+i+'"><span class="v" id="lv'+i+'">'+row[3].toFixed(1)+'</span></div>';
+  });
+  html+='<div style="display:flex;gap:7px;margin-top:8px"><button class="btn pri" id="okBtn">确 认</button>'+
+        '<button class="btn" id="autoBtn">回到自动结果</button>'+
+        '<button class="btn" id="rstBtn">清零</button></div>';
+  c.innerHTML=html;
+  c.querySelectorAll('input[type=range]').forEach(function(r){
+    r.oninput=function(){ document.getElementById('lv'+r.dataset.i).textContent=(+r.value).toFixed(1); };
+    r.onchange=function(){ log(st.lvl+' 人工微调', '参数 '+cfg[r.dataset.i][0]+' = '+(+r.value).toFixed(1)+
+      '｜仅本级别结果变化，上一级结果保留｜确认前不影响对比结论'); };
+  });
+  $('#okBtn').onclick=function(){ log('确认 '+st.lvl,'该级结果写入本次会话记录｜联动：对比视图按新位置刷新｜可随时回到自动结果'); };
+  $('#autoBtn').onclick=function(){ log('回到自动结果'+'（'+st.lvl+'）','清除本级人工微调，恢复算法初始值'); };
+  $('#rstBtn').onclick=function(){ log('清零'+'（'+st.lvl+'）','参数归零，用于重新开始微调'); };
+}
+function hasEnhance(){ return EX[st.t].s.some(function(x){return /增强/.test(x);}); }
+
+/* ===== ④ 对比工具 + 看板 ===== */
+function renderTools(){
+  var h=$('#tools'); h.innerHTML='';
+  TOOLS.forEach(function(t){
+    var b=el('div','tool'+(st.tool===t?' on':''), t);
+    b.onclick=function(){
+      st.tool=t;
+      log('点击对比分析工具 '+t, '影像区切为该显示模式｜看板同步高亮对应指标'+
+        (t==='差值图'?'（差值图依赖已对齐结果，未对齐时提示）':'')+(t==='闪烁'?'（两期交替闪烁，用于发现微小变化）':''));
+      renderAll();
+    };
+    h.appendChild(b);
+  });
+  var a=$('#paneA'), b2=$('#paneB');
+  a.className='pane'; b2.className='pane';
+  if(st.tool==='叠加'||st.tool==='差值图'){ a.className='pane'+(st.tool==='叠加'?' mode-fuse':' mode-diff'); b2.style.display='none'; }
+  else if(st.tool==='闪烁'){ a.className='pane blink'; b2.style.display='none'; }
+  else { b2.style.display=''; if(st.tool==='时间电影'){ a.querySelector('.ph').textContent='时间序列电影（沿时间轴播）'; b2.style.display='none'; } }
+  if(st.tool!=='时间电影') a.querySelector('.ph').textContent='本次影像占位';
+}
+function renderKpi(){
+  document.querySelectorAll('.it').forEach(function(it){
+    it.classList.toggle('on', st.kpi===it.dataset.kpi);
+    it.onclick=function(){
+      st.kpi=it.dataset.kpi;
+      var same = it.dataset.kpi==='倍增时间';
+      log('点击看板 '+st.kpi, same ? '倍增时间依赖至少 2 个有效体积点，当前样本不足（占位）'
+        : '影像区跳到该病灶（'+st.lesion+'）+ 对应时点并高亮｜对比模式不变');
+      renderAll();
+    };
+  });
+  // 体积曲线（占位）
+  var pts=[[0,46],[60,40],[120,32],[180,24],[240,17]], d='M';
+  pts.forEach(function(p,i){ d += (i?' L':'')+p[0]+' '+p[1]; });
+  $('#curve').innerHTML='<path d="'+d+'" fill="none" stroke="#00A398" stroke-width="2"/>'+
+    '<path d="'+d+' L240 56 L0 56 Z" fill="rgba(0,163,152,.10)" stroke="none"/>'+
+    pts.map(function(p){return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="2.6" fill="#0070C0"/>';}).join('');
+  $('#v1').textContent='4.05'; $('#v2').textContent='19.8'; $('#v3').textContent='38'; $('#v4').textContent='—';
+}
+function renderImg(){
+  var e=EX[st.t], p=EX[Math.max(0,st.t-st.range)];
+  var sname=e.s[Math.min(st.ser,e.s.length-1)];
+  $('#labA').textContent='本次 '+e.d+' · '+sname+(st.lvl?(' · '+st.lvl):'');
+  $('#labB').textContent='对比 '+p.d+' · '+(p.s[0]||'—')+(st.kpi?(' · 看板：'+st.kpi):'');
+}
+function renderAll(){ renderTL(); renderSer(); renderLv(); renderTools(); renderKpi(); renderImg(); }
+renderAll();
+setTimeout(function(){ log('页面初始化','线框图已就绪：请依次点击 时间轴 → 序列 → 三级对齐 → 对比工具 → 看板，观察右下角联动日志'); }, 260);
+</script>
+</body>
+</html>
