@@ -100,6 +100,24 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .log .ln{padding:2px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
 .log .k{color:#FFD98A}
 .log .a{color:#8FD8FF}
+.wsbar{display:flex;align-items:center;gap:8px;padding:7px 16px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:11px;color:var(--ink);background:#FBFEFE}
+.chip.ok{border-color:var(--brand);color:var(--brand-d)}
+.chip.warn{border-color:var(--warn);color:var(--warn)}
+.seg{display:flex;gap:4px}
+.sg{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:5px;cursor:pointer;background:#fff}
+.sg.on{border-color:var(--brand);background:#E8F7F5;font-weight:700}
+.wsbar b{font-size:11px;color:var(--gray)}
+.two{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 16px 10px;align-items:start}
+.mtx{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px}
+.mrow{display:flex;justify-content:space-between;font-size:11px;border-bottom:1px dashed var(--line);padding:3px 0}
+.mrow b{color:var(--brand-d)}
+.les{display:flex;gap:7px;align-items:center;padding:5px 6px;border:1px solid var(--line);border-radius:6px;margin-bottom:5px;cursor:pointer;font-size:11px}
+.les.on{border-color:var(--brand);background:#E8F7F5}
+.les .dot2{width:9px;height:9px;border-radius:50%;background:var(--gold,#00B0F0);flex:none}
+.rep{font-size:11px;line-height:1.6;color:var(--ink)}
+.rep mark{background:#FFF3C4;border-bottom:1px solid var(--warn);cursor:pointer;padding:0 2px}
+.foot2{font-size:10.5px;color:var(--gray);padding:6px 11px 9px}
 .note{margin:2px 16px 74px;font-size:10.5px;color:var(--gray);border-left:3px solid var(--brand);padding-left:9px}
 </style>
 </head>
@@ -120,6 +138,15 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
       <button class="btn" id="btnRange">区间：最近 2 期</button>
     </div>
     <div class="tl" id="tl"></div>
+  </div>
+
+  <div class="wsbar">
+    <span class="chip">患者：何婷 / P2784 · 女 / 31Y</span>
+    <span class="chip">检查号 E20260 · CT 平扫 1.25mm · 64 层</span>
+    <b>布局</b><div class="seg" id="lay"></div>
+    <b>工具</b><div class="seg" id="tls"></div>
+    <span class="spacer"></span>
+    <span class="chip ok" id="chk">入组校验：期数 5 ≥ 3 ✓ ｜ 层厚 1.25 ≤ 5mm ✓ ｜ 序列完整性 ✓ ｜ 检查类型：平扫（本期无增强 → 密度类对比降级标注）</span>
   </div>
 
   <div class="grid">
@@ -161,6 +188,35 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
         </div>
       </div>
       <div class="hint">点看板任一项＝影像区跳到<b>该病灶 + 该时点</b>并高亮（反向联动）。</div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="panel">
+      <h3><span class="n">5</span>配准能力（三级 · 补全）</h3>
+      <div class="bd">
+        <div class="prow"><label>应用范围</label><div class="seg" id="scope"></div></div>
+        <div class="seg" id="regbtns" style="margin:7px 0"></div>
+        <div class="mtx" id="regm"></div>
+        <div style="margin-top:8px;border:1px dashed var(--dash);border-radius:6px;padding:6px 8px;font-size:10.5px;color:var(--gray)">
+          配准前 / 配准后 对比占位（并排两小格，用于医生肉眼确认对齐效果）
+        </div>
+      </div>
+      <div class="foot2">三级为递进：整体 → 解剖 → 病灶；每级结果独立记录、不覆盖上级。人工微调＝在自动结果上确认。</div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="n">6</span>病灶列表与量化</h3>
+      <div class="bd" id="lesBox"></div>
+      <div class="foot2">点击病灶＝影像区定位并高亮 + 报告对应描述高亮（双向联动）。「基准」＝系统按可随访性推荐的基准病灶，可手动改。</div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="n">7</span>诊断报告（图文联动）</h3>
+      <div class="bd">
+        <div class="rep" id="repBox"></div>
+      </div>
+      <div class="foot2">报告中<b>黄色的病灶描述</b>可点，点击后影像区跳到该病灶（需求：报告↔影像双向联动）。</div>
     </div>
   </div>
 
@@ -343,10 +399,103 @@ function renderKpi(){
 function renderImg(){
   var e=EX[st.t], p=EX[cmpIdx()];   /* 倒序：对比期在上一次（下标更大） */
   var sname=e.s[Math.min(st.ser,e.s.length-1)];
-  $('#labA').textContent='本次 '+e.d+' · '+sname+(st.lvl?(' · '+st.lvl):'');
-  $('#labB').textContent='对比 '+p.d+' · '+(p.s[0]||'—')+(st.kpi?(' · 看板：'+st.kpi):'');
+  $('#labA').textContent='本次 '+e.d+' · '+sname+(st.lvl?(' · '+st.lvl):'')+(reg.done?' · ✅已配准':'');
+  $('#labB').textContent='对比 '+p.d+'（上一次） · '+(p.s[0]||'—')+(st.kpi?(' · 看板：'+st.kpi):'')+
+    ' · 病灶 '+st.lesion+(ws.lay?(' · 布局 '+ws.lay):'');
 }
-function renderAll(){ renderTL(); renderSer(); renderLv(); renderTools(); renderKpi(); renderImg(); }
+/* ===== 工作区条：布局与工具 ===== */
+var LAYS=['1×1','1×2','2×1','2×2','三视图','自定义'], TLSS=['调窗','平移','缩放','测量','标注','导出'];
+function renderWs(){
+  var a=$('#lay'), b=$('#tls');
+  a.innerHTML=''; b.innerHTML='';
+  LAYS.forEach(function(k){
+    var d=el('div','sg'+(ws.lay===k?' on':''), k);
+    d.onclick=function(){ ws.lay=k; log('切换布局 '+k,
+      k==='三视图'?'布局改为三视图（轴位/冠状位/矢状位），三面共享同一三维定位点':
+      k==='自定义'?'打开自定义布局（行×列，最大 4×4，每格可单独指定序列）':
+      '影像区重新分格为 '+k+'，已选序列按原顺序保留'); renderAll(); };
+    a.appendChild(d);
+  });
+  TLSS.forEach(function(k){
+    var d=el('div','sg'+(ws.tls===k?' on':''), k);
+    d.onclick=function(){ ws.tls=k; log('选择工具 '+k,
+      k==='调窗'?'滚轮改为调窗宽窗位（当前 W:1500 L:-600）':
+      k==='测量'?'进入测量：长度/角度/面积，测量结果可留存至报告':
+      k==='标注'?'进入标注：可在序列上标注并跨序列联动（同一次检查内 2D/3D 联动标注）':
+      k==='导出'?'导出当前视图/测量结果/随访数据（CSV 或截图），供科研复用':
+      '该工具已就绪'); renderAll(); };
+    b.appendChild(d);
+  });
+}
+var ws={lay:'1×2', tls:'调窗'};
+/* ===== 配准能力：应用范围 + 操作 + 质量指标 ===== */
+var SCOPES=['序列之间','检查之间'];
+var REGBTNS=['⚡ 自动配准','📄 读档','🧹 清除','应 用'];
+var REGM=[['互信息 MI','0.97'],['结构 Dice','0.95'],['相似度','0.99'],['残余失配','0.0 mm'],
+          ['质量分级','优 · 可用于解剖结构对齐与量化'],['配准耗时','78 s']];
+function renderReg(){
+  var sc=$('#scope'); sc.innerHTML='';
+  SCOPES.forEach(function(k){
+    var d=el('div','sg'+(reg.scope===k?' on':''), k);
+    d.onclick=function(){ reg.scope=k; log('切换应用范围 '+k,
+      k==='检查之间'?'配准结果应用于跨检查的全部可比序列（实测影响 9 个窗口）':'配准结果仅应用于当前两序列之间'); renderAll(); };
+    sc.appendChild(d);
+  });
+  var rb=$('#regbtns'); rb.innerHTML='';
+  REGBTNS.forEach(function(k){
+    var d=el('div','sg'+(k.indexOf('应 用')>=0?' on':''), k);
+    d.onclick=function(){
+      if(k.indexOf('自动')>=0){ reg.done=true; log('⚡ 自动配准','6 步收敛：残余失配 21.7mm → 0.0mm ｜ 互信息 0.33 → 0.97 ｜ 分级「优」');
+      } else if(k.indexOf('读档')>=0){ log('📄 读档', reg.done?'载回本会话上次配准参数（仅同「参照层←浮动层」组合可读）':'无历史记录：请先执行【自动】或手动调整'); }
+      else if(k.indexOf('清除')>=0){ reg.done=false; log('🧹 清除','参数归零，回到未配准状态（已应用的对比结果需重新确认）'); }
+      else { log('应 用','配准结果写入本次会话 ｜ 受影响窗口打「已配准」角标 ｜ 关闭配准面板回到工作区'); }
+      renderAll();
+    };
+    rb.appendChild(d);
+  });
+  var h=$('#regm'); h.innerHTML='';
+  REGM.forEach(function(r){
+    var d=el('div','mrow','<span>'+r[0]+'</span><b>'+(reg.done||r[0].indexOf('互信息')<0?r[1]:'—')+'</b>');
+    h.appendChild(d);
+  });
+}
+var reg={scope:'序列之间', done:false};
+/* ===== 病灶列表与量化 ===== */
+var LES=[{id:'F-001',loc:'右肺上叶后段',vol:'4.05',d:'-15.6%',dia:'19.8',hu:'38',base:true},
+         {id:'F-002',loc:'左肺下叶背段',vol:'1.12',d:'+3.2%',dia:'11.4',hu:'-42',base:false},
+         {id:'F-003',loc:'右肺中叶外侧段',vol:'—',d:'已消失',dia:'—',hu:'—',base:false}];
+function renderLes(){
+  var h=$('#lesBox'); h.innerHTML='';
+  LES.forEach(function(L){
+    var d=el('div','les'+(st.lesion===L.id?' on':''),
+      '<span class="dot2"></span><span>'+L.id+' · '+L.loc+'</span>'+
+      '<span class="spacer"></span><em style="font-style:normal;color:var(--gray)">'+L.vol+' cm³ ｜ '+L.dia+' mm ｜ '+L.hu+' HU</em>'+
+      (L.base?'<span class="tag2">基准</span>':'<span class="tag2" style="border-color:#C8D4DC;color:#7A8B99">'+L.d+'</span>'));
+    d.onclick=function(){
+      st.lesion=L.id; st.kpi=null;
+      log('点击病灶 '+L.id, '影像区定位到 '+L.loc+' 并高亮（'+L.vol+' cm³ ｜ '+L.dia+' mm ｜ '+L.hu+' HU）｜报告对应描述同步高亮'+
+        (L.vol==='—'?' ｜ ⚠ 最近 4 期无对应体积 → 显示「已消失」而不计为 0':''));
+      renderAll();
+    };
+    h.appendChild(d);
+  });
+}
+/* ===== 报告联动 ===== */
+var REP='<b>影像所见：</b>右肺上叶后段见<mark data-l="F-001">结节状高密度影，大小约 19.8×16.2mm，边界清楚</mark>，'
+  +'较前次（26.05）<mark data-l="F-001">体积缩小约 15.6%</mark>；左肺下叶背段见<mark data-l="F-002">小结节，约 11.4mm</mark>，较前相仿；'
+  +'右肺中叶外侧段原病灶<mark data-l="F-003">本期未见显示</mark>。<br><b>诊断意见：</b>右肺上叶结节较前缩小，建议继续随访；'
+  +'<mark data-l="F-002">左肺下叶结节</mark>建议结合增强进一步评估。';
+function renderRep(){
+  var h=$('#repBox'); h.innerHTML=REP;
+  h.querySelectorAll('mark').forEach(function(m){
+    m.onclick=function(){
+      st.lesion=m.dataset.l;
+      log('点击报告中的病灶描述（'+m.dataset.l+'）','影像区跳到该病灶对应层面并高亮 ｜ 病灶列表同步选中；反向：点影像病灶时本段文字同步高亮');
+      renderAll();
+    };
+  });
+}
+function renderAll(){ renderWs(); renderTL(); renderSer(); renderLv(); renderTools(); renderKpi(); renderReg(); renderLes(); renderRep(); renderImg(); }
 renderAll();
 setTimeout(function(){ log('页面初始化','线框图已就绪：请依次点击 时间轴 → 序列 → 三级对齐 → 对比工具 → 看板，观察右下角联动日志'); }, 260);
 </script>
