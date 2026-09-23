@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V7.9</title>
+<title>临床阅片器 · 时间轴导航原型 V8.0</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -107,6 +107,10 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .kpi .it em{font-style:normal;color:var(--gray);font-size:10px}
 .curve{width:100%;height:auto;margin:6px 0 2px;cursor:crosshair}
 .ax{font-size:9px;fill:var(--gray)}
+.btn-tag{cursor:pointer;border-style:solid;border-color:var(--brand);color:var(--brand-d);user-select:none}
+.btn-tag:hover{background:#1B3350}
+.sres{position:absolute;left:4%;top:6%;font-size:10.5px;background:rgba(13,27,42,.92);border:1px solid var(--brand);border-radius:4px;padding:3px 6px;color:var(--ink)}
+.sres i{font-style:normal;color:var(--brand-d);font-weight:700}
 .dot3{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px;vertical-align:middle}
 .tool.sm{font-size:10.5px;padding:3px 7px}
 .spark{width:60px;height:18px;flex:none}
@@ -158,8 +162,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V7.9</h1>
-    <span class="tag">V7.9 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V8.0</h1>
+    <span class="tag">V8.0 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -202,11 +206,11 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
             <div class="lvlbar" id="lvlbar"></div>
           </div>
           <div class="iv">
-            <div class="ivt">时序对齐视图<span class="tag">跨时点自动配准</span></div>
+            <div class="ivt">时序对齐视图<span class="tag btn-tag" id="tagT" title="点击执行跨时点自动配准">▶ 跨时点自动配准</span></div>
             <div class="pane" id="paneT"><div class="pimg" id="imgT"></div><div class="ovl" id="ovlT"></div><div class="ph">时序配准视图占位</div><div class="lab" id="labT">—</div></div>
           </div>
           <div class="iv">
-            <div class="ivt">序列对比视图<span class="tag">序列间自动配准</span></div>
+            <div class="ivt">序列对比视图<span class="tag btn-tag" id="tagS" title="点击执行序列间自动配准">▶ 序列间自动配准</span></div>
             <div class="pane" id="paneS"><div class="pimg" id="imgS"></div><div class="ovl" id="ovlS"></div><div class="ph">序列自动配准视图占位</div><div class="lab" id="labS">—</div></div>
           </div>
           <div class="iv">
@@ -578,7 +582,7 @@ function applyImages(){
     var ph=p.querySelector('.ph'); if(ph){ ph.style.display='none'; }
     var lb=document.querySelector('#'+id+' .lab');
     if(lb){ var bs=(lb.textContent+'').split(' · 层')[0]; lb.textContent=bs+' · 层 '+((((stS[key]+st.t)%REALCT.length))+1)+'/'+REALCT.length; }
-    applyTransforms(); drawOverlays(); renderAllStrip();
+    applyTransforms(); drawOverlays(); renderAllStrip(); renderSeriesResult();
   });
 }
 
@@ -742,6 +746,36 @@ function startMovie(){
   }, 1400);
 }
 function clearMovie(){ if (movieTimer){ clearInterval(movieTimer); movieTimer = null; } }
+function bindRegEntry(){
+  var t1=document.getElementById('tagT');
+  if (t1) t1.onclick=function(){
+    st.range = EX.length;
+    $('#btnRange').textContent='区间：全部 '+EX.length+' 期';
+    runAllReg();
+    renderAll();
+  };
+  var t2=document.getElementById('tagS');
+  if (t2) t2.onclick=function(){
+    if (!REG.ready){ toast2('真实影像尚未加载完成，请稍候再试'); return; }
+    var A=GC[gcIndex(st.t+1)], B=GC[gcIndex(st.t+3)];      /* 同期不同序列（真实切片）*/
+    var c=search(A,B,bodyMask(A),10,2), f=search(A,B,bodyMask(A),2,1), best=(f.ncc>c.ncc)?f:c;
+    REG.series={ ncc:best.ncc, dxmm:best.dx*(400/128), dymm:best.dy*(400/128) };
+    renderSeriesResult();
+    log('序列间自动配准','以当前期序列为参照、同检查另一序列为浮动层：NCC='+best.ncc.toFixed(3)
+      +'｜最佳位移 '+best.dxmm.toFixed(1)+'/'+best.dymm.toFixed(1)+' mm｜已做 HU 归一化（平扫/增强密度差异）');
+  };
+}
+function renderSeriesResult(){
+  var box=document.getElementById('paneS'); if(!box) return;
+  var old=document.getElementById('sres'); if(old) old.remove();
+  if(!REG.series) return;
+  var d=document.createElement('div'); d.id='sres'; d.className='sres';
+  var col=REG.series.ncc>=0.9?'#00C896':(REG.series.ncc>=0.75?'#2A7FFF':'#FFA53C');
+  d.innerHTML='<i>序列间自动配准</i> NCC <span style="color:'+col+'">'+REG.series.ncc.toFixed(3)
+    +'</span> ｜ 位移 '+REG.series.dxmm.toFixed(1)+'/'+REG.series.dymm.toFixed(1)+' mm ｜ HU 归一化 ✓';
+  d.setAttribute('data-ncc', REG.series.ncc.toFixed(3));
+  box.appendChild(d);
+}
 function bindWheel(){
   ['paneA','paneT','paneS'].forEach(function(id){
     var p=document.getElementById(id); if(!p||p.__wh) return; p.__wh=1;
@@ -759,6 +793,7 @@ function bindWheel(){
 function renderAll(){ applyImages(); renderTL(); renderSer(); renderLv(); renderTools(); renderKpi(); renderLes(); renderRep(); renderImg(); }
 loadGray();
 bindWheel();
+bindRegEntry();
 renderAll();
 setTimeout(function(){ log('页面初始化','线框图已就绪：请依次点击 时间轴 → 序列 → 三级对齐 → 对比工具 → 看板，观察右下角联动日志'); }, 260);
 </script>
