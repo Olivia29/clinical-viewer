@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V8.1</title>
+<title>临床阅片器 · 时间轴导航原型 V8.2</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -162,8 +162,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V8.1</h1>
-    <span class="tag">V8.1 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V8.2</h1>
+    <span class="tag">V8.2 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -346,25 +346,66 @@ function runAllReg(){
   log('全部时间范围配准','基准 = '+EX[base].d+'（最早一期）｜其余 '+out.length+' 期逐一与基准配准｜平均 NCC '
     +avg.toFixed(3)+'（逐期：'+out.map(function(r){return r.d+' '+r.ncc.toFixed(2);}).join(' / ')+'）｜时序视图已切换为多期对齐结果条');
 }
+var COLORS = ['#4FA3FF','#33E0A8','#B58CFF','#FFB84D','#FF6B8A'];   /* 各期融合色 */
 function renderAllStrip(){
-  var box=document.getElementById('paneT'); if(!box) return;
-  var old=document.getElementById('allStrip'); if(old) old.remove();
-  if(!REG.all) return;
-  var d=document.createElement('div'); d.id='allStrip';
-  d.style.cssText='position:absolute;inset:0;background:rgba(10,25,47,.92);padding:6px;display:flex;flex-direction:column;gap:4px';
-  d.innerHTML='<div style="font-size:10.5px;color:#8FA3BF">全部时间范围配准 · 基准 '+REG.all.base+' · 平均 NCC '+Number(REG.all.avg||0).toFixed(3)+'</div>';
-  var row=document.createElement('div'); row.style.cssText='display:flex;gap:4px;flex:1';
-  REG.all.rows.forEach(function(r,ix){
-    var col=r.ncc>=0.9?'#00C896':(r.ncc>=0.75?'#2A7FFF':'#FFA53C');
-    var cell=document.createElement('div');
-    var img=REALCT[(stS.T+st.t+ix)%REALCT.length];
-    cell.style.cssText='flex:1;border:1px solid '+col+';border-radius:3px;background:url(data:image/jpeg;base64,'+img+') center/cover;position:relative;min-width:0';
-    cell.innerHTML='<div style="position:absolute;left:0;right:0;bottom:0;background:rgba(13,27,42,.85);font-size:9px;padding:1px 2px;text-align:center">'+r.d+'<br><span style="color:'+col+'">'+Number(r.ncc||0).toFixed(2)+'</span></div>';
-    cell.setAttribute('data-ncc', Number(r.ncc||0).toFixed(3)); cell.setAttribute('data-d', r.d);
-    row.appendChild(cell);
+  var box = document.getElementById('paneT'); if (!box) return;
+  var old = document.getElementById('allStrip'); if (old) old.remove();
+  if (!REG.all) return;
+  var d = document.createElement('div'); d.id = 'allStrip';
+  d.style.cssText = 'position:absolute;inset:0;background:rgba(10,25,47,.94);display:flex;flex-direction:column';
+  var info = document.createElement('div');
+  info.style.cssText = 'font-size:10.5px;color:#8FA3BF;padding:5px 7px 2px';
+  info.textContent = '时序对齐（全部期数）· 多期彩色融合 · ' + REG.all.rows.length + ' 期各一色 · 基准 '
+    + REG.all.base + ' · 平均 NCC ' + Number(REG.all.avg || 0).toFixed(3);
+  d.appendChild(info);
+  var cv = document.createElement('canvas'); cv.id = 'allCanvas';
+  cv.style.cssText = 'flex:1;width:100%;min-height:0;display:block;background:#000';
+  d.appendChild(cv);
+  var lg = document.createElement('div');
+  lg.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;padding:3px 7px 5px;font-size:9.5px';
+  REG.all.rows.forEach(function(r, ix){
+    var sp = document.createElement('span');
+    sp.setAttribute('data-ncc', Number(r.ncc || 0).toFixed(3));
+    sp.setAttribute('data-d', r.d);
+    sp.style.color = COLORS[ix % COLORS.length];
+    sp.textContent = '■ ' + r.d + ' ' + Number(r.ncc || 0).toFixed(2);
+    lg.appendChild(sp);
   });
-  d.appendChild(row); box.appendChild(d);
+  d.appendChild(lg);
+  box.appendChild(d);
+  drawFusion();
 }
+/* 多期彩色融合：各期按各自配准位移错位、各上一色，加法混合到同一张画布
+   —— 对齐好的部位叠加成灰白，未对齐处出现彩色镶边（配准质量一眼可见）*/
+function drawFusion(){
+  var cv = document.getElementById('allCanvas'); if (!cv) return;
+  var rc = cv.getBoundingClientRect();
+  cv.width = Math.max(180, Math.round(rc.width || 300));
+  cv.height = Math.max(130, Math.round(rc.height || 220));
+  var g = cv.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, cv.width, cv.height);
+  var side = Math.min(cv.width, cv.height);
+  REG.all.rows.forEach(function(r, ix){
+    var im = REALCT[(stS.T + ix) % REALCT.length];
+    var img = new Image();
+    img.onload = function(){
+      var c2 = document.createElement('canvas'); c2.width = cv.width; c2.height = cv.height;
+      var g2 = c2.getContext('2d');
+      var px = Number(r.dxmm || 0) * PXMM, py = Number(r.dymm || 0) * PXMM;
+      g2.drawImage(img, px, py, side, side);
+      g2.globalCompositeOperation = 'multiply';
+      g2.fillStyle = COLORS[ix % COLORS.length]; g2.fillRect(0, 0, cv.width, cv.height);
+      g2.globalCompositeOperation = 'destination-in';
+      g2.drawImage(img, px, py, side, side);
+      g.globalCompositeOperation = 'lighter';
+      g.globalAlpha = 0.34;
+      g.drawImage(c2, 0, 0);
+      g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+    };
+    img.src = 'data:image/jpeg;base64,' + im;
+  });
+}
+
 
 
 /* ===== ② 序列 ===== */
@@ -726,16 +767,15 @@ function drawOverlays(){
 }
 /* ③ 对比工具 → 改变图像呈现（真可见：透明度/滤镜/闪烁/电影） */
 function applyCompare(){
-  var a = document.getElementById('imgA'), t = document.getElementById('imgT');
-  if (!a || !t) return;
-  a.style.filter = 'none'; t.style.filter = 'none'; t.style.opacity = '1'; t.className = 'pimg';
-  t.style.transform = t.style.transform || 'none';
-  if (st.tool === '叠加'){ t.style.opacity = '0.45'; }
-  else if (st.tool === '差值图'){ a.style.filter = 'invert(1) contrast(1.35)'; t.style.opacity = '0.6'; }
-  else if (st.tool === '闪烁'){ t.className = 'pimg blink'; }
-  else if (st.tool === '时间电影'){ startMovie(); }
-  else { clearMovie(); }
+  /* 显示模式仅作用于【主视图（核心对齐序列）】；时序视图固定显示多期彩色融合结果 */
+  var a = document.getElementById('imgA'); if (!a) return;
+  a.style.filter = 'none'; a.style.opacity = '1'; a.className = 'pimg';
+  if (st.tool === '叠加'){ a.style.opacity = '0.55'; }
+  else if (st.tool === '差值图'){ a.style.filter = 'invert(1) contrast(1.35)'; }
+  else if (st.tool === '闪烁'){ a.className = 'pimg blink'; }
+  else if (st.tool === '并排'){ /* 主视图常规显示 */ }
 }
+
 var movieTimer = null;
 function startMovie(){
   clearMovie();
