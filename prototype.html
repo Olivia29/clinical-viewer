@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V7.1</title>
+<title>临床阅片器 · 时间轴导航原型 V7.3</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -63,6 +63,18 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .pane .ph{position:absolute;inset:0;background:
   radial-gradient(circle at 50% 45%,#16273D 0 22%,#132234 22% 42%,#101D2D 42% 58%,#0D1826 58% 100%);
   display:grid;place-items:center;color:#5B7280;font-size:11.5px}
+.pimg{position:absolute;inset:0;background-size:contain;background-position:center;background-repeat:no-repeat;background-color:#000;transition:transform .18s ease, filter .18s ease, opacity .18s ease}
+.ovl{position:absolute;inset:0;pointer-events:none}
+.ovl .mk{position:absolute;border:2px solid var(--gold);box-shadow:0 0 0 1px rgba(0,0,0,.5) inset;pointer-events:auto;cursor:pointer}
+.ovl .mk b{position:absolute;top:-14px;left:-2px;font-size:10px;background:var(--gold);color:#1b1b00;padding:0 3px;border-radius:2px;font-weight:700}
+.ovl .xh{position:absolute;width:13px;height:13px;margin:-7px 0 0 -7px;border:1px solid var(--blue)}
+.ovl .xh::before,.ovl .xh::after{content:"";position:absolute;background:var(--blue)}
+.ovl .xh::before{left:5px;top:-7px;width:1px;height:27px}
+.ovl .xh::after{top:5px;left:-7px;height:1px;width:27px}
+.ovl .callout{position:absolute;font-size:10.5px;background:rgba(13,27,42,.92);border:1px solid var(--brand);color:var(--ink);padding:3px 6px;border-radius:4px;white-space:nowrap}
+.ovl .callout i{font-style:normal;color:var(--brand-d);font-weight:700}
+.blink{animation:bl 1s steps(2,end) infinite}
+@keyframes bl{50%{opacity:.25}}
 .pane .lab{position:absolute;left:0;right:0;bottom:0;background:rgba(13,27,42,.88);border-top:1px solid var(--line);font-size:10.5px;padding:3px 7px;color:var(--gray)}
 .pane.mode-fuse .ph{opacity:.55}
 .pane.mode-diff .ph{background:linear-gradient(90deg,#DCE6EA,#F0DFD0 45%,#D8E6DC 100%)}
@@ -138,8 +150,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V7.1</h1>
-    <span class="tag">V7.1 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V7.3</h1>
+    <span class="tag">V7.3 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -178,16 +190,16 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
         <div class="iw">
           <div class="iv">
             <div class="ivt">主视图（核心对齐序列）<span class="spacer"></span><span class="m3 on">■ 2D</span><span class="m3">MPR</span><span class="m3">3D</span></div>
-            <div class="pane" id="paneA"><div class="ph">自动配准后的主视图占位</div><div class="lab" id="labA">本次 26.09 · —</div></div>
+            <div class="pane" id="paneA"><div class="pimg" id="imgA"></div><div class="ovl" id="ovlA"></div><div class="ph">自动配准后的主视图占位</div><div class="lab" id="labA">本次 26.09 · —</div></div>
             <div class="lvlbar" id="lvlbar"></div>
           </div>
           <div class="iv">
             <div class="ivt">时序对齐视图<span class="tag">跨时点自动配准</span></div>
-            <div class="pane" id="paneT"><div class="ph">时序配准视图占位</div><div class="lab" id="labT">—</div></div>
+            <div class="pane" id="paneT"><div class="pimg" id="imgT"></div><div class="ovl" id="ovlT"></div><div class="ph">时序配准视图占位</div><div class="lab" id="labT">—</div></div>
           </div>
           <div class="iv">
             <div class="ivt">序列对比视图<span class="tag">序列间自动配准</span></div>
-            <div class="pane" id="paneS"><div class="ph">序列自动配准视图占位</div><div class="lab" id="labS">—</div></div>
+            <div class="pane" id="paneS"><div class="pimg" id="imgS"></div><div class="ovl" id="ovlS"></div><div class="ph">序列自动配准视图占位</div><div class="lab" id="labS">—</div></div>
           </div>
           <div class="iv">
             <div class="ivt">调整联动（三级对齐参数）</div>
@@ -339,6 +351,7 @@ function renderLv(){
       if(deg){ log('点击 '+L.k,'⚠ 已降级：本次检查缺增强序列，密度类对比口径受限，需医生确认后使用'); return; }
       st.lvl=L.k;
       var r=regRun(L.k);
+      applyTransforms();
       log('点击 '+L.k, r ? ('真实配准已计算：NCC='+r.ncc.toFixed(3)+' ｜ 最佳位移 dx='+r.dxmm.toFixed(1)+'mm dy='+r.dymm.toFixed(1)+'mm ｜ 残余 '+r.residual.toFixed(1)+' ｜ 不覆盖上一级结果')
                        : '打开配准面板（算法未就绪）');
       renderAll();
@@ -365,7 +378,17 @@ function renderLv(){
         '<button class="btn" id="rstBtn">清零</button></div>';
   c.innerHTML=html;
   c.querySelectorAll('input[type=range]').forEach(function(r){
-    r.oninput=function(){ document.getElementById('lv'+r.dataset.i).textContent=(+r.value).toFixed(1); };
+    r.oninput=function(){
+      document.getElementById('lv'+r.dataset.i).textContent=(+r.value).toFixed(1);
+      var nm=cfg[r.dataset.i][0];
+      var v=+r.value;
+      if(nm.indexOf('X')>=0) st2.tx=v;                          /* 含「移动X / 中心X」 */
+      if(nm.indexOf('Y')>=0||nm.indexOf('位移')>=0) st2.ty=v;    /* 含「移动Y / 膈肌位移」 */
+      if(nm.indexOf('旋转')>=0) st2.rot=v;
+      if(nm.indexOf('扩张')>=0) st2.sc=v;                        /* 边界扩张 → 缩放 */
+      if(nm.indexOf('权重')>=0){ document.getElementById('imgT').style.opacity=(0.35+v/100*0.6).toFixed(2); }
+      applyTransforms();                                   /* 拖动即时改变主视图位置/角度 */
+    };
     r.onchange=function(){
       var R2=REG.out[st.lvl];
       var msg='参数 '+cfg[r.dataset.i][0]+' = '+(+r.value).toFixed(1);
@@ -392,7 +415,8 @@ function renderTools(){
     var b=el('div','tool'+(st.tool===t?' on':''), t);
     b.onclick=function(){
       st.tool=t;
-      log('点击对比分析工具 '+t, '影像区切为该显示模式｜看板同步高亮对应指标'+
+      applyCompare();
+      log('点击对比分析工具 '+t, '影像区图像已按该模式呈现（并排=双图对照 / 叠加=半透明融合 / 差值=反相增强 / 闪烁=交替显隐 / 电影=沿时间轴自动播放）｜看板同步高亮对应指标'+
         (t==='差值图'?'（差值图依赖已对齐结果，未对齐时提示）':'')+(t==='闪烁'?'（两期交替闪烁，用于发现微小变化）':''));
       renderAll();
     };
@@ -404,6 +428,7 @@ function renderTools(){
   else if(st.tool==='闪烁'){ a.className='pane blink'; b2.style.display='none'; }
   else { b2.style.display=''; if(st.tool==='时间电影'){ a.querySelector('.ph').textContent='时间序列电影（沿时间轴播）'; b2.style.display='none'; } }
   if(st.tool!=='时间电影') a.querySelector('.ph').textContent='本次影像占位';
+  applyCompare();
 }
 function renderKpi(){
   document.querySelectorAll('.it').forEach(function(it){
@@ -412,7 +437,8 @@ function renderKpi(){
       st.kpi=it.dataset.kpi;
       var same = it.dataset.kpi==='倍增时间';
       log('点击看板 '+st.kpi, same ? '倍增时间依赖至少 2 个有效体积点，当前样本不足（占位）'
-        : '影像区跳到该病灶（'+st.lesion+'）+ 对应时点并高亮｜对比模式不变');
+        : '影像区已在 '+st.lesion+' 处叠加【'+st.kpi+'】指标标注块（三视图同步）+ 曲线对应点高亮｜对比模式不变');
+      drawOverlays();
       renderAll();
     };
   });
@@ -461,7 +487,8 @@ function renderRep(){
   h.querySelectorAll('mark').forEach(function(m){
     m.onclick=function(){
       st.lesion=m.dataset.l;
-      log('点击报告中的病灶描述（'+m.dataset.l+'）','影像区跳到该病灶对应层面并高亮 ｜ 病灶列表同步选中；反向：点影像病灶时本段文字同步高亮');
+      log('点击报告中的病灶描述（'+m.dataset.l+'）','影像区三视图已在病灶锚点画出定位框与十字（主图加粗）｜病灶列表同步选中；反向：点影像病灶框时本段文字同步高亮');
+      drawOverlays();
       renderAll();
     };
   });
@@ -474,9 +501,9 @@ function applyImages(){
   a.forEach(function(id,ix){
     var p=document.getElementById(id); if(!p) return;
     var img=rcPick(st.t*2+ix*2+2);
-    p.style.backgroundImage='url(data:image/jpeg;base64,'+img+')';
-    p.style.backgroundSize='contain'; p.style.backgroundPosition='center'; p.style.backgroundRepeat='no-repeat';
-    var ph=p.querySelector('.ph'); if(ph){ ph.style.display='none'; }
+    var im=document.getElementById(['imgA','imgT','imgS'][ix]);
+    if(im){ im.style.backgroundImage='url(data:image/jpeg;base64,'+img+')'; im.style.backgroundSize='contain'; }
+    var ph=p.querySelector('.ph'); if(ph){ ph.style.display='none'; } applyTransforms(); drawOverlays();
   });
 }
 
@@ -566,6 +593,71 @@ function regRun(level){
   return out;
 }
 function toast2(t){ log('提示', t); }
+
+/* ===== 联动引擎：让三种交互都作用到图像上 ===== */
+var LES_ANCHOR = { 'F-001':{u:-0.39,v:0.19}, 'F-002':{u:0.19,v:0.26}, 'F-003':{u:0.27,v:0.33} };
+var LES_VAL = { 'F-001':{vol:'4.05',dia:'19.8',hu:'38'}, 'F-002':{vol:'1.12',dia:'11.4',hu:'-42'}, 'F-003':{vol:'—',dia:'—',hu:'—'} };
+var st2 = { tx:0, ty:0, rot:0, sc:0 };                 /* 人工微调（mm / 度） */
+var PXMM = 1.35;                                 /* 1mm ≈ 1.35px（影像格 300px 对应约 220mm 视野） */
+/* ① 三级对齐调整 → 图像变换：主视图按人工微调平移/旋转；时序视图按算法位移平移 */
+function applyTransforms(){
+  var a = document.getElementById('imgA'), t = document.getElementById('imgT'), s3 = document.getElementById('imgS');
+  if (a) a.style.transform = 'translate(' + (st2.tx*PXMM).toFixed(1) + 'px,' + (st2.ty*PXMM).toFixed(1) + 'px) rotate(' + st2.rot.toFixed(1) + 'deg) scale(' + (1 + st2.sc*0.03).toFixed(2) + ')';
+  var R = (st.lvl && REG.out[st.lvl]) ? REG.out[st.lvl] : (REG.out['整体图像对齐'] || null);
+  if (t) t.style.transform = R ? 'translate(' + (R.dxmm*PXMM).toFixed(1) + 'px,' + (R.dymm*PXMM).toFixed(1) + 'px)' : 'none';
+  if (s3) s3.style.transform = 'none';
+}
+/* ② 覆盖层：病灶框 + 十字 + 看板指标标注（点击后图上立刻可见） */
+function drawOverlays(){
+  ['A','T','S'].forEach(function(k){
+    var o = document.getElementById('ovl' + k); if (!o) return;
+    o.innerHTML = '';
+    var an = LES_ANCHOR[st.lesion];
+    if (an){
+      var box = document.createElement('div');
+      box.className = 'mk'; box.setAttribute('data-les', st.lesion);
+      box.style.left = (50 + an.u*34) + '%'; box.style.top = (50 + an.v*34) + '%';
+      box.style.width = '13%'; box.style.height = '13%';
+      box.innerHTML = '<b>' + st.lesion + '</b>';
+      box.onclick = function(){ st.lesion = st.lesion; log('点击影像上的病灶框 ' + st.lesion, '报告对应描述高亮 + 病灶列表同步选中（影像→报告反向联动）'); renderAll(); };
+      o.appendChild(box);
+      var xh = document.createElement('div'); xh.className = 'xh';
+      xh.style.left = (50 + an.u*34) + '%'; xh.style.top = (50 + an.v*34) + '%';
+      o.appendChild(xh);
+    }
+    if (st.kpi){
+      var c = document.createElement('div'); c.className = 'callout';
+      var v = LES_VAL[st.lesion] || {};
+      var txt = { '体积': v.vol + ' cm³', '径线': v.dia + ' mm', '密度': v.hu + ' HU', '倍增时间': '—' }[st.kpi] || '—';
+      c.innerHTML = '<i>' + st.kpi + '</i> ' + txt + ' · ' + st.lesion;
+      c.style.left = '4%'; c.style.top = '6%';
+      c.setAttribute('data-callout', st.kpi);
+      o.appendChild(c);
+    }
+  });
+}
+/* ③ 对比工具 → 改变图像呈现（真可见：透明度/滤镜/闪烁/电影） */
+function applyCompare(){
+  var a = document.getElementById('imgA'), t = document.getElementById('imgT');
+  if (!a || !t) return;
+  a.style.filter = 'none'; t.style.filter = 'none'; t.style.opacity = '1'; t.className = 'pimg';
+  t.style.transform = t.style.transform || 'none';
+  if (st.tool === '叠加'){ t.style.opacity = '0.45'; }
+  else if (st.tool === '差值图'){ a.style.filter = 'invert(1) contrast(1.35)'; t.style.opacity = '0.6'; }
+  else if (st.tool === '闪烁'){ t.className = 'pimg blink'; }
+  else if (st.tool === '时间电影'){ startMovie(); }
+  else { clearMovie(); }
+}
+var movieTimer = null;
+function startMovie(){
+  clearMovie();
+  movieTimer = setInterval(function(){
+    st.t = (st.t + 1) % EX.length;
+    renderTL(); renderSer(); applyImages();
+    log('时间电影', '沿时间轴自动播放至 ' + EX[st.t].d + '（影像与序列同步变化）');
+  }, 1400);
+}
+function clearMovie(){ if (movieTimer){ clearInterval(movieTimer); movieTimer = null; } }
 function renderAll(){ applyImages(); renderTL(); renderSer(); renderLv(); renderTools(); renderKpi(); renderLes(); renderRep(); renderImg(); }
 loadGray();
 renderAll();
