@@ -100,6 +100,12 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .log .ln{padding:2px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
 .log .k{color:#FFD98A}
 .log .a{color:#8FD8FF}
+.tl-flex{display:flex;align-items:flex-start}
+.ptinfo{width:292px;flex:none;padding:4px 18px 8px 0;border-right:1px solid #E0E0E0}
+.ptinfo h4{margin:0 0 9px;font-size:14.5px;font-weight:700;color:var(--ink)}
+.ptinfo .r{font-size:12.5px;line-height:1.75;color:#000}
+.ptinfo .r span{color:#666}
+.tl-right{flex:1;min-width:0;padding-left:18px}
 .chip{font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:11px;color:var(--ink);background:#FBFEFE}
 .chip.ok{border-color:var(--brand);color:var(--brand-d)}
 .chip.warn{border-color:var(--warn);color:var(--warn)}
@@ -130,14 +136,23 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
   </div>
 
   <!-- ① 时间轴 -->
-  <div class="tl-band">
-    <div class="tl-head"><span class="chip">何婷 / P2784 · 女 / 31Y</span><span class="chip">检查号 E20260 · CT 平扫 1.25mm · 64 层</span><b>① 时间轴导航</b><span class="tag">时间倒序：最新在最左 ｜ 点节点＝切时点 ｜ 点「区间」＝定对比跨度</span>
+  <div class="tl-band"><div class="tl-flex">
+    <div class="ptinfo">
+      <h4>患者信息</h4>
+      <div class="r"><span>姓名：</span>何婷</div>
+      <div class="r"><span>年龄：</span>31 岁</div>
+      <div class="r"><span>性别：</span>女</div>
+      <div class="r"><span>病历号：</span>P2784</div>
+      <div class="r"><span>检查号：</span>E20260</div>
+      <div class="r"><span>检查日期：</span>2026-09-02</div>
+    </div><div class="tl-right">
+    <div class="tl-head"><b>① 时间轴导航</b><span class="tag">时间倒序 · 最新在最左</span>
       <span class="spacer"></span>
       <span class="chip warn" id="chk">入组校验 ✓ 期数 5≥3 ｜ 层厚 1.25≤5mm ｜ 序列完整 ｜ ⚠ 本期无增强 → 密度类对比降级</span>
       <button class="btn" id="btnRange">区间：最近 2 期</button>
     </div>
     <div class="tl" id="tl"></div>
-  </div>
+  </div></div></div>
 
   <div class="grid">
     <!-- ② 序列 -->
