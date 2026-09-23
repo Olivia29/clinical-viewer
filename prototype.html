@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V7.7</title>
+<title>临床阅片器 · 时间轴导航原型 V7.8</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -34,7 +34,7 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .tlnode.cur .badge{border-color:var(--brand);color:var(--brand-d)}
 .tlnode:hover .dot{border-color:var(--brand-d)}
 /* 四区 */
-.grid{display:grid;grid-template-columns:212px 1fr 246px;gap:10px;padding:10px 16px 14px;align-items:start}
+.grid{display:grid;grid-template-columns:196px 1fr 312px;gap:10px;padding:10px 16px 14px;align-items:start}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:6px}
 .panel>h3{margin:0;padding:8px 11px;font-size:12.5px;color:var(--brand-d);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px}
 .panel>h3 .n{width:17px;height:17px;border-radius:50%;background:var(--brand);color:#fff;font-size:10.5px;display:grid;place-items:center;font-weight:700}
@@ -105,8 +105,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 .kpi .it:hover{background:#16273D}
 .kpi .it.on{background:#1B3350;box-shadow:inset 0 0 0 1px var(--brand)}
 .kpi .it em{font-style:normal;color:var(--gray);font-size:10px}
-.curve{width:100%;height:98px;margin:6px 0 2px;cursor:crosshair}
-.ax{font-size:8px;fill:var(--gray)}
+.curve{width:100%;height:auto;margin:6px 0 2px;cursor:crosshair}
+.ax{font-size:9px;fill:var(--gray)}
 .dot3{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px;vertical-align:middle}
 .tool.sm{font-size:10.5px;padding:3px 7px}
 .spark{width:60px;height:18px;flex:none}
@@ -158,8 +158,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V7.7</h1>
-    <span class="tag">V7.7 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V7.8</h1>
+    <span class="tag">V7.8 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -235,7 +235,7 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
           <div class="it" data-kpi="面积"><span>病灶面积（mm²）</span><em id="v2">312</em><svg class="spark" data-spark="面积" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
           <div class="it" data-kpi="密度"><span>平均密度（HU）</span><em id="v3">38</em><svg class="spark" data-spark="密度" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
           <div class="it" data-kpi="一致性"><span>测量一致性（%）</span><em id="v4">96</em><svg class="spark" data-spark="一致性" viewBox="0 0 60 18" preserveAspectRatio="none"></svg></div>
-          <svg class="curve" id="curve" viewBox="0 0 240 56" preserveAspectRatio="none"></svg>
+          <svg class="curve" id="curve" viewBox="0 0 300 132"></svg>
         </div>
       </div>
       <div class="hint">点看板任一项＝影像区跳到<b>该病灶 + 该时点</b>并高亮（反向联动）。</div>
@@ -456,23 +456,32 @@ function renderKpi(){
     var em=it.querySelector('em'); if(em) em.textContent=mVal(k,st.t);
     it.onclick=function(){ st.kpi=k; log('点击指标行 '+k,'曲线图切到【'+k+'】（'+MDATA[k].u+'）+ 影像上叠加该指标标注（'+mTxt(k,st.t)+'）'); renderAll(); };
   });
-  var k=st.kpi||'体积', v=MDATA[k].v, W=252, H=98, N=v.length, seq=[];
-  for(var j=0;j<N;j++) seq.push({ i:N-1-j, val:v[N-1-j], lab:EX[N-1-j].d });     /* 正序：早 → 新 */
-  var mn=Math.min.apply(null,v), mx=Math.max.apply(null,v); if(mn===mx){mn-=1;mx+=1;}
-  var padL=36,padR=8,padT=12,padB=20,iw=W-padL-padR,ih=H-padT-padB;
-  var X=function(j){return padL+j*(iw/(N-1));}, Y=function(val){return padT+ih-(val-mn)/(mx-mn)*ih;};
-  var h='<text class="ax" x="2" y="'+(padT+5)+'">'+k+' ('+MDATA[k].u+')</text>';
-  for(var t=0;t<=4;t++){ var vv=mn+(mx-mn)*t/4, yy=Y(vv);
-    h+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#24344D" stroke-width="0.6"/>';
-    h+='<text class="ax" x="'+(padL-3)+'" y="'+(yy+3).toFixed(1)+'" text-anchor="end">'+(vv<10?vv.toFixed(1):Math.round(vv))+'</text>';
+  /* 折线图：横轴=随访时间（正序：左早右新）；纵轴=当前指标单位；上下留白避免裁切 */
+  var k=st.kpi||'体积', v=MDATA[k].v, W=300, H=132, N=v.length, seq=[];
+  for(var j=0;j<N;j++) seq.push({ i:N-1-j, val:v[N-1-j], lab:EX[N-1-j].d });
+  var mn=Math.min.apply(null,v), mx=Math.max.apply(null,v);
+  var pad=(mx-mn)*0.28 || 1; mn-=pad; mx+=pad;
+  var padL=54, padR=16, padT=18, padB=42, iw=W-padL-padR, ih=H-padT-padB;
+  var X=function(j){ return padL+j*(iw/(N-1)); };
+  var Y=function(val){ return padT+ih-(val-mn)/(mx-mn)*ih; };
+  var h='<text class="ax" x="4" y="'+(padT+4)+'">'+k+' ('+MDATA[k].u+')</text>';
+  for(var t=0;t<=4;t++){                                   /* 5 条水平网格 + 纵轴刻度 */
+    var vv=mn+(mx-mn)*t/4, yy=Y(vv);
+    h+='<line x1="'+padL+'" y1="'+yy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+yy.toFixed(1)+'" stroke="#24344D" stroke-width="0.7"/>';
+    h+='<text class="ax" x="'+(padL-5)+'" y="'+(yy+3).toFixed(1)+'" text-anchor="end">'+(Math.abs(vv)<10?vv.toFixed(1):Math.round(vv))+'</text>';
   }
+  h+='<line x1="'+padL+'" y1="'+padT+'" x2="'+padL+'" y2="'+(padT+ih)+'" stroke="#3A5A80" stroke-width="0.8"/>';   /* 纵轴 */
+  h+='<line x1="'+padL+'" y1="'+(padT+ih)+'" x2="'+(W-padR)+'" y2="'+(padT+ih)+'" stroke="#3A5A80" stroke-width="0.8"/>'; /* 横轴 */
   var d=''; seq.forEach(function(p,j){ d+=(j?' L':'M')+X(j).toFixed(1)+' '+Y(p.val).toFixed(1); });
-  h+='<path d="'+d+'" fill="none" stroke="#2A7FFF" stroke-width="2"/>';
+  h+='<path d="'+d+'" fill="none" stroke="#2A7FFF" stroke-width="2.2"/>';
   h+='<path d="'+d+' L'+X(N-1).toFixed(1)+' '+(padT+ih)+' L'+X(0).toFixed(1)+' '+(padT+ih)+' Z" fill="rgba(42,127,255,.10)" stroke="none"/>';
   seq.forEach(function(p,j){ var on=(p.i===st.t);
-    h+='<circle class="pt" data-ti="'+p.i+'" cx="'+X(j).toFixed(1)+'" cy="'+Y(p.val).toFixed(1)+'" r="'+(on?4.4:3)+'" fill="'+(on?'#FFD700':'#2A7FFF')+'"/>';
-    h+='<text class="ax" x="'+X(j).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+p.lab+'</text>';
+    h+='<circle class="pt" data-ti="'+p.i+'" cx="'+X(j).toFixed(1)+'" cy="'+Y(p.val).toFixed(1)+'" r="'+(on?4.6:3.2)+'" fill="'+(on?'#FFD700':'#2A7FFF')+'"/>';
+    h+='<text class="ax" x="'+X(j).toFixed(1)+'" y="'+(Y(p.val)-8).toFixed(1)+'" text-anchor="middle">'+p.val+'</text>';
+    h+='<line x1="'+X(j).toFixed(1)+'" y1="'+(padT+ih)+'" x2="'+X(j).toFixed(1)+'" y2="'+(padT+ih+4)+'" stroke="#3A5A80" stroke-width="0.8"/>';
+    h+='<text class="ax" x="'+X(j).toFixed(1)+'" y="'+(H-22)+'" text-anchor="middle">'+p.lab+'</text>';
   });
+  h+='<text class="ax" x="'+padL+'" y="'+(H-4)+'" text-anchor="start">随访时间（早 → 新）</text>';
   var cv=$('#curve'); cv.innerHTML=h;
   cv.querySelectorAll('circle.pt').forEach(function(c){ c.onclick=function(){ var ti=+c.dataset.ti; st.t=ti;
     log('点击曲线数据点（'+k+' · '+EX[ti].d+'）','时间轴与影像已跳到 '+EX[ti].d+'｜该指标值 '+mTxt(k,ti)+'｜图上标注同步'); renderAll(); }; });
