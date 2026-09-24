@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V9.3</title>
+<title>临床阅片器 · 时间轴导航原型 V9.4</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -179,8 +179,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V9.3</h1>
-    <span class="tag">V9.3 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V9.4</h1>
+    <span class="tag">V9.4 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -901,6 +901,76 @@ window.addEventListener('load',hide); setTimeout(hide,300); setTimeout(hide,1200
   }, true);
   snap(); document.addEventListener('DOMContentLoaded',snap); window.addEventListener('load',snap);
   setTimeout(snap,500); setTimeout(snap,1500);
+})();
+
+/* ===== 调整联动：以弹窗形式展示 ===== */
+(function(){
+  var panel=null, overlay=null, origCss='';
+  function backdrop(){
+    if(!overlay){
+      overlay=document.createElement('div'); overlay.id='__backdrop';
+      overlay.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(4,12,24,.74);'
+        +'z-index:99990;display:none';
+      overlay.addEventListener('click', close);
+      document.body.appendChild(overlay);
+    }
+    return overlay;
+  }
+  /* 找到承载"三级对齐参数"的容器：从滑块向上找最近的、内部含滑块的区块 */
+  function panelOf(){
+    var a=document.querySelectorAll('input[type=range]');
+    if(!a.length) return null;
+    var host=a[0], cur=host;
+    for(var i=0;i<5 && cur.parentElement;i++){
+      cur=cur.parentElement;
+      if(cur.querySelectorAll('input[type=range]').length>0 && cur.getBoundingClientRect().width>240){ host=cur; break; }
+    }
+    return host;
+  }
+  function open(){
+    panel = panelOf();
+    if(!panel) return;
+    if(!panel.__origCss) panel.__origCss = panel.getAttribute('style') || '';
+    origCss = panel.__origCss;
+    panel.setAttribute('data-modal','1');
+    panel.setAttribute('style', origCss
+      + ';position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);'
+      + 'width:min(620px,92vw);max-height:82vh;overflow:auto;z-index:99995;'
+      + 'background:#112233;border:1px solid #24344D;border-radius:12px;'
+      + 'box-shadow:0 24px 70px rgba(0,0,0,.66);padding:16px 18px');
+    backdrop().style.display='block';
+    if(!panel.querySelector('.__mclose')){
+      var x=document.createElement('button'); x.className='__mclose'; x.textContent='×';
+      x.style.cssText='position:absolute;right:10px;top:8px;background:transparent;border:0;'
+        +'color:#8FA3BF;font-size:22px;line-height:1;cursor:pointer;padding:2px 6px';
+      x.addEventListener('click', close);
+      panel.style.position='fixed'; panel.appendChild(x);
+    }
+  }
+  function close(){
+    var ps=document.querySelectorAll('[data-modal]');
+    for(var i=0;i<ps.length;i++){ ps[i].removeAttribute('data-modal'); ps[i].setAttribute('style', ps[i].__origCss||''); }
+    if(overlay) overlay.style.display='none';
+    panel=null;
+  }
+  window.__closeAlignModal=close; window.__openAlignModal=open;
+  /* 拦截三级对齐按钮：先让产品渲染参数面板，再弹出 */
+  document.addEventListener('click', function(ev){
+    var t=ev.target && ev.target.closest ? ev.target.closest('.lvl,#lvlbar .lvl,#lvlbar button') : null;
+    if(!t) return;
+    var txt=(t.textContent||'').replace(/\s+/g,'');
+    if(txt.indexOf('对齐')<0) return;
+    setTimeout(open, 80);
+  }, false);
+  /* 三个动作按钮：给提示 + 关闭弹窗（提示逻辑由前一段代码负责，这里只关闭） */
+  document.addEventListener('click', function(ev){
+    var b=ev.target && ev.target.closest ? ev.target.closest('button') : null;
+    if(!b) return;
+    var t=(b.textContent||'').replace(/\s+/g,'');
+    if(t==='确认'||t==='回到自动结果'||t==='清零'){ setTimeout(close, 260); }
+  }, false);
+  /* ESC 关闭 */
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); }, false);
 })();
 </script>
 </body>
