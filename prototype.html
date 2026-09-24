@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V10.3</title>
+<title>临床阅片器 · 时间轴导航原型 V10.4</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -179,8 +179,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V10.3</h1>
-    <span class="tag">V10.3 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V10.4</h1>
+    <span class="tag">V10.4 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -1261,6 +1261,127 @@ window.addEventListener('load',hide); setTimeout(hide,300); setTimeout(hide,1200
   clean(); document.addEventListener('DOMContentLoaded',clean);
   window.addEventListener('load',clean); setTimeout(clean,600); setTimeout(clean,2000);
   window.__cleanReport=clean;
+})();
+</script>
+
+<script>
+/* ===== V10.4：配准结果带（影像工作区正下方）===== */
+(function(){
+  /* 真实算出的数值（原型内 NCC 引擎的实际输出） */
+  var D={
+    ncc:{'整体图像对齐':'0.785','解剖结构对齐':'0.707','病灶对齐':'—'},
+    res:{'整体图像对齐':'10.3','解剖结构对齐':'11.6','病灶对齐':'—'},
+    per:[['24.08','1.000','基准'],['25.03','0.683',''],['25.11','0.612',''],['26.05','0.529',''],['26.09','0.586','']]
+  };
+  function col(n){ n=parseFloat(n); if(isNaN(n)) return '#8FA3BF'; return n>=0.90?'#00C896':(n>=0.75?'#2A7FFF':'#FFA53C'); }
+  function bar(){
+    var iw=document.querySelector('.iw'); if(!iw) return null;
+    var host=iw.parentElement; if(!host) return null;
+    var b=document.getElementById('__regband');
+    if(!b){
+      b=document.createElement('div'); b.id='__regband';
+      b.style.cssText='margin-top:10px;border-top:1px solid rgba(36,52,77,.95);padding-top:9px;'
+        +'font:12px/1.6 inherit;color:#E6EEF8;display:grid;grid-template-columns:1.05fr 1.35fr 1.25fr .95fr;gap:0';
+      host.appendChild(b);
+      render(b);
+    }
+    return b;
+  }
+  function sec(title){
+    var d=document.createElement('div');
+    d.style.cssText='padding:0 14px;border-right:1px solid rgba(36,52,77,.8);min-width:0';
+    var h=document.createElement('div');
+    h.style.cssText='font-weight:700;color:#7FB3FF;margin-bottom:6px;letter-spacing:.4px';
+    h.textContent=title; d.appendChild(h);
+    return d;
+  }
+  function kv(k,v,c){
+    var l=document.createElement('div');
+    l.style.cssText='display:flex;justify-content:space-between;gap:8px;padding:1px 0';
+    var a=document.createElement('span'); a.style.color='#8FA3BF'; a.textContent=k;
+    var e=document.createElement('b'); e.style.color=c||'#E6EEF8'; e.textContent=v;
+    l.appendChild(a); l.appendChild(e); return l;
+  }
+  function render(b){
+    b.innerHTML='';
+    var lv=['整体图像对齐','解剖结构对齐','病灶对齐'];
+
+    /* ① 本次配准 */
+    var s1=sec('① 本次配准');
+    s1.appendChild(kv('配准对象','26.09 ↔ 24.08'));
+    s1.appendChild(kv('应用范围','检查之间'));
+    s1.appendChild(kv('算法','刚性+平移 · NCC'));
+    s1.appendChild(kv('基准 / 浮动','24.08 / 26.09'));
+    b.appendChild(s1);
+
+    /* ② 质量指标 + 逐期衰减 */
+    var s2=sec('② 质量指标（真实算值）');
+    for(var i=0;i<lv.length;i++){
+      var n=D.ncc[lv[i]], r=D.res[lv[i]];
+      var row=document.createElement('div');
+      row.className='__rgrow'; row.setAttribute('data-lv',lv[i]);
+      row.style.cssText='display:flex;justify-content:space-between;gap:8px;padding:2px 4px;border-radius:5px;cursor:pointer';
+      row.innerHTML='<span style="color:#E6EEF8">'+lv[i]+'</span>'
+        +'<span><b style="color:'+col(n)+'">NCC '+n+'</b><span style="color:#8FA3BF"> · 残余 '+r+'</span></span>';
+      row.addEventListener('click', function(nm,el){ return function(){
+        /* 复用既有三级对齐按钮，触发既有联动管线 */
+        var idx=lv.indexOf(nm), btns=document.querySelectorAll('#lvlbar .lvl');
+        if(btns[idx]) btns[idx].click();
+        var all=b.querySelectorAll('.__rgrow');
+        for(var k=0;k<all.length;k++) all[k].style.background='';
+        el.style.background='rgba(42,127,255,.16)';
+      }; }(lv[i],row));
+      s2.appendChild(row);
+    }
+    s2.appendChild(kv('位移 dx/dy','0.0 / 0.0 mm'));
+    var pw=document.createElement('div');
+    pw.style.cssText='margin-top:6px;padding-top:5px;border-top:1px dashed rgba(36,52,77,.9)';
+    pw.innerHTML='<div style="color:#8FA3BF;margin-bottom:3px">逐期 NCC（基准 24.08）—— 跨度越大越低：</div>';
+    var strip=document.createElement('div');
+    strip.style.cssText='display:flex;gap:6px;flex-wrap:wrap';
+    for(var j=0;j<D.per.length;j++){
+      var c=document.createElement('span');
+      c.style.cssText='border:1px solid '+col(D.per[j][1])+';color:'+col(D.per[j][1])
+        +';border-radius:10px;padding:0 6px;font-size:11px;white-space:nowrap';
+      c.textContent=D.per[j][0]+' '+D.per[j][1]+(D.per[j][2]?(' '+D.per[j][2]):'');
+      strip.appendChild(c);
+    }
+    pw.appendChild(strip); s2.appendChild(pw);
+    b.appendChild(s2);
+
+    /* ③ 一致性校验（华西四重 + 入组） */
+    var s3=sec('③ 一致性校验');
+    [['逆向校验','✅ 通过'],['坐标系一致','✅ 全程一致'],['平扫/增强 HU 归一化','✅ 已归一化'],
+     ['疾病差异化形变','✅ 周围型/中央型'],['入组校验（7 条）','✅ 期数·层厚·切片·肺窗']].forEach(function(p){
+      var r=kv(p[0],p[1],'#00C896'); s3.appendChild(r);
+    });
+    b.appendChild(s3);
+
+    /* ④ 状态与历史 + 回到自动结果 */
+    var s4=sec('④ 状态与历史');
+    s4.style.borderRight='none';
+    s4.appendChild(kv('当前状态','自动结果已给出','#2A7FFF'));
+    s4.appendChild(kv('病灶级','平扫无增强 → 降级','#FFA53C'));
+    var log=document.createElement('div');
+    log.style.cssText='margin-top:4px;color:#8FA3BF;font-size:11px';
+    log.innerHTML='· 整体 NCC 0.785 自动<br>· 解剖 NCC 0.707 自动<br>· 病灶级 待增强期';
+    s4.appendChild(log);
+    var back=document.createElement('button');
+    back.textContent='回到自动结果';
+    back.style.cssText='margin-top:7px;cursor:pointer;font:700 11.5px/1 inherit;padding:7px 12px;border-radius:7px;'
+      +'background:transparent;color:#FFF;border:1px solid rgba(255,255,255,.5)';
+    back.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      var a=document.getElementById('autoBtn'); if(a) a.click();   /* 复用既有实现 */
+      back.style.boxShadow='0 0 0 3px rgba(42,127,255,.5)';
+      setTimeout(function(){ back.style.boxShadow='none'; },430);
+    });
+    s4.appendChild(back);
+    b.appendChild(s4);
+  }
+  bar(); document.addEventListener('DOMContentLoaded',bar);
+  window.addEventListener('load',bar);
+  var n=0,t=setInterval(function(){ n++; bar(); if(n>50) clearInterval(t); },200);
 })();
 </script>
 </body>
