@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V9.6</title>
+<title>临床阅片器 · 时间轴导航原型 V9.7</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -179,8 +179,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V9.6</h1>
-    <span class="tag">V9.6 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V9.7</h1>
+    <span class="tag">V9.7 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -929,6 +929,54 @@ window.addEventListener('load',hide); setTimeout(hide,300); setTimeout(hide,1200
     cmp.style.cssText = (cmp.getAttribute('style')||'')+';flex:1 1 100%;max-width:none;width:auto;max-height:320px;overflow:auto';
     two.style.cssText = (two.getAttribute('style')||'')+';align-items:stretch';
     two.appendChild(cmp);
+  }
+  run(); document.addEventListener('DOMContentLoaded',run); window.addEventListener('load',run);
+  var n=0,t=setInterval(function(){ n++; run(); if(n>40) clearInterval(t); },200);
+})();
+
+/* ===== V9.7：对比分析模块 —— 隐藏显示模式 / 曲线与按钮左右排列 / 无滚动条 ===== */
+(function(){
+  function leafByText(t){
+    var all=document.querySelectorAll('div,span,b,h4,h5');
+    for(var i=0;i<all.length;i++){ if(all[i].children.length===0 && (all[i].textContent||'').replace(/\s+/g,'').indexOf(t)>=0) return all[i]; }
+    return null;
+  }
+  function panelOf(sel){ var e=document.querySelector(sel); return e?e.closest('.panel')||e.parentElement:null; }
+  function run(){
+    /* ① 隐藏「显示模式」标签 + 其按钮组 */
+    var lab=leafByText('显示模式'); if(lab){ lab.setAttribute('data-hide','1'); lab.style.display='none'; }
+    var t1=document.getElementById('tools'); if(t1){ t1.setAttribute('data-hide','1'); t1.style.display='none'; }
+
+    var t2=document.getElementById('tools2'), cv=document.getElementById('curve'), kpi=document.querySelector('.kpi');
+    if(!t2||!cv||!kpi) return;
+
+    /* ② 建立「左：指标按钮+数值行  右：曲线图」的左右排列 */
+    var row=document.getElementById('__cmprow');
+    if(!row){
+      row=document.createElement('div'); row.id='__cmprow';
+      row.style.cssText='display:flex;gap:18px;align-items:flex-start;min-width:0;width:100%';
+      var L=document.createElement('div'); L.id='__cmpl'; L.style.cssText='flex:1 1 46%;min-width:0';
+      var R=document.createElement('div'); R.id='__cmpr'; R.style.cssText='flex:1 1 54%;min-width:0;max-width:620px';
+      row.appendChild(L); row.appendChild(R);
+      kpi.parentElement.insertBefore(row, kpi);
+    }
+    var L=document.getElementById('__cmpl'), R=document.getElementById('__cmpr');
+    if(t2.parentElement!==L) L.appendChild(t2);
+    /* 把 .kpi 内的内容按类型分流：曲线 → 右，其余（指标行）→ 左 */
+    var kids=[].slice.call(kpi.children);
+    for(var i=0;i<kids.length;i++){
+      var ch=kids[i];
+      if(ch.id==='curve'){ if(ch.parentElement!==R) R.appendChild(ch); }
+      else if(ch.parentElement!==L) L.appendChild(ch);
+    }
+    kpi.style.display='none';
+
+    /* ③ 曲线尺寸与无滚动条 */
+    cv.style.cssText=(cv.getAttribute('style')||'')+';width:100%;height:auto;max-height:260px;display:block';
+    var p=panelOf('#curve');
+    if(p){ p.style.overflow='visible'; p.style.maxHeight='none'; }
+    var two=document.querySelector('.two'); if(two){ two.style.overflow='visible'; two.style.alignItems='flex-start'; }
+    var rc=document.getElementById('__rcol'); if(rc){ rc.style.maxHeight='none'; rc.style.overflow='visible'; }
   }
   run(); document.addEventListener('DOMContentLoaded',run); window.addEventListener('load',run);
   var n=0,t=setInterval(function(){ n++; run(); if(n>40) clearInterval(t); },200);
