@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V8.7</title>
+<title>临床阅片器 · 时间轴导航原型 V8.8</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -165,8 +165,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V8.7</h1>
-    <span class="tag">V8.7 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V8.8</h1>
+    <span class="tag">V8.8 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -314,7 +314,8 @@ $('#clr').onclick=function(){$('#logBody').innerHTML='';};
 function renderTL(){
   var h=$('#tl'); h.innerHTML='';
   EX.forEach(function(e,i){
-    var n=el('div','tlnode'+(i===st.t?' cur':'')+(i===st.t||i===cmpIdx()?' inrange':''));
+    var inR=(st.range===2)?(i===st.t||i===cmpIdx()):true;   /* 区间=全部 → 时间轴全部选中 */
+      var n=el('div','tlnode'+(i===st.t?' cur':'')+(inR?' inrange':''));
     n.innerHTML='<div class="dot"></div><div class="d">'+e.d+'</div><div class="m">'+e.m+'</div>'+
       '<div class="badge">'+e.tag+'</div>';
     n.title='点击切换时点';
