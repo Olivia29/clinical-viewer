@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V10.1</title>
+<title>临床阅片器 · 时间轴导航原型 V10.2</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -179,8 +179,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V10.1</h1>
-    <span class="tag">V10.1 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V10.2</h1>
+    <span class="tag">V10.2 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -1192,6 +1192,36 @@ window.addEventListener('load',hide); setTimeout(hide,300); setTimeout(hide,1200
   fix(); document.addEventListener('DOMContentLoaded',fix);
   window.addEventListener('load',fix);
   var n=0,t=setInterval(function(){ n++; fix(); if(n>60) clearInterval(t); },180);
+})();
+</script>
+
+<script>
+/* ===== V10.2：AI 按钮不再写入内容（仅保留"生成中"状态）===== */
+(function(){
+  function pulse(b,c){ if(!b) return; var o=b.style.boxShadow; b.style.boxShadow='0 0 0 3px '+c;
+    setTimeout(function(){ b.style.boxShadow=o||'none'; },430); }
+  function killTip(){ var t=document.getElementById('__toast'); if(t){ t.style.display='none'; } }
+  function rebind(){
+    var old=document.getElementById('__rptgen');
+    if(!old || old.getAttribute('data-v102')==='1') return;
+    var b=old.cloneNode(true);            /* 克隆 = 摘掉 V10.0 绑定的旧点击处理 */
+    b.setAttribute('data-v102','1');
+    b.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      killTip();
+      var t0=b.textContent;
+      b.disabled=true; b.textContent='↻ AI 生成中…'; b.style.opacity='.65';
+      pulse(b,'rgba(42,127,255,.55)');
+      setTimeout(function(){
+        killTip();                        /* 不弹任何文字提示 */
+        b.disabled=false; b.textContent=t0; b.style.opacity='1';
+      }, 1200);
+    });
+    old.parentNode.replaceChild(b, old);
+  }
+  rebind(); document.addEventListener('DOMContentLoaded',rebind);
+  window.addEventListener('load',rebind);
+  var n=0,t=setInterval(function(){ n++; rebind(); if(n>60) clearInterval(t); },180);
 })();
 </script>
 </body>
