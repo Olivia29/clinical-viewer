@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V8.9</title>
+<title>临床阅片器 · 时间轴导航原型 V9.0</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -162,14 +162,19 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 
     /* 联动日志：按需求隐藏（log 逻辑保留，仅不展示） */
     #log{display:none!important;visibility:hidden!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+
+    /* 时间轴选中态：选中节点 icon 强制蓝色（覆盖 inrange，体现选中） */
+    .tlnode.cur .dot{border-color:#2A7FFF!important;background:#2A7FFF!important;box-shadow:0 0 0 4px rgba(42,127,255,.28)!important}
+    .tlnode.cur .badge{border-color:#2A7FFF!important;color:#7FB3FF!important}
+    .tlnode.cur:hover .dot{border-color:#4E96FF!important;background:#4E96FF!important}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V8.9</h1>
-    <span class="tag">V8.9 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V9.0</h1>
+    <span class="tag">V9.0 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
