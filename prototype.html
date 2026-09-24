@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V9.9</title>
+<title>临床阅片器 · 时间轴导航原型 V10.0</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -179,8 +179,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V9.9</h1>
-    <span class="tag">V9.9 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V10.0</h1>
+    <span class="tag">V10.0 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -1061,6 +1061,107 @@ window.addEventListener('load',hide); setTimeout(hide,300); setTimeout(hide,1200
   }
   run(); document.addEventListener('DOMContentLoaded',run); window.addEventListener('load',run);
   var n=0,t=setInterval(function(){ n++; run(); if(n>40) clearInterval(t); },200);
+})();
+</script>
+
+<script>
+/* ===== V10.0：诊断报告 —— 下方操作按钮（AI 重新生成草稿 / 保存报告）===== */
+(function(){
+  var KEY='hermes-rpt-edit-v1';
+  function rp(){
+    var hs=document.querySelectorAll('h3');
+    for(var i=0;i<hs.length;i++){ if(/诊断报告/.test(hs[i].textContent||'')) return hs[i].parentElement; }
+    return null;
+  }
+  function bodyEl(){ return document.querySelector('[data-editable][contenteditable]'); }
+  function tip(msg,color){
+    var t=document.getElementById('__toast');
+    if(!t){ t=document.createElement('div'); t.id='__toast';
+      t.style.cssText='position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:99999;'
+        +'padding:10px 20px;border-radius:8px;font:700 13.5px/1.4 inherit;color:#fff;'
+        +'box-shadow:0 8px 26px rgba(0,0,0,.5);transition:opacity .25s;pointer-events:none;opacity:0';
+      document.body.appendChild(t); }
+    t.textContent=msg; t.style.background=color||'rgba(42,127,255,.97)'; t.style.opacity='1';
+    clearTimeout(t.__t); t.__t=setTimeout(function(){ t.style.opacity='0'; },2000);
+  }
+  function setState(txt,color){ var e=document.getElementById('__edstate'); if(e){ e.textContent=txt; e.style.color=color||'#8FA3BF'; }
+    var m=document.getElementById('__rptstate'); if(m){ m.textContent=txt; m.style.color=color||'#8FA3BF'; } }
+  function build(p){
+    if(document.getElementById('__rptbar')) return;
+    var wrap=document.createElement('div'); wrap.id='__rptbar';
+    wrap.style.cssText='display:flex;align-items:center;gap:12px;margin-top:10px;padding-top:10px;'
+      +'border-top:1px solid rgba(36,52,77,.9)';
+    function mk(txt,primary){
+      var b=document.createElement('button'); b.textContent=txt;
+      b.style.cssText='cursor:pointer;font:700 12.5px/1 inherit;padding:10px 16px;border-radius:7px;'
+        +'transition:.15s;letter-spacing:.3px;'
+        +'background:'+(primary?'#2A7FFF':'transparent')+';'
+        +'color:'+(primary?'#FFFFFF':'#E2E8F0')+';'
+        +'border:1px solid '+(primary?'#2A7FFF':'rgba(226,232,240,.55)');
+      b.addEventListener('mouseenter',function(){ b.style.background=primary?'#4E96FF':'rgba(226,232,240,.12)'; });
+      b.addEventListener('mouseleave',function(){ b.style.background=primary?'#2A7FFF':'transparent'; });
+      return b;
+    }
+    var gen=mk('↻ AI 重新生成草稿',false), save=mk('保存报告',true);
+    gen.id='__rptgen'; save.id='__rptsave';
+    var st=document.createElement('span'); st.id='__rptstate';
+    st.style.cssText='font-size:11.5px;color:#8FA3BF;margin-left:2px';
+    st.textContent='修改后请保存';
+    save.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      var b=bodyEl(); if(!b) return;
+      var payload=b.innerHTML;
+      var okSave=false;
+      try{ localStorage.setItem(KEY,payload); okSave=true; }catch(e){}
+      setState(okSave?'报告已保存（本机浏览器保留 · '+b.textContent.length+' 字）':'保存失败：浏览器禁止本地存储','#00C896');
+      tip(okSave?'报告已保存':'保存失败（本地存储不可用）', okSave?'rgba(0,200,150,.97)':'rgba(255,86,86,.97)');
+    });
+    gen.addEventListener('click', function(ev){
+      ev.stopPropagation();
+      var b=bodyEl(); if(!b) return;
+      var old=[].map.call(b.querySelectorAll('mark'), function(m){ return m.onclick; });
+      gen.disabled=true; var t0=gen.textContent; gen.textContent='↻ AI 生成中…'; gen.style.opacity='.65';
+      setState('AI 正在基于当前病灶数据重新生成草稿…','#7FB3FF');
+      setTimeout(function(){
+        var nLes=document.querySelectorAll('#leslist .li,#les .li,.les .li').length;
+        /* 复用原有段落元素，只替换其内容（不铲掉产品认知的结构，避免其后续渲染取到 null） */
+        var seg=[
+          '<b>影像所见</b>',
+          '本次（26.09）胸部 CT 平扫，双肺纹理清晰；右下肺见实性结节，边界尚清，较既往（24.08）体积缩小约 <mark data-les="F-001">15.6%</mark>，平均密度约 <mark data-les="F-002">38 HU</mark>；余肺野未见明确新发病灶，纵隔居中，双侧胸膜腔未见积液。',
+          '<b>诊断意见</b>',
+          '右下肺实性结节较既往缩小，考虑良性或治疗后改变可能性大；建议结合临床并 <mark data-les="F-003">6 个月</mark> 后复查。',
+          '（AI 重新生成草稿 · 基于当前期次与病灶量化数据 · 演示内容）'
+        ];
+        var ks=[].slice.call(b.children);
+        for(var qi=0; qi<seg.length; qi++){
+          if(ks[qi]){ ks[qi].innerHTML=seg[qi]; }
+          else { var nd=document.createElement('div'); nd.innerHTML=seg[qi]; b.appendChild(nd); }
+        }
+        for(var qj=seg.length; qj<ks.length; qj++){ try{ ks[qj].innerHTML=''; }catch(e){} }
+        var nm=b.querySelectorAll('mark');
+        for(var i=0;i<nm.length;i++){ nm[i].style.cursor='pointer'; if(old[i]) nm[i].onclick=old[i]; }
+        gen.disabled=false; gen.textContent=t0; gen.style.opacity='1';
+        setState('已由 AI 重新生成草稿（未保存）','#FFA53C');
+        tip('AI 已重新生成草稿（演示内容）','rgba(0,160,255,.97)');
+      },1200);
+    });
+    wrap.appendChild(gen); wrap.appendChild(save); wrap.appendChild(st);
+    p.appendChild(wrap);
+  }
+  function restore(){
+    var b=bodyEl(); if(!b) return;
+    try{
+      var v=localStorage.getItem(KEY);
+      if(v){ var old=[].map.call(b.querySelectorAll('mark'),function(m){return m.onclick;});
+        b.innerHTML=v; var nm=b.querySelectorAll('mark');
+        for(var i=0;i<nm.length;i++){ if(old[i]) nm[i].onclick=old[i]; }
+        setState('已载入本机保存的报告','#00C896'); }
+    }catch(e){}
+  }
+  var done=false;
+  function run(){ var p=rp(); if(!p) return false; build(p); if(!done){ done=true; restore(); } return true; }
+  if(!run()){ document.addEventListener('DOMContentLoaded',run); window.addEventListener('load',run);
+    var n=0,t=setInterval(function(){ n++; if(run()||n>60) clearInterval(t); },200); }
 })();
 </script>
 </body>
