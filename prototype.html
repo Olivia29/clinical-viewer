@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V9.8</title>
+<title>临床阅片器 · 时间轴导航原型 V9.9</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -179,8 +179,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V9.8</h1>
-    <span class="tag">V9.8 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V9.9</h1>
+    <span class="tag">V9.9 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -1012,6 +1012,52 @@ window.addEventListener('load',hide); setTimeout(hide,300); setTimeout(hide,1200
     var cmp=null, hs=document.querySelectorAll('h3');
     for(var i=0;i<hs.length;i++){ if(/对比分析/.test(hs[i].textContent||'')){ cmp=hs[i].parentElement; break; } }
     if(cmp){ cmp.style.flex='1 1 100%'; cmp.style.maxWidth='none'; cmp.style.width='100%'; cmp.style.maxHeight='none'; cmp.style.overflow='visible'; }
+  }
+  run(); document.addEventListener('DOMContentLoaded',run); window.addEventListener('load',run);
+  var n=0,t=setInterval(function(){ n++; run(); if(n>40) clearInterval(t); },200);
+})();
+
+/* ===== V9.9：诊断报告支持编辑（保留图文联动）===== */
+(function(){
+  function repPanel(){
+    var hs=document.querySelectorAll('h3');
+    for(var i=0;i<hs.length;i++){ if(/诊断报告/.test(hs[i].textContent||'')) return hs[i].parentElement; }
+    return null;
+  }
+  function run(){
+    var p=repPanel(); if(!p) return;
+    if(p.getAttribute('data-editable')==='1') return;
+    /* 找报告正文：面板内文本最长、且子元素较少的容器 */
+    var all=p.querySelectorAll('div,p,section'), best=null, bl=0;
+    for(var i=0;i<all.length;i++){
+      var e=all[i], t=(e.textContent||'').trim();
+      if(e.children.length<=3 && t.length>bl && t.length>60 && e.querySelectorAll('mark').length>=0){ bl=t.length; best=e; }
+    }
+    if(!best) return;
+    p.setAttribute('data-editable','1');
+    best.setAttribute('data-editable','1');
+    best.setAttribute('contenteditable','true');
+    best.setAttribute('spellcheck','false');
+    best.style.outline='none'; best.style.cursor='text'; best.style.minHeight='42px';
+    best.style.borderLeft='2px solid rgba(42,127,255,.85)'; best.style.paddingLeft='8px';
+    /* 编辑提示条 */
+    var bar=document.createElement('div'); bar.className='__edhint';
+    bar.style.cssText='display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:11.5px;color:#8FA3BF';
+    bar.innerHTML='<span style="border:1px solid rgba(42,127,255,.7);color:#7FB3FF;border-radius:10px;'
+      +'padding:0 7px;font-weight:700">✎ 可编辑</span><span id="__edstate">直接点击正文即可修改（点击病灶描述仍会联动影像）</span>';
+    var h3=p.querySelector('h3');
+    if(h3 && h3.nextSibling) p.insertBefore(bar, h3.nextSibling); else p.appendChild(bar);
+    /* 修改状态 */
+    best.addEventListener('input', function(){
+      var st=document.getElementById('__edstate');
+      if(st){ st.textContent='已修改（未保存）'; st.style.color='#FFA53C'; }
+    }, false);
+    /* 提示：聚焦时高亮 */
+    best.addEventListener('focus', function(){ best.style.background='rgba(42,127,255,.06)'; }, false);
+    best.addEventListener('blur', function(){ best.style.background=''; }, false);
+    /* 保留 mark 的点击联动（contenteditable 内点击仍会冒泡，这里确保不被阻止） */
+    var marks=best.querySelectorAll('mark');
+    for(var k=0;k<marks.length;k++){ marks[k].style.cursor='pointer'; }
   }
   run(); document.addEventListener('DOMContentLoaded',run); window.addEventListener('load',run);
   var n=0,t=setInterval(function(){ n++; run(); if(n>40) clearInterval(t); },200);
