@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V9.7</title>
+<title>临床阅片器 · 时间轴导航原型 V9.8</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -179,8 +179,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V9.7</h1>
-    <span class="tag">V9.7 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V9.8</h1>
+    <span class="tag">V9.8 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -977,6 +977,41 @@ window.addEventListener('load',hide); setTimeout(hide,300); setTimeout(hide,1200
     if(p){ p.style.overflow='visible'; p.style.maxHeight='none'; }
     var two=document.querySelector('.two'); if(two){ two.style.overflow='visible'; two.style.alignItems='flex-start'; }
     var rc=document.getElementById('__rcol'); if(rc){ rc.style.maxHeight='none'; rc.style.overflow='visible'; }
+  }
+  run(); document.addEventListener('DOMContentLoaded',run); window.addEventListener('load',run);
+  var n=0,t=setInterval(function(){ n++; run(); if(n>40) clearInterval(t); },200);
+})();
+
+/* ===== V9.8：对比分析模块样式优化（纯视觉）===== */
+(function(){
+  function run(){
+    var L=document.getElementById('__cmpl'), R=document.getElementById('__cmpr'), row=document.getElementById('__cmprow');
+    if(!row||!L||!R) return;
+    row.style.cssText='display:flex;gap:0;align-items:stretch;width:100%;min-width:0';
+    L.style.cssText='flex:0 0 400px;min-width:0;padding-right:16px;border-right:1px solid rgba(36,52,77,.9);'+
+                    'display:flex;flex-direction:column;gap:8px';
+    R.style.cssText='flex:1 1 auto;min-width:0;max-width:none;padding-left:16px;display:flex;'+
+                    'flex-direction:column;justify-content:center';
+    /* 指标行 2×2 网格：填满左列、高度更紧凑 */
+    var cells=[].slice.call(L.querySelectorAll('.it'));
+    if(cells.length && !document.getElementById('__cmpgrid')){
+      var g=document.createElement('div'); g.id='__cmpgrid';
+      g.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;min-width:0';
+      L.appendChild(g);
+      for(var i=0;i<cells.length;i++) g.appendChild(cells[i]);
+    }
+    /* 曲线：撑满右列 */
+    var cv=document.getElementById('curve');
+    if(cv){ cv.style.cssText=(cv.getAttribute('style')||'').replace(/max-height:[^;]*;?/,'')+
+      ';width:100%;height:auto;max-height:240px;display:block'; }
+    /* 面板撑满整行、不留空白 */
+    var p=row.closest('.panel');
+    if(p){ p.style.width='100%'; p.style.maxWidth='none'; p.style.overflow='visible'; p.style.maxHeight='none'; }
+    var two=document.querySelector('.two');
+    if(two){ two.style.display='flex'; two.style.alignItems='stretch'; two.style.overflow='visible'; }
+    var cmp=null, hs=document.querySelectorAll('h3');
+    for(var i=0;i<hs.length;i++){ if(/对比分析/.test(hs[i].textContent||'')){ cmp=hs[i].parentElement; break; } }
+    if(cmp){ cmp.style.flex='1 1 100%'; cmp.style.maxWidth='none'; cmp.style.width='100%'; cmp.style.maxHeight='none'; cmp.style.overflow='visible'; }
   }
   run(); document.addEventListener('DOMContentLoaded',run); window.addEventListener('load',run);
   var n=0,t=setInterval(function(){ n++; run(); if(n>40) clearInterval(t); },200);
