@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V10.4</title>
+<title>临床阅片器 · 时间轴导航原型 V10.5</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -179,8 +179,8 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V10.4</h1>
-    <span class="tag">V10.4 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V10.5</h1>
+    <span class="tag">V10.5 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
@@ -1382,6 +1382,41 @@ window.addEventListener('load',hide); setTimeout(hide,300); setTimeout(hide,1200
   bar(); document.addEventListener('DOMContentLoaded',bar);
   window.addEventListener('load',bar);
   var n=0,t=setInterval(function(){ n++; bar(); if(n>50) clearInterval(t); },200);
+})();
+</script>
+
+<script>
+/* ===== V10.5：配准结果带 —— 只保留配准结果（②质量指标 + ③一致性校验）===== */
+(function(){
+  function trim(){
+    var b=document.getElementById('__regband'); if(!b) return;
+    var ks=[].slice.call(b.children);
+    if(ks.length<3) return;                       /* 尚未渲染完 */
+    /* 段的识别：按文本判断，不依赖顺序 */
+    for(var i=0;i<ks.length;i++){
+      var t=(ks[i].textContent||'').replace(/\s+/g,'');
+      var keep=(t.indexOf('②质量指标')>=0)||(t.indexOf('③一致性校验')>=0);
+      if(!keep && ks[i].parentNode){ ks[i].parentNode.removeChild(ks[i]); i--; ks=[].slice.call(b.children); }
+    }
+    /* 段内：去掉「回到自动结果」按钮（它是操作，不是结果；参数面板里已有同名入口） */
+    var bs=b.querySelectorAll('button');
+    for(var j=0;j<bs.length;j++){
+      if((bs[j].textContent||'').replace(/\s+/g,'')==='回到自动结果' && bs[j].parentNode){ bs[j].parentNode.removeChild(bs[j]); }
+    }
+    b.style.gridTemplateColumns='1.45fr 1.25fr';
+    b.setAttribute('data-trimmed','1');
+  }
+  trim();
+  document.addEventListener('DOMContentLoaded',trim);
+  window.addEventListener('load',trim);
+  var n=0,t=setInterval(function(){ n++; trim(); if(n>80) clearInterval(t); },250);
+  /* 关键：V10.4 会周期性重建该区域 → 监听其子树变化，重建后立刻再裁 */
+  function watch(){
+    var b=document.getElementById('__regband');
+    if(!b){ setTimeout(watch,300); return; }
+    try{ new MutationObserver(function(){ trim(); }).observe(b,{childList:true}); }catch(e){}
+  }
+  watch();
 })();
 </script>
 </body>
