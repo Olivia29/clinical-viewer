@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>临床阅片器 · 时间轴导航原型 V9.0</title>
+<title>临床阅片器 · 时间轴导航原型 V9.1</title>
 <style>
 :root{
   --brand:#2A7FFF; --brand-d:#5AA0FF; --blue:#00C896; --ink:#E6EEF8; --gray:#8FA3BF;
@@ -167,14 +167,20 @@ body{margin:0;font:13px/1.55 "微软雅黑","Microsoft YaHei",system-ui;color:va
     .tlnode.cur .dot{border-color:#2A7FFF!important;background:#2A7FFF!important;box-shadow:0 0 0 4px rgba(42,127,255,.28)!important}
     .tlnode.cur .badge{border-color:#2A7FFF!important;color:#7FB3FF!important}
     .tlnode.cur:hover .dot{border-color:#4E96FF!important;background:#4E96FF!important}
+
+    /* 调整联动：回到自动结果 / 清零 —— 改白字（深字在深底上看不清） */
+    #autoBtn{color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;border-color:rgba(255,255,255,.5)!important;background:rgba(255,255,255,.07)!important;font-weight:700!important}
+    #autoBtn:hover{color:#FFFFFF!important;background:rgba(255,255,255,.16)!important;border-color:#FFFFFF!important}
+    #rstBtn{color:#FFFFFF!important;-webkit-text-fill-color:#FFFFFF!important;border-color:rgba(255,255,255,.5)!important;background:rgba(255,255,255,.07)!important;font-weight:700!important}
+    #rstBtn:hover{color:#FFFFFF!important;background:rgba(255,255,255,.16)!important;border-color:#FFFFFF!important}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div class="top">
-    <h1>临床阅片器 · 时间轴导航原型 V9.0</h1>
-    <span class="tag">V9.0 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
+    <h1>临床阅片器 · 时间轴导航原型 V9.1</h1>
+    <span class="tag">V9.1 · 真实 CT 影像 · 配准由真实像素实时计算（NCC 刚性搜索）· 量化数值仍为演示数据</span>
     <span class="spacer"></span>
     <span class="tag">点击任意元素 → 右下角显示本次联动</span>
   </div>
